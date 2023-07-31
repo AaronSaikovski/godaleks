@@ -13,6 +13,7 @@ import (
 const (
 	screenWidth  = 640
 	screenHeight = 480
+	playerSpeed  = 0.5
 )
 
 // Create our empty vars
@@ -46,14 +47,14 @@ func init() {
 		log.Fatal(err)
 	}
 
-	HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, 1.5}
+	HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed*2}
 
 	EvilRobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	EvilRobots = Robot{EvilRobotImage, screenWidth / 2.0, screenHeight / 2.0, 1.5}
+	EvilRobots = Robot{EvilRobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed}
 
 }
 
@@ -79,6 +80,9 @@ func (g *Game) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
 		fmt.Print("S pressed")
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyT) {
+		fmt.Print("T pressed")
 	}
 	return nil
 }
