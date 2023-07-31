@@ -5,7 +5,7 @@ GOFLAGS = -ldflags="-s -w"
 #export PATH=$PATH:$HOME/go/bin;
 
 # Define the target executable
-TARGET = gogoodwe
+TARGET = gorobots
 
 ## help - Display help about make targets for this Makefile
 help:
