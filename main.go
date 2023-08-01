@@ -17,7 +17,7 @@ const (
 	screenHeight = 480
 	spriteWidth  = 32
 	spriteHeight = 32
-	playerSpeed  = 1.0
+	playerSpeed  = 0.5
 )
 
 // Create our empty vars
@@ -29,14 +29,6 @@ var (
 	HeroPlayer Hero
 	Robots     Robot
 )
-
-// type Player interface {
-// 	image      *ebiten.Image
-// 	xPos, yPos float64
-// 	speed      float64
-// 	isAlive    bool
-
-// }
 
 // Create the player class
 type Hero struct {
@@ -62,19 +54,16 @@ func init() {
 		log.Fatal(err)
 	}
 
-	//HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
-
 	// Start the hero in a random starting position
 	xHeroStart, yHeroStart := randomPlayerStartPosition()
 	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true}
 
-	RobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot.png")
+	RobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot01.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	xRobotStart, yRoboStart := randomPlayerStartPosition()
-	//Robots = Robot{RobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
 	Robots = Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true}
 
 }
@@ -103,15 +92,27 @@ func CheckHeroBoundary(HeroPlayer *Hero) {
 func MoveHero(HeroPlayer *Hero) {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		HeroPlayer.yPos -= HeroPlayer.speed
+
+		//Move the Robot
+		MoveRobot(HeroPlayer, &Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		HeroPlayer.yPos += HeroPlayer.speed
+
+		//Move the Robot
+		MoveRobot(HeroPlayer, &Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		HeroPlayer.xPos -= HeroPlayer.speed
+
+		//Move the Robot
+		MoveRobot(HeroPlayer, &Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		HeroPlayer.xPos += HeroPlayer.speed
+
+		//Move the Robot
+		MoveRobot(HeroPlayer, &Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyL) {
 		fmt.Print("L pressed")
@@ -127,6 +128,22 @@ func MoveHero(HeroPlayer *Hero) {
 	}
 }
 
+// MoveRobot - Moves the robot to chase the player
+func MoveRobot(HeroPlayer *Hero, RobotPlayer *Robot) {
+	if RobotPlayer.xPos < HeroPlayer.xPos {
+		RobotPlayer.xPos += RobotPlayer.speed
+	} else {
+		RobotPlayer.xPos -= RobotPlayer.speed
+	}
+
+	if RobotPlayer.yPos < HeroPlayer.yPos {
+		RobotPlayer.yPos += RobotPlayer.speed
+	} else {
+		RobotPlayer.yPos -= RobotPlayer.speed
+	}
+
+}
+
 // randomPlayerStartPosition - Places our player(s) in a random coordinate on the grid
 func randomPlayerStartPosition() (xPos, yPos float64) {
 	// Retrieve the window size
@@ -137,7 +154,10 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 	maxY := float64(windowHeight - spriteHeight)
 
 	// Generate random X and Y coordinates within the window bounds
-	rand.Seed(time.Now().UnixNano())
+	//rand.Seed(time.Now().UnixNano())
+
+	//seed the randomiser
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Return random X & Y coords
 	return rand.Float64() * maxX, rand.Float64() * maxY
