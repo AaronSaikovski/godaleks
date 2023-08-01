@@ -225,6 +225,19 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 	return rand.Float64() * maxX, rand.Float64() * maxY
 }
 
+func CheckHeroCollision(HeroPlayer *Hero) bool {
+	// Check for collisions among sprites
+	for i := 0; i < startRobots; i++ {
+		if AreSpritesColliding(HeroPlayer, Robots[i]) {
+			return true
+		} else {
+			return false
+		}
+	}
+
+	return false
+}
+
 // Update proceeds the game state.
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
@@ -233,15 +246,11 @@ func (g *Game) Update() error {
 		//Ensure the Hero doesnt go off the game
 		CheckHeroBoundary(&HeroPlayer)
 
-		// Check for collisions among sprites
-		for i := 0; i < startRobots; i++ {
-			if AreSpritesColliding(&HeroPlayer, Robots[i]) {
-				fmt.Print("COLLISION!")
-
-				// End the game
-				g.isGameOver = true
-
-			}
+		// check if we have a collision between the player and a robot
+		if CheckHeroCollision(&HeroPlayer) {
+			g.isGameOver = true
+		} else {
+			g.isGameOver = false
 		}
 
 		// Move the hero
