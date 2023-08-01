@@ -6,6 +6,7 @@ import (
 	_ "image/png"
 	"log"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,6 +19,7 @@ const (
 	spriteWidth  = 32
 	spriteHeight = 32
 	playerSpeed  = 0.5
+	startRobots  = 5
 )
 
 // Create our empty vars
@@ -27,7 +29,10 @@ var (
 	HeroImage  *ebiten.Image
 	RobotImage *ebiten.Image
 	HeroPlayer Hero
-	Robots     Robot
+	Robots     []*Robot
+
+	GameScore int
+	GameEnded bool
 )
 
 // Create the player class
@@ -45,9 +50,17 @@ type Robot struct {
 	isAlive    bool
 }
 
-//var img *ebiten.Image
+// StartNewGame - Starts a new game and resets everything
+func StartNewGame() {
 
-func init() {
+	//Reset everything
+	GameScore = 0
+	GameEnded = false
+	HeroImage = nil
+	HeroPlayer = Hero{}
+	RobotImage = nil
+	Robots = nil
+
 	var err error
 	HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
 	if err != nil {
@@ -58,14 +71,34 @@ func init() {
 	xHeroStart, yHeroStart := randomPlayerStartPosition()
 	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true}
 
-	RobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot01.png")
-	if err != nil {
-		log.Fatal(err)
+	//Setup the Robots slice
+	//Robots := make([]Robot, startRobots)
+	for i := 0; i < startRobots; i++ {
+		strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
+		RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		xRobotStart, yRoboStart := randomPlayerStartPosition()
+		newRobot := &Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true}
+		Robots = append(Robots, newRobot)
 	}
 
-	xRobotStart, yRoboStart := randomPlayerStartPosition()
-	Robots = Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true}
+}
 
+// Reset - Resets the game
+func (g *Game) Reset() {
+
+	// Clear the screen with a white color again after the reset
+	ebiten.SetScreenTransparent(false)
+
+	StartNewGame()
+}
+
+// init - Start a new game
+func init() {
+	StartNewGame()
 }
 
 type Game struct{}
@@ -94,52 +127,60 @@ func MoveHero(HeroPlayer *Hero) {
 		HeroPlayer.yPos -= HeroPlayer.speed
 
 		//Move the Robot
-		MoveRobot(HeroPlayer, &Robots)
+		MoveRobot(HeroPlayer, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		HeroPlayer.yPos += HeroPlayer.speed
 
 		//Move the Robot
-		MoveRobot(HeroPlayer, &Robots)
+		MoveRobot(HeroPlayer, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		HeroPlayer.xPos -= HeroPlayer.speed
 
 		//Move the Robot
-		MoveRobot(HeroPlayer, &Robots)
+		MoveRobot(HeroPlayer, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		HeroPlayer.xPos += HeroPlayer.speed
 
 		//Move the Robot
-		MoveRobot(HeroPlayer, &Robots)
+		MoveRobot(HeroPlayer, Robots)
 	}
+	//Laststand
 	if ebiten.IsKeyPressed(ebiten.KeyL) {
 		fmt.Print("L pressed")
 	}
+	//Sonic screwdriver
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
 		fmt.Print("S pressed")
 	}
+	//Teleport
 	if ebiten.IsKeyPressed(ebiten.KeyT) {
 		fmt.Print("T pressed")
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyN) {
-		fmt.Print("N pressed")
-	}
+	// New game
+	// if ebiten.IsKeyPressed(ebiten.KeyN) {
+	// 	fmt.Print("Newgame")
+	// 	StartNewGame()
+	// }
 }
 
 // MoveRobot - Moves the robot to chase the player
-func MoveRobot(HeroPlayer *Hero, RobotPlayer *Robot) {
-	if RobotPlayer.xPos < HeroPlayer.xPos {
-		RobotPlayer.xPos += RobotPlayer.speed
-	} else {
-		RobotPlayer.xPos -= RobotPlayer.speed
-	}
+func MoveRobot(HeroPlayer *Hero, RobotPlayer []*Robot) {
 
-	if RobotPlayer.yPos < HeroPlayer.yPos {
-		RobotPlayer.yPos += RobotPlayer.speed
-	} else {
-		RobotPlayer.yPos -= RobotPlayer.speed
+	for i := 0; i < startRobots; i++ {
+		if RobotPlayer[i].xPos < HeroPlayer.xPos {
+			RobotPlayer[i].xPos += RobotPlayer[i].speed
+		} else {
+			RobotPlayer[i].xPos -= RobotPlayer[i].speed
+		}
+
+		if RobotPlayer[i].yPos < HeroPlayer.yPos {
+			RobotPlayer[i].yPos += RobotPlayer[i].speed
+		} else {
+			RobotPlayer[i].yPos -= RobotPlayer[i].speed
+		}
 	}
 
 }
@@ -152,9 +193,6 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 	// Calculate the maximum X and Y coordinates for the sprite to stay within the window
 	maxX := float64(windowWidth - spriteWidth)
 	maxY := float64(windowHeight - spriteHeight)
-
-	// Generate random X and Y coordinates within the window bounds
-	//rand.Seed(time.Now().UnixNano())
 
 	//seed the randomiser
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -172,6 +210,12 @@ func (g *Game) Update() error {
 
 	// Move the hero
 	MoveHero(&HeroPlayer)
+
+	// New game
+	if ebiten.IsKeyPressed(ebiten.KeyN) {
+		g.Reset()
+		StartNewGame()
+	}
 
 	// if ebiten.IsKeyPressed(ebiten.KeyUp) {
 	// 	HeroPlayer.yPos -= HeroPlayer.speed
@@ -204,11 +248,15 @@ func DrawHero(screen *ebiten.Image) {
 	screen.DrawImage(HeroPlayer.image, playerOp)
 }
 
-// DrawEvilRobot - Draws an evil robot
-func DrawEvilRobot(screen *ebiten.Image) {
-	evilRobotOp := &ebiten.DrawImageOptions{}
-	evilRobotOp.GeoM.Translate(Robots.xPos, Robots.yPos)
-	screen.DrawImage(Robots.image, evilRobotOp)
+// DrawRobot - Draws an robot player
+func DrawRobot(screen *ebiten.Image) {
+
+	//Setup the Robots slice
+	for index, _ := range Robots {
+		robotOp := &ebiten.DrawImageOptions{}
+		robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
+		screen.DrawImage(Robots[index].image, robotOp)
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -220,7 +268,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	DrawHero(screen)
 
 	// Draw some bad robots
-	DrawEvilRobot(screen)
+	DrawRobot(screen)
 
 }
 
