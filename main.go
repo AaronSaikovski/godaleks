@@ -136,8 +136,12 @@ func AreSpritesColliding(HeroPlayer *Hero, RobotPlayer *Robot) bool {
 }
 
 // AreRobotsColliding - Are Robots colliding?
-func AreRobotsColliding(RobotPlayer *Robot) bool {
-	return false
+func AreRobotsColliding(Robot1, Robot2 *Robot) bool {
+	// Check for bounding box collision
+	return Robot1.xPos < Robot2.xPos+float64(Robot2.image.Bounds().Dx()) &&
+		Robot1.xPos+float64(Robot1.image.Bounds().Dx()) > Robot2.xPos &&
+		Robot1.yPos < Robot2.yPos+float64(Robot2.image.Bounds().Dy()) &&
+		Robot1.yPos+float64(Robot1.image.Bounds().Dy()) > Robot2.yPos
 }
 
 // TeleportHero - Teleports the hero to a random place on the game grid
@@ -229,7 +233,7 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 }
 
 func CheckHeroCollision(HeroPlayer *Hero) bool {
-	// Check for collisions among sprites	
+	// Check for collisions among sprites
 	for index := range Robots {
 		if AreSpritesColliding(HeroPlayer, Robots[index]) {
 			return true
@@ -259,6 +263,17 @@ func (g *Game) Update() error {
 		MoveHero(&HeroPlayer)
 	}
 
+	//WIP
+	// Check if Robots are colliding
+	for i := 0; i < len(Robots); i++ {
+		for j := i + 1; j < len(Robots); j++ {
+			// e.g., perform actions like removing sprites, triggering events, etc.
+			if AreRobotsColliding(Robots[i], Robots[j]) {
+				// Handle collision between sprites[i] and sprites[j]
+				fmt.Print("Robots colliding!")
+			}
+		}
+	}
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
 		g.Reset()
