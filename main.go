@@ -196,18 +196,17 @@ func MoveHero(HeroPlayer *Hero) {
 
 // MoveRobot - Moves the robot to chase the player
 func MoveRobot(HeroPlayer *Hero, RobotPlayer []*Robot) {
-
-	for i := 0; i < startRobots; i++ {
-		if RobotPlayer[i].xPos < HeroPlayer.xPos {
-			RobotPlayer[i].xPos += RobotPlayer[i].speed
+	for index := range Robots {
+		if RobotPlayer[index].xPos < HeroPlayer.xPos {
+			RobotPlayer[index].xPos += RobotPlayer[index].speed
 		} else {
-			RobotPlayer[i].xPos -= RobotPlayer[i].speed
+			RobotPlayer[index].xPos -= RobotPlayer[index].speed
 		}
 
-		if RobotPlayer[i].yPos < HeroPlayer.yPos {
-			RobotPlayer[i].yPos += RobotPlayer[i].speed
+		if RobotPlayer[index].yPos < HeroPlayer.yPos {
+			RobotPlayer[index].yPos += RobotPlayer[index].speed
 		} else {
-			RobotPlayer[i].yPos -= RobotPlayer[i].speed
+			RobotPlayer[index].yPos -= RobotPlayer[index].speed
 		}
 	}
 
@@ -230,15 +229,14 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 }
 
 func CheckHeroCollision(HeroPlayer *Hero) bool {
-	// Check for collisions among sprites
-	for i := 0; i < startRobots; i++ {
-		if AreSpritesColliding(HeroPlayer, Robots[i]) {
+	// Check for collisions among sprites	
+	for index := range Robots {
+		if AreSpritesColliding(HeroPlayer, Robots[index]) {
 			return true
 		} else {
 			return false
 		}
 	}
-
 	return false
 }
 
