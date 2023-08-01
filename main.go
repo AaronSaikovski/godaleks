@@ -13,32 +13,45 @@ import (
 const (
 	screenWidth  = 640
 	screenHeight = 480
-	playerSpeed  = 0.5
+	spriteWidth  = 32
+	spriteHeight = 32
+	playerSpeed  = 1.0
 )
 
 // Create our empty vars
 var (
-	err            error
-	HeroImage      *ebiten.Image
-	EvilRobotImage *ebiten.Image
-	HeroPlayer     Hero
-	EvilRobots     Robot
+	img        *ebiten.Image
+	err        error
+	HeroImage  *ebiten.Image
+	RobotImage *ebiten.Image
+	HeroPlayer Hero
+	Robots     Robot
 )
+
+// type Player interface {
+// 	image      *ebiten.Image
+// 	xPos, yPos float64
+// 	speed      float64
+// 	isAlive    bool
+
+// }
 
 // Create the player class
 type Hero struct {
 	image      *ebiten.Image
 	xPos, yPos float64
 	speed      float64
+	isAlive    bool
 }
 
 type Robot struct {
 	image      *ebiten.Image
 	xPos, yPos float64
 	speed      float64
+	isAlive    bool
 }
 
-var img *ebiten.Image
+//var img *ebiten.Image
 
 func init() {
 	var err error
@@ -47,22 +60,39 @@ func init() {
 		log.Fatal(err)
 	}
 
-	HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed*2}
+	HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
 
-	EvilRobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot.png")
+	RobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	EvilRobots = Robot{EvilRobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed}
+	Robots = Robot{RobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
 
 }
 
 type Game struct{}
 
-// Update proceeds the game state.
-// Update is called every tick (1/60 [s] by default).
-func (g *Game) Update() error {
+// CheckPlayerBounds - Ensures the players stay within the game grid
+func CheckHeroBoundary(HeroPlayer *Hero) {
+	// Check if sprite goes off the left or right edge
+	if HeroPlayer.xPos < 0 {
+		HeroPlayer.xPos = 0
+	} else if HeroPlayer.xPos > screenWidth-spriteWidth {
+		HeroPlayer.xPos = screenWidth - spriteWidth
+	}
+
+	// Check if sprite goes off the top or bottom edge
+	if HeroPlayer.yPos < 0 {
+		HeroPlayer.yPos = 0
+	} else if HeroPlayer.yPos > screenHeight-spriteHeight {
+		HeroPlayer.yPos = screenHeight - spriteHeight
+	}
+
+}
+
+// MoveHero - Moves the hero around the grid
+func MoveHero(HeroPlayer *Hero) {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		HeroPlayer.yPos -= HeroPlayer.speed
 	}
@@ -84,6 +114,42 @@ func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyT) {
 		fmt.Print("T pressed")
 	}
+	if ebiten.IsKeyPressed(ebiten.KeyN) {
+		fmt.Print("N pressed")
+	}
+}
+
+// Update proceeds the game state.
+// Update is called every tick (1/60 [s] by default).
+func (g *Game) Update() error {
+
+	//Ensure the Hero doesnt go off the game
+	CheckHeroBoundary(&HeroPlayer)
+
+	// Move the hero
+	MoveHero(&HeroPlayer)
+
+	// if ebiten.IsKeyPressed(ebiten.KeyUp) {
+	// 	HeroPlayer.yPos -= HeroPlayer.speed
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyDown) {
+	// 	HeroPlayer.yPos += HeroPlayer.speed
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+	// 	HeroPlayer.xPos -= HeroPlayer.speed
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyRight) {
+	// 	HeroPlayer.xPos += HeroPlayer.speed
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyL) {
+	// 	fmt.Print("L pressed")
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyS) {
+	// 	fmt.Print("S pressed")
+	// }
+	// if ebiten.IsKeyPressed(ebiten.KeyT) {
+	// 	fmt.Print("T pressed")
+	// }
 	return nil
 }
 
@@ -97,8 +163,8 @@ func DrawHero(screen *ebiten.Image) {
 // DrawEvilRobot - Draws an evil robot
 func DrawEvilRobot(screen *ebiten.Image) {
 	evilRobotOp := &ebiten.DrawImageOptions{}
-	evilRobotOp.GeoM.Translate(EvilRobots.xPos, EvilRobots.yPos)
-	screen.DrawImage(EvilRobots.image, evilRobotOp)
+	evilRobotOp.GeoM.Translate(Robots.xPos, Robots.yPos)
+	screen.DrawImage(Robots.image, evilRobotOp)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
