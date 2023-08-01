@@ -5,6 +5,8 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -60,14 +62,20 @@ func init() {
 		log.Fatal(err)
 	}
 
-	HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
+	//HeroPlayer = Hero{HeroImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
+
+	// Start the hero in a random starting position
+	xHeroStart, yHeroStart := randomPlayerStartPosition()
+	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true}
 
 	RobotImage, _, err = ebitenutil.NewImageFromFile("./assets/images/robot.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Robots = Robot{RobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
+	xRobotStart, yRoboStart := randomPlayerStartPosition()
+	//Robots = Robot{RobotImage, screenWidth / 2.0, screenHeight / 2.0, playerSpeed, true}
+	Robots = Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true}
 
 }
 
@@ -117,6 +125,22 @@ func MoveHero(HeroPlayer *Hero) {
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
 		fmt.Print("N pressed")
 	}
+}
+
+// randomPlayerStartPosition - Places our player(s) in a random coordinate on the grid
+func randomPlayerStartPosition() (xPos, yPos float64) {
+	// Retrieve the window size
+	windowWidth, windowHeight := ebiten.WindowSize()
+
+	// Calculate the maximum X and Y coordinates for the sprite to stay within the window
+	maxX := float64(windowWidth - spriteWidth)
+	maxY := float64(windowHeight - spriteHeight)
+
+	// Generate random X and Y coordinates within the window bounds
+	rand.Seed(time.Now().UnixNano())
+
+	// Return random X & Y coords
+	return rand.Float64() * maxX, rand.Float64() * maxY
 }
 
 // Update proceeds the game state.
