@@ -35,6 +35,11 @@ var (
 	GameEnded bool
 )
 
+// Game - Game struct
+type Game struct {
+	isGameOver bool
+}
+
 // Hero - struct
 type Hero struct {
 	image      *ebiten.Image
@@ -73,7 +78,6 @@ func StartNewGame() {
 	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true}
 
 	//Setup the Robots slice
-	//Robots := make([]Robot, startRobots)
 	for i := 0; i < startRobots; i++ {
 		strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
 		RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
@@ -93,8 +97,8 @@ func (g *Game) Reset() {
 
 	// Clear the screen with a white color again after the reset
 	ebiten.SetScreenTransparent(false)
-	//ebiten.RunGameWithOptions(nil, nil)
 
+	g.isGameOver = false
 	StartNewGame()
 }
 
@@ -102,8 +106,6 @@ func (g *Game) Reset() {
 func init() {
 	StartNewGame()
 }
-
-type Game struct{}
 
 // CheckHeroBoundary - Ensures the players stay within the game grid
 func CheckHeroBoundary(HeroPlayer *Hero) {
@@ -121,6 +123,26 @@ func CheckHeroBoundary(HeroPlayer *Hero) {
 		HeroPlayer.yPos = screenHeight - spriteHeight
 	}
 
+}
+
+// AreSpritesColliding - Are the sprites colliding
+func AreSpritesColliding(HeroPlayer *Hero, RobotPlayer *Robot) bool {
+	return HeroPlayer.xPos < RobotPlayer.xPos+float64(RobotPlayer.image.Bounds().Dx()) &&
+		HeroPlayer.xPos+float64(HeroPlayer.image.Bounds().Dx()) > RobotPlayer.xPos &&
+		HeroPlayer.yPos < RobotPlayer.yPos+float64(RobotPlayer.image.Bounds().Dy()) &&
+		HeroPlayer.yPos+float64(HeroPlayer.image.Bounds().Dy()) > RobotPlayer.yPos
+}
+
+// AreRobotsColliding - Are Robots colliding?
+func AreRobotsColliding(RobotPlayer *Robot) bool {
+	return false
+}
+
+// TeleportHero - Teleports the hero to a random place on the game grid
+func TeleportHero(HeroPlayer *Hero) {
+	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition()
+	HeroPlayer.xPos = xHeroTeleport
+	HeroPlayer.yPos = yHeroTeleport
 }
 
 // MoveHero - Moves the hero around the grid
@@ -159,7 +181,7 @@ func MoveHero(HeroPlayer *Hero) {
 	}
 	//Teleport
 	if ebiten.IsKeyPressed(ebiten.KeyT) {
-		fmt.Print("T pressed")
+		TeleportHero(HeroPlayer)
 	}
 	// New game
 	// if ebiten.IsKeyPressed(ebiten.KeyN) {
@@ -207,11 +229,24 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
 
-	//Ensure the Hero doesnt go off the game
-	CheckHeroBoundary(&HeroPlayer)
+	if !g.isGameOver {
+		//Ensure the Hero doesnt go off the game
+		CheckHeroBoundary(&HeroPlayer)
 
-	// Move the hero
-	MoveHero(&HeroPlayer)
+		// Check for collisions among sprites
+		for i := 0; i < startRobots; i++ {
+			if AreSpritesColliding(&HeroPlayer, Robots[i]) {
+				fmt.Print("COLLISION!")
+
+				// End the game
+				g.isGameOver = true
+
+			}
+		}
+
+		// Move the hero
+		MoveHero(&HeroPlayer)
+	}
 
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
