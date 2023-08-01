@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 800
+	screenHeight = 600
 	spriteWidth  = 32
 	spriteHeight = 32
 	playerSpeed  = 0.5
@@ -35,7 +35,7 @@ var (
 	GameEnded bool
 )
 
-// Create the player class
+// Hero - struct
 type Hero struct {
 	image      *ebiten.Image
 	xPos, yPos float64
@@ -43,6 +43,7 @@ type Hero struct {
 	isAlive    bool
 }
 
+// Robot - Robot struct
 type Robot struct {
 	image      *ebiten.Image
 	xPos, yPos float64
@@ -92,6 +93,7 @@ func (g *Game) Reset() {
 
 	// Clear the screen with a white color again after the reset
 	ebiten.SetScreenTransparent(false)
+	//ebiten.RunGameWithOptions(nil, nil)
 
 	StartNewGame()
 }
@@ -103,7 +105,7 @@ func init() {
 
 type Game struct{}
 
-// CheckPlayerBounds - Ensures the players stay within the game grid
+// CheckHeroBoundary - Ensures the players stay within the game grid
 func CheckHeroBoundary(HeroPlayer *Hero) {
 	// Check if sprite goes off the left or right edge
 	if HeroPlayer.xPos < 0 {
@@ -252,7 +254,7 @@ func DrawHero(screen *ebiten.Image) {
 func DrawRobot(screen *ebiten.Image) {
 
 	//Setup the Robots slice
-	for index, _ := range Robots {
+	for index := range Robots {
 		robotOp := &ebiten.DrawImageOptions{}
 		robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
 		screen.DrawImage(Robots[index].image, robotOp)
