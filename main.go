@@ -46,6 +46,7 @@ type Hero struct {
 	xPos, yPos float64
 	speed      float64
 	isAlive    bool
+	active     bool
 }
 
 // Robot - Robot struct
@@ -54,6 +55,7 @@ type Robot struct {
 	xPos, yPos float64
 	speed      float64
 	isAlive    bool
+	active     bool
 }
 
 // StartNewGame - Starts a new game and resets everything
@@ -75,7 +77,7 @@ func StartNewGame() {
 
 	// Start the hero in a random starting position
 	xHeroStart, yHeroStart := randomPlayerStartPosition()
-	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true}
+	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true, true}
 
 	//Setup the Robots slice
 	for i := 0; i < startRobots; i++ {
@@ -86,7 +88,7 @@ func StartNewGame() {
 		}
 
 		xRobotStart, yRoboStart := randomPlayerStartPosition()
-		newRobot := &Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true}
+		newRobot := &Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true, true}
 		Robots = append(Robots, newRobot)
 	}
 
@@ -140,6 +142,7 @@ func AreRobotsColliding(RobotPlayer *Robot) bool {
 
 // TeleportHero - Teleports the hero to a random place on the game grid
 func TeleportHero(HeroPlayer *Hero) {
+	HeroPlayer.active = false
 	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition()
 	HeroPlayer.xPos = xHeroTeleport
 	HeroPlayer.yPos = yHeroTeleport
@@ -182,6 +185,7 @@ func MoveHero(HeroPlayer *Hero) {
 	//Teleport
 	if ebiten.IsKeyPressed(ebiten.KeyT) {
 		TeleportHero(HeroPlayer)
+		HeroPlayer.active = true
 	}
 	// New game
 	// if ebiten.IsKeyPressed(ebiten.KeyN) {
