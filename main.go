@@ -102,6 +102,7 @@ func (g *Game) Reset() {
 	//ebiten.SetScreenTransparent(false)
 
 	//taken fom https://github.com/hajimehoshi/ebiten/commit/8e5ae8873878a32e27e0c87fb6b3fb9c7e0d4c0a
+	// and https://github.com/hajimehoshi/ebiten/issues/2378
 	op := &ebiten.RunGameOptions{}
 	op.ScreenTransparent = false
 	// if err := ebiten.RunGameWithOptions(g{}, op); err != nil {
