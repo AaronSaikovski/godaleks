@@ -13,6 +13,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+// PlayerType - Custom Player datatype
+type PlayerType string
+
 const (
 	screenWidth  = 800
 	screenHeight = 600
@@ -20,6 +23,10 @@ const (
 	spriteHeight = 32
 	playerSpeed  = 0.5
 	startRobots  = 5
+
+	// Define our player types
+	HumanPlayer PlayerType = "Human"
+	RobotPlayer PlayerType = "Robot"
 )
 
 // Create our empty vars
@@ -28,43 +35,26 @@ var (
 	err        error
 	HeroImage  *ebiten.Image
 	RobotImage *ebiten.Image
-	HeroPlayer Hero
-	Robots     []*Robot
+	HeroPlayer Player
+	Robots     []*Player
 
 	GameScore int
 	GameEnded bool
 )
-
-// Players - Players interface
-// type Player interface {
-// 	Hero | Robot
-// }
-
-// type Ptr[P Player] interface {
-// 	*P
-// }
 
 // Game - Game struct
 type Game struct {
 	isGameOver bool
 }
 
-// Hero - struct
-type Hero struct {
+// Player - Player struct
+type Player struct {
 	image      *ebiten.Image
 	xPos, yPos float64
 	speed      float64
 	isAlive    bool
 	active     bool
-}
-
-// Robot - Robot struct
-type Robot struct {
-	image      *ebiten.Image
-	xPos, yPos float64
-	speed      float64
-	isAlive    bool
-	active     bool
+	PlayerType PlayerType
 }
 
 // StartNewGame - Starts a new game and resets everything
@@ -74,7 +64,7 @@ func StartNewGame() {
 	GameScore = 0
 	GameEnded = false
 	HeroImage = nil
-	HeroPlayer = Hero{}
+	HeroPlayer = Player{}
 	RobotImage = nil
 	Robots = nil
 
@@ -86,7 +76,7 @@ func StartNewGame() {
 
 	// Start the hero in a random starting position
 	xHeroStart, yHeroStart := randomPlayerStartPosition()
-	HeroPlayer = Hero{HeroImage, xHeroStart, yHeroStart, playerSpeed, true, true}
+	HeroPlayer = Player{HeroImage, xHeroStart, yHeroStart, playerSpeed, true, true, HumanPlayer}
 
 	//Setup the Robots slice
 	for i := 0; i < startRobots; i++ {
@@ -97,7 +87,7 @@ func StartNewGame() {
 		}
 
 		xRobotStart, yRoboStart := randomPlayerStartPosition()
-		newRobot := &Robot{RobotImage, xRobotStart, yRoboStart, playerSpeed, true, true}
+		newRobot := &Player{RobotImage, xRobotStart, yRoboStart, playerSpeed, true, true, RobotPlayer}
 		Robots = append(Robots, newRobot)
 	}
 
@@ -119,7 +109,7 @@ func init() {
 }
 
 // CheckHeroBoundary - Ensures the players stay within the game grid
-func CheckHeroBoundary(HeroPlayer *Hero) {
+func CheckHeroBoundary(HeroPlayer *Player) {
 	// Check if sprite goes off the left or right edge
 	if HeroPlayer.xPos < 0 {
 		HeroPlayer.xPos = 0
@@ -136,34 +126,16 @@ func CheckHeroBoundary(HeroPlayer *Hero) {
 
 }
 
-// SpritesCollision - Are the sprites colliding?
-// func SpritesCollision[P1, P2 Player](Player1 P1, Player2 P2) bool {
-
-	
-
-// 	return false
-
-// }
-
-// AreSpritesColliding - Are the sprites colliding
-func AreSpritesColliding(HeroPlayer *Hero, RobotPlayer *Robot) bool {
-	return HeroPlayer.xPos < RobotPlayer.xPos+float64(RobotPlayer.image.Bounds().Dx()) &&
-		HeroPlayer.xPos+float64(HeroPlayer.image.Bounds().Dx()) > RobotPlayer.xPos &&
-		HeroPlayer.yPos < RobotPlayer.yPos+float64(RobotPlayer.image.Bounds().Dy()) &&
-		HeroPlayer.yPos+float64(HeroPlayer.image.Bounds().Dy()) > RobotPlayer.yPos
-}
-
-// AreRobotsColliding - Are Robots colliding?
-func AreRobotsColliding(Robot1, Robot2 *Robot) bool {
-	// Check for bounding box collision
-	return Robot1.xPos < Robot2.xPos+float64(Robot2.image.Bounds().Dx()) &&
-		Robot1.xPos+float64(Robot1.image.Bounds().Dx()) > Robot2.xPos &&
-		Robot1.yPos < Robot2.yPos+float64(Robot2.image.Bounds().Dy()) &&
-		Robot1.yPos+float64(Robot1.image.Bounds().Dy()) > Robot2.yPos
+// ArePlayersColliding - Are the two sprites colliding?
+func ArePlayersColliding(Player1, Player2 *Player) bool {
+	return Player1.xPos < Player2.xPos+float64(Player2.image.Bounds().Dx()) &&
+		Player1.xPos+float64(Player1.image.Bounds().Dx()) > Player2.xPos &&
+		Player1.yPos < Player2.yPos+float64(Player2.image.Bounds().Dy()) &&
+		Player1.yPos+float64(Player1.image.Bounds().Dy()) > Player2.yPos
 }
 
 // TeleportHero - Teleports the hero to a random place on the game grid
-func TeleportHero(HeroPlayer *Hero) {
+func TeleportHero(HeroPlayer *Player) {
 	HeroPlayer.active = false
 	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition()
 	HeroPlayer.xPos = xHeroTeleport
@@ -171,7 +143,7 @@ func TeleportHero(HeroPlayer *Hero) {
 }
 
 // MoveHero - Moves the hero around the grid
-func MoveHero(HeroPlayer *Hero) {
+func MoveHero(HeroPlayer *Player) {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		HeroPlayer.yPos -= HeroPlayer.speed
 
@@ -217,7 +189,7 @@ func MoveHero(HeroPlayer *Hero) {
 }
 
 // MoveRobot - Moves the robot to chase the player
-func MoveRobot(HeroPlayer *Hero, RobotPlayer []*Robot) {
+func MoveRobot(HeroPlayer *Player, RobotPlayer []*Player) {
 	for index := range Robots {
 
 		// Only move the robot if they are alive
@@ -256,10 +228,10 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 	return rand.Float64() * maxX, rand.Float64() * maxY
 }
 
-func CheckHeroCollision(HeroPlayer *Hero) bool {
+func CheckHeroCollision(HeroPlayer *Player) bool {
 	// Check for collisions among sprites
 	for index := range Robots {
-		if AreSpritesColliding(HeroPlayer, Robots[index]) {
+		if ArePlayersColliding(HeroPlayer, Robots[index]) {
 			HeroPlayer.isAlive = false
 			return true
 		} else {
@@ -275,7 +247,7 @@ func CheckRobotsCollision() {
 	for i := 0; i < len(Robots); i++ {
 		for j := i + 1; j < len(Robots); j++ {
 			// e.g., perform actions like removing sprites, triggering events, etc.
-			if AreRobotsColliding(Robots[i], Robots[j]) {
+			if ArePlayersColliding(Robots[i], Robots[j]) {
 				// Handle collision between sprites[i] and sprites[j]
 				Robots[i].isAlive = false
 				Robots[j].isAlive = false
