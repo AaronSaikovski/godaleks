@@ -24,6 +24,8 @@ const (
 	playerSpeed  = 0.5
 	startRobots  = 5
 
+	highScore = 0
+
 	// Define our player types
 	HumanPlayer PlayerType = "Human"
 	RobotPlayer PlayerType = "Robot"
@@ -97,7 +99,14 @@ func StartNewGame() {
 func (g *Game) Reset() {
 
 	// Clear the screen with a white color again after the reset
-	ebiten.SetScreenTransparent(false)
+	//ebiten.SetScreenTransparent(false)
+
+	//taken fom https://github.com/hajimehoshi/ebiten/commit/8e5ae8873878a32e27e0c87fb6b3fb9c7e0d4c0a
+	op := &ebiten.RunGameOptions{}
+	op.ScreenTransparent = false
+	// if err := ebiten.RunGameWithOptions(g{}, op); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	g.isGameOver = false
 	StartNewGame()
