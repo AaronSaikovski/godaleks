@@ -35,6 +35,15 @@ var (
 	GameEnded bool
 )
 
+// Players - Players interface
+// type Player interface {
+// 	Hero | Robot
+// }
+
+// type Ptr[P Player] interface {
+// 	*P
+// }
+
 // Game - Game struct
 type Game struct {
 	isGameOver bool
@@ -127,6 +136,15 @@ func CheckHeroBoundary(HeroPlayer *Hero) {
 
 }
 
+// SpritesCollision - Are the sprites colliding?
+// func SpritesCollision[P1, P2 Player](Player1 P1, Player2 P2) bool {
+
+	
+
+// 	return false
+
+// }
+
 // AreSpritesColliding - Are the sprites colliding
 func AreSpritesColliding(HeroPlayer *Hero, RobotPlayer *Robot) bool {
 	return HeroPlayer.xPos < RobotPlayer.xPos+float64(RobotPlayer.image.Bounds().Dx()) &&
@@ -201,17 +219,23 @@ func MoveHero(HeroPlayer *Hero) {
 // MoveRobot - Moves the robot to chase the player
 func MoveRobot(HeroPlayer *Hero, RobotPlayer []*Robot) {
 	for index := range Robots {
-		if RobotPlayer[index].xPos < HeroPlayer.xPos {
-			RobotPlayer[index].xPos += RobotPlayer[index].speed
-		} else {
-			RobotPlayer[index].xPos -= RobotPlayer[index].speed
+
+		// Only move the robot if they are alive
+		if RobotPlayer[index].isAlive {
+			if RobotPlayer[index].xPos < HeroPlayer.xPos {
+				RobotPlayer[index].xPos += RobotPlayer[index].speed
+			} else {
+				RobotPlayer[index].xPos -= RobotPlayer[index].speed
+			}
+
+			if RobotPlayer[index].yPos < HeroPlayer.yPos {
+				RobotPlayer[index].yPos += RobotPlayer[index].speed
+			} else {
+				RobotPlayer[index].yPos -= RobotPlayer[index].speed
+			}
+
 		}
 
-		if RobotPlayer[index].yPos < HeroPlayer.yPos {
-			RobotPlayer[index].yPos += RobotPlayer[index].speed
-		} else {
-			RobotPlayer[index].yPos -= RobotPlayer[index].speed
-		}
 	}
 
 }
@@ -236,12 +260,29 @@ func CheckHeroCollision(HeroPlayer *Hero) bool {
 	// Check for collisions among sprites
 	for index := range Robots {
 		if AreSpritesColliding(HeroPlayer, Robots[index]) {
+			HeroPlayer.isAlive = false
 			return true
 		} else {
+			HeroPlayer.isAlive = true
 			return false
 		}
 	}
 	return false
+}
+
+// CheckRobotsCollision - Check if the Robots are colliding with each other
+func CheckRobotsCollision() {
+	for i := 0; i < len(Robots); i++ {
+		for j := i + 1; j < len(Robots); j++ {
+			// e.g., perform actions like removing sprites, triggering events, etc.
+			if AreRobotsColliding(Robots[i], Robots[j]) {
+				// Handle collision between sprites[i] and sprites[j]
+				Robots[i].isAlive = false
+				Robots[j].isAlive = false
+			}
+		}
+	}
+
 }
 
 // Update proceeds the game state.
@@ -254,26 +295,24 @@ func (g *Game) Update() error {
 
 		// check if we have a collision between the player and a robot
 		if CheckHeroCollision(&HeroPlayer) {
+			fmt.Print("player collision")
+			HeroPlayer.isAlive = false
 			g.isGameOver = true
 		} else {
 			g.isGameOver = false
+			HeroPlayer.isAlive = true
 		}
 
 		// Move the hero
-		MoveHero(&HeroPlayer)
+		if HeroPlayer.isAlive {
+			MoveHero(&HeroPlayer)
+		}
+
 	}
 
-	//WIP
 	// Check if Robots are colliding
-	for i := 0; i < len(Robots); i++ {
-		for j := i + 1; j < len(Robots); j++ {
-			// e.g., perform actions like removing sprites, triggering events, etc.
-			if AreRobotsColliding(Robots[i], Robots[j]) {
-				// Handle collision between sprites[i] and sprites[j]
-				fmt.Print("Robots colliding!")
-			}
-		}
-	}
+	CheckRobotsCollision()
+
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
 		g.Reset()
@@ -316,9 +355,18 @@ func DrawRobot(screen *ebiten.Image) {
 
 	//Setup the Robots slice
 	for index := range Robots {
+
 		robotOp := &ebiten.DrawImageOptions{}
 		robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
 		screen.DrawImage(Robots[index].image, robotOp)
+
+		// Only draw the robot if they are alive
+		// if Robots[index].isAlive {
+		// 	robotOp := &ebiten.DrawImageOptions{}
+		// 	robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
+		// 	screen.DrawImage(Robots[index].image, robotOp)
+		// }
+
 	}
 }
 
