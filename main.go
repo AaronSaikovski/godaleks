@@ -228,29 +228,27 @@ func randomPlayerStartPosition() (xPos, yPos float64) {
 	return rand.Float64() * maxX, rand.Float64() * maxY
 }
 
-func CheckHeroCollision(HeroPlayer *Player) bool {
+func CheckHeroCollision(HeroPlayer *Player) {
 	// Check for collisions among sprites
 	for index := range Robots {
 		if ArePlayersColliding(HeroPlayer, Robots[index]) {
 			HeroPlayer.isAlive = false
-			return true
-		} else {
-			HeroPlayer.isAlive = true
-			return false
+			//fmt.Print("Hero is dead - collision")
+
 		}
 	}
-	return false
 }
 
 // CheckRobotsCollision - Check if the Robots are colliding with each other
-func CheckRobotsCollision() {
-	for i := 0; i < len(Robots); i++ {
-		for j := i + 1; j < len(Robots); j++ {
+func CheckRobotsCollision(RobotPlayer []*Player) {
+	for i := 0; i < len(RobotPlayer); i++ {
+		for j := i + 1; j < len(RobotPlayer); j++ {
 			// e.g., perform actions like removing sprites, triggering events, etc.
-			if ArePlayersColliding(Robots[i], Robots[j]) {
+			if ArePlayersColliding(RobotPlayer[i], RobotPlayer[j]) {
 				// Handle collision between sprites[i] and sprites[j]
-				Robots[i].isAlive = false
+				RobotPlayer[i].isAlive = false
 				Robots[j].isAlive = false
+				//fmt.Print("Robot collision")
 			}
 		}
 	}
@@ -261,29 +259,25 @@ func CheckRobotsCollision() {
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
 
-	if !g.isGameOver {
-		//Ensure the Hero doesnt go off the game
-		CheckHeroBoundary(&HeroPlayer)
-
-		// check if we have a collision between the player and a robot
-		if CheckHeroCollision(&HeroPlayer) {
-			fmt.Print("player collision")
-			HeroPlayer.isAlive = false
-			g.isGameOver = true
-		} else {
-			g.isGameOver = false
-			HeroPlayer.isAlive = true
-		}
-
-		// Move the hero
-		if HeroPlayer.isAlive {
-			MoveHero(&HeroPlayer)
-		}
-
-	}
+	//Ensure the Hero doesnt go off the game
+	CheckHeroBoundary(&HeroPlayer)
 
 	// Check if Robots are colliding
-	CheckRobotsCollision()
+	CheckRobotsCollision(Robots)
+
+	// check if we have a collision between the player and a robot
+	CheckHeroCollision(&HeroPlayer)
+
+	if !HeroPlayer.isAlive {
+		g.isGameOver = true
+	} else {
+		g.isGameOver = false
+	}
+
+	// Move the hero..only if alive!
+	if HeroPlayer.isAlive && !g.isGameOver {
+		MoveHero(&HeroPlayer)
+	}
 
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
