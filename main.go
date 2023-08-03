@@ -6,7 +6,6 @@ import (
 	_ "image/png"
 	"log"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -92,7 +91,8 @@ func StartNewGame() {
 
 	//Setup the Robots slice and add image and add random position
 	for i := 0; i < startRobots; i++ {
-		strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
+		//strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
+		strRobotImg := "./assets/images/robot.png"
 		RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
 		if err != nil {
 			log.Fatal(err)
