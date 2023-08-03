@@ -39,11 +39,14 @@ var (
 
 	GameScore int
 	GameEnded bool
+
+	CurrentGameLevel int = 1
 )
 
 // Game - Game struct
 type Game struct {
-	isGameOver bool
+	isGameOver      bool
+	isLevelComplete bool
 }
 
 // Player - Player struct
@@ -252,6 +255,7 @@ func randomPlayerStartPosition(Player *Player) (xPos, yPos float64) {
 	return rand.Float64() * maxX, rand.Float64() * maxY
 }
 
+// CheckHeroCollision - Checks if the hero has collided with a robot
 func CheckHeroCollision(HeroPlayer *Player) {
 	// Check for collisions among sprites
 	for index := range Robots {
@@ -292,6 +296,7 @@ func (g *Game) Update() error {
 	// check if we have a collision between the player and a robot
 	CheckHeroCollision(&HeroPlayer)
 
+	// Is Hero alive?
 	if !HeroPlayer.isAlive {
 		g.isGameOver = true
 	} else {
@@ -309,27 +314,6 @@ func (g *Game) Update() error {
 		StartNewGame()
 	}
 
-	// if ebiten.IsKeyPressed(ebiten.KeyUp) {
-	// 	HeroPlayer.yPos -= HeroPlayer.speed
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyDown) {
-	// 	HeroPlayer.yPos += HeroPlayer.speed
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-	// 	HeroPlayer.xPos -= HeroPlayer.speed
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyRight) {
-	// 	HeroPlayer.xPos += HeroPlayer.speed
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyL) {
-	// 	fmt.Print("L pressed")
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyS) {
-	// 	fmt.Print("S pressed")
-	// }
-	// if ebiten.IsKeyPressed(ebiten.KeyT) {
-	// 	fmt.Print("T pressed")
-	// }
 	return nil
 }
 
@@ -362,7 +346,7 @@ func DrawRobot(screen *ebiten.Image) {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 
-	//set background
+	// set background
 	screen.Fill(color.RGBA{255, 255, 255, 0})
 
 	// Draw our hero
@@ -373,10 +357,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 }
 
+// Layout - Set layout
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
+// main - Main function
 func main() {
 	game := &Game{}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
