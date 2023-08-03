@@ -11,6 +11,11 @@ TARGET = gorobots
 help:
 	@cat Makefile | grep '^## ' --color=never | cut -c4- | sed -e "`printf 's/ - /\t- /;'`" | column -s "`printf '\t'`" -t
 
+## localrelease -  Builds the project in preparation for (local)release
+localrelease:
+	go build $(GOFLAGS) -o bin/${TARGET} main.go
+	file bin/${TARGET}
+
 ## release - Builds the project in preparation for release
 release:
 	goreleaser release --snapshot --clean
