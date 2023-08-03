@@ -19,8 +19,6 @@ type PlayerType string
 const (
 	screenWidth  = 800
 	screenHeight = 600
-	spriteWidth  = 32
-	spriteHeight = 32
 	playerSpeed  = 0.5
 	startRobots  = 5
 
@@ -59,6 +57,16 @@ type Player struct {
 	PlayerType PlayerType
 }
 
+// GetPlayerImageWidth - Returns the Player Image width
+func (P *Player) GetPlayerImageWidth() int {
+	return P.image.Bounds().Dx()
+}
+
+// GetPlayerImageWidth - Returns the Player Image width
+func (P *Player) GetPlayerImageHeight() int {
+	return P.image.Bounds().Dy()
+}
+
 // StartNewGame - Starts a new game and resets everything
 func StartNewGame() {
 
@@ -76,11 +84,13 @@ func StartNewGame() {
 		log.Fatal(err)
 	}
 
-	// Start the hero in a random starting position
-	xHeroStart, yHeroStart := randomPlayerStartPosition()
-	HeroPlayer = Player{HeroImage, xHeroStart, yHeroStart, playerSpeed, true, true, HumanPlayer}
+	// Create a new hero and start the hero in a random starting position
+	HeroPlayer = Player{HeroImage, 0, 0, playerSpeed, true, true, HumanPlayer}
+	xHeroStart, yHeroStart := randomPlayerStartPosition(&HeroPlayer)
+	HeroPlayer.xPos = xHeroStart
+	HeroPlayer.yPos = yHeroStart
 
-	//Setup the Robots slice
+	//Setup the Robots slice and add image and add random position
 	for i := 0; i < startRobots; i++ {
 		strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
 		RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
@@ -88,8 +98,11 @@ func StartNewGame() {
 			log.Fatal(err)
 		}
 
-		xRobotStart, yRoboStart := randomPlayerStartPosition()
-		newRobot := &Player{RobotImage, xRobotStart, yRoboStart, playerSpeed, true, true, RobotPlayer}
+		// Create a new robot struct and set start pos
+		newRobot := &Player{RobotImage, 0, 0, playerSpeed, true, true, RobotPlayer}
+		xRobotStart, yRoboStart := randomPlayerStartPosition(newRobot)
+		newRobot.xPos = xRobotStart
+		newRobot.yPos = yRoboStart
 		Robots = append(Robots, newRobot)
 	}
 
@@ -121,33 +134,34 @@ func init() {
 // CheckHeroBoundary - Ensures the players stay within the game grid
 func CheckHeroBoundary(HeroPlayer *Player) {
 	// Check if sprite goes off the left or right edge
+
 	if HeroPlayer.xPos < 0 {
 		HeroPlayer.xPos = 0
-	} else if HeroPlayer.xPos > screenWidth-spriteWidth {
-		HeroPlayer.xPos = screenWidth - spriteWidth
+	} else if HeroPlayer.xPos > float64(screenWidth-HeroPlayer.GetPlayerImageWidth()) {
+		HeroPlayer.xPos = float64(screenWidth - HeroPlayer.GetPlayerImageWidth())
 	}
 
 	// Check if sprite goes off the top or bottom edge
 	if HeroPlayer.yPos < 0 {
 		HeroPlayer.yPos = 0
-	} else if HeroPlayer.yPos > screenHeight-spriteHeight {
-		HeroPlayer.yPos = screenHeight - spriteHeight
+	} else if HeroPlayer.yPos > float64(screenHeight-HeroPlayer.GetPlayerImageHeight()) {
+		HeroPlayer.yPos = float64(screenHeight - HeroPlayer.GetPlayerImageHeight())
 	}
 
 }
 
 // ArePlayersColliding - Are the two sprites colliding?
 func ArePlayersColliding(Player1, Player2 *Player) bool {
-	return Player1.xPos < Player2.xPos+float64(Player2.image.Bounds().Dx()) &&
-		Player1.xPos+float64(Player1.image.Bounds().Dx()) > Player2.xPos &&
-		Player1.yPos < Player2.yPos+float64(Player2.image.Bounds().Dy()) &&
-		Player1.yPos+float64(Player1.image.Bounds().Dy()) > Player2.yPos
+	return Player1.xPos < Player2.xPos+float64(Player2.GetPlayerImageWidth()) &&
+		Player1.xPos+float64(Player1.GetPlayerImageWidth()) > Player2.xPos &&
+		Player1.yPos < Player2.yPos+float64(Player2.GetPlayerImageHeight()) &&
+		Player1.yPos+float64(Player1.GetPlayerImageHeight()) > Player2.yPos
 }
 
 // TeleportHero - Teleports the hero to a random place on the game grid
 func TeleportHero(HeroPlayer *Player) {
 	HeroPlayer.active = false
-	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition()
+	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition(HeroPlayer)
 	HeroPlayer.xPos = xHeroTeleport
 	HeroPlayer.yPos = yHeroTeleport
 }
@@ -223,13 +237,13 @@ func MoveRobot(HeroPlayer *Player, RobotPlayer []*Player) {
 }
 
 // randomPlayerStartPosition - Places our player(s) in a random coordinate on the grid
-func randomPlayerStartPosition() (xPos, yPos float64) {
+func randomPlayerStartPosition(Player *Player) (xPos, yPos float64) {
 	// Retrieve the window size
 	windowWidth, windowHeight := ebiten.WindowSize()
 
 	// Calculate the maximum X and Y coordinates for the sprite to stay within the window
-	maxX := float64(windowWidth - spriteWidth)
-	maxY := float64(windowHeight - spriteHeight)
+	maxX := float64(windowWidth - Player.GetPlayerImageWidth())
+	maxY := float64(windowHeight - Player.GetPlayerImageHeight())
 
 	//seed the randomiser
 	rand.New(rand.NewSource(time.Now().UnixNano()))
