@@ -21,8 +21,6 @@ const (
 	playerSpeed  = 0.5
 	startRobots  = 5
 
-	highScore = 0
-
 	// Define our player types
 	HumanPlayer PlayerType = "Human"
 	RobotPlayer PlayerType = "Robot"
@@ -41,12 +39,14 @@ var (
 	GameEnded bool
 
 	CurrentGameLevel int = 1
+	HighScore            = 0
 )
 
 // Game - Game struct
 type Game struct {
 	isGameOver      bool
 	isLevelComplete bool
+	Laststand       bool
 }
 
 // Player - Player struct
@@ -79,6 +79,7 @@ func StartNewGame() {
 	HeroPlayer = Player{}
 	RobotImage = nil
 	Robots = nil
+	HighScore = 0
 
 	var err error
 	HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
@@ -155,6 +156,7 @@ func CheckHeroBoundary(HeroPlayer *Player) {
 
 // ArePlayersColliding - Are the two sprites colliding?
 func ArePlayersColliding(Player1, Player2 *Player) bool {
+
 	return Player1.xPos < Player2.xPos+float64(Player2.GetPlayerImageWidth()) &&
 		Player1.xPos+float64(Player1.GetPlayerImageWidth()) > Player2.xPos &&
 		Player1.yPos < Player2.yPos+float64(Player2.GetPlayerImageHeight()) &&
@@ -167,6 +169,37 @@ func TeleportHero(HeroPlayer *Player) {
 	xHeroTeleport, yHeroTeleport := randomPlayerStartPosition(HeroPlayer)
 	HeroPlayer.xPos = xHeroTeleport
 	HeroPlayer.yPos = yHeroTeleport
+}
+
+// LastStand - Laststand
+func LastStand(HeroPlayer *Player) {
+
+	// // Create an instance of your game
+	// game := &Game{}
+
+	MoveRobot(HeroPlayer, Robots)
+
+	// // Manually call the Update function
+	// err := game.Update()
+
+	// if err != nil {
+	// 	// Handle error if any
+	// 	// ...
+	// }
+
+	// for {
+
+	// 	fmt.Print("Last stand")
+	// 	//Move the Robots
+	// 	MoveRobot(HeroPlayer, Robots)
+
+	// 	time.Sleep(2 * time.Second)
+
+	// 	// Exit condition
+	// 	if !HeroPlayer.isAlive {
+	// 		break
+	// 	}
+	// }
 }
 
 // MoveHero - Moves the hero around the grid
@@ -195,10 +228,12 @@ func MoveHero(HeroPlayer *Player) {
 		//Move the Robot
 		MoveRobot(HeroPlayer, Robots)
 	}
-	//Laststand
-	if ebiten.IsKeyPressed(ebiten.KeyL) {
-		fmt.Print("L pressed")
-	}
+	// //Laststand
+	// if ebiten.IsKeyPressed(ebiten.KeyL) {
+	// 	LastStand(HeroPlayer)
+	// 	HeroPlayer.active = false
+	// 	//fmt.Print("L pressed")
+	// }
 	//Sonic screwdriver
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
 		fmt.Print("S pressed")
@@ -213,6 +248,27 @@ func MoveHero(HeroPlayer *Player) {
 	// 	fmt.Print("Newgame")
 	// 	StartNewGame()
 	// }
+}
+
+// CheckAllRobotsDead - Checks if all robots in the slice are alive
+func CheckAllRobotsAlive(RobotPlayer []*Player) bool {
+
+	//Get the robots in the slice
+	var robotAliveVal int = len(RobotPlayer)
+
+	// Loop over the robot players
+	for index, _ := range RobotPlayer {
+		if RobotPlayer[index].isAlive {
+			return true
+		} else if !RobotPlayer[index].isAlive {
+			robotAliveVal -= 1
+			if robotAliveVal == 0 {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // MoveRobot - Moves the robot to chase the player
@@ -275,8 +331,11 @@ func CheckRobotsCollision(RobotPlayer []*Player) {
 			if ArePlayersColliding(RobotPlayer[i], RobotPlayer[j]) {
 				// Handle collision between sprites[i] and sprites[j]
 				RobotPlayer[i].isAlive = false
-				Robots[j].isAlive = false
-				//fmt.Print("Robot collision")
+				HighScore += 10
+
+				RobotPlayer[j].isAlive = false
+				HighScore += 10
+
 			}
 		}
 	}
@@ -287,11 +346,37 @@ func CheckRobotsCollision(RobotPlayer []*Player) {
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
 
+	//Laststand
+	if ebiten.IsKeyPressed(ebiten.KeyL) {
+		g.Laststand = true
+		LastStand(&HeroPlayer)
+		HeroPlayer.active = false
+
+		// for {
+
+		// 	fmt.Print("Last stand")
+		// 	//Move the Robots
+		// 	go MoveRobot(&HeroPlayer, Robots)
+
+		// 	// Exit condition
+		// 	if !HeroPlayer.isAlive {
+		// 		break
+		// 	}
+		// }
+	}
+
 	//Ensure the Hero doesnt go off the game
 	CheckHeroBoundary(&HeroPlayer)
 
 	// Check if Robots are colliding
 	CheckRobotsCollision(Robots)
+
+	//Check if robots are all alive
+	if !CheckAllRobotsAlive(Robots) {
+		g.isGameOver = true
+	} else {
+		g.isGameOver = false
+	}
 
 	// check if we have a collision between the player and a robot
 	CheckHeroCollision(&HeroPlayer)
@@ -304,7 +389,7 @@ func (g *Game) Update() error {
 	}
 
 	// Move the hero..only if alive!
-	if HeroPlayer.isAlive && !g.isGameOver {
+	if HeroPlayer.isAlive || !g.isGameOver || !g.Laststand {
 		MoveHero(&HeroPlayer)
 	}
 
@@ -313,6 +398,8 @@ func (g *Game) Update() error {
 		g.Reset()
 		StartNewGame()
 	}
+
+	//S
 
 	return nil
 }
