@@ -8,13 +8,14 @@ import (
 
 // Player - Player struct
 type Player struct {
-	image      *ebiten.Image
-	xPos, yPos float64
-	speed      float64
-	isAlive    bool
-	active     bool
-	PlayerType PlayerType
-	NewGame    bool
+	image         *ebiten.Image
+	xPos, yPos    float64
+	speed         float64
+	isAlive       bool
+	active        bool
+	PlayerType    PlayerType
+	NewGame       bool
+	isTeleporting bool
 }
 
 // GetPlayerImageWidth - Returns the Player Image width
@@ -30,24 +31,28 @@ func (P *Player) GetPlayerImageHeight() int {
 // Move - Moves the hero around the grid
 func (Player *Player) Move() {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		Player.isTeleporting = false
 		Player.yPos -= Player.speed
 
 		//Move the Robot
 		MoveRobot(Player, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
+		Player.isTeleporting = false
 		Player.yPos += Player.speed
 
 		//Move the Robot
 		MoveRobot(Player, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+		Player.isTeleporting = false
 		Player.xPos -= Player.speed
 
 		//Move the Robot
 		MoveRobot(Player, Robots)
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
+		Player.isTeleporting = false
 		Player.xPos += Player.speed
 
 		//Move the Robot
@@ -61,16 +66,19 @@ func (Player *Player) Move() {
 	// }
 	//Sonic screwdriver
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		Player.isTeleporting = false
 		fmt.Print("S pressed")
 	}
 	//Teleport
 	if ebiten.IsKeyPressed(ebiten.KeyT) {
 		//TeleportHero(HeroPlayer)
-		Player.Teleport()
-		Player.active = true
+		//Player.Teleport()
+		//Player.active = true
+		Player.isTeleporting = true
 	}
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {
+		Player.isTeleporting = false
 		Player.NewGame = true
 		//fmt.Print("Newgame")
 	}
@@ -109,31 +117,15 @@ func (Player *Player) DrawHero(screen *ebiten.Image) {
 }
 
 // Teleport - Teleports the hero to a random place on the game grid
-func (Player *Player) Teleport() {
-	HeroPlayer.active = false
-	xHeroTeleport, yHeroTeleport := RandomPlayerStartPosition(Player)
-	Player.xPos = xHeroTeleport
-	Player.yPos = yHeroTeleport
-}
+// func (Player *Player) Teleport() {
+// 	//Player.active = false
+// 	Player.isTeleporting = true
+// 	// xHeroTeleport, yHeroTeleport := RandomPlayerStartPosition(Player)
+// 	// Player.xPos = xHeroTeleport
+// 	// Player.yPos = yHeroTeleport
 
-// CheckPlayerBoundary - Ensures the players stay within the game grid
-func CheckPlayerBoundary(Player *Player) {
-	// Check if sprite goes off the left or right edge
-
-	if Player.xPos < 0 {
-		Player.xPos = 0
-	} else if Player.xPos > float64(ScreenWidth-Player.GetPlayerImageWidth()) {
-		Player.xPos = float64(ScreenWidth - Player.GetPlayerImageWidth())
-	}
-
-	// Check if sprite goes off the top or bottom edge
-	if Player.yPos < 0 {
-		Player.yPos = 0
-	} else if Player.yPos > float64(ScreenHeight-Player.GetPlayerImageHeight()) {
-		Player.yPos = float64(ScreenHeight - Player.GetPlayerImageHeight())
-	}
-
-}
+// 	//Player.image.Clear()
+// }
 
 // DrawRobots - Draws a robot player(s)
 func (Player *Player) DrawRobots(screen *ebiten.Image, Robots []*Player) {

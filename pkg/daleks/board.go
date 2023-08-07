@@ -44,14 +44,16 @@ func (b *Board) placeHero() {
 	}
 
 	// Create a new hero and start the hero in a random starting position
-	HeroPlayer = Player{HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false}
+	HeroPlayer = Player{HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false, false}
 	xHeroStart, yHeroStart := RandomPlayerStartPosition(&HeroPlayer)
 	HeroPlayer.xPos = xHeroStart
 	HeroPlayer.yPos = yHeroStart
+	HeroPlayer.isTeleporting = false
 	b.player = &HeroPlayer
 
 }
 
+// placeRobots - Place the robots on the board
 func (b *Board) placeRobots() {
 	//Setup the Robots slice and add image and add random position
 	for i := 0; i < StartRobots; i++ {
@@ -63,7 +65,7 @@ func (b *Board) placeRobots() {
 		}
 
 		// Create a new robot struct and set start pos
-		newRobot := &Player{RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer, false}
+		newRobot := &Player{RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer, false, false}
 		xRobotStart, yRoboStart := RandomPlayerStartPosition(newRobot)
 		newRobot.xPos = xRobotStart
 		newRobot.yPos = yRoboStart
@@ -152,6 +154,18 @@ func (b *Board) Update(input *Input) error {
 
 	// Ensure the Hero doesnt go off the game
 	CheckPlayerBoundary(&HeroPlayer)
+
+	//Teleport our here
+	if HeroPlayer.isTeleporting {
+		HeroPlayer.image.Clear()
+
+		//delay redraw
+		time.Sleep(2 * time.Second)
+
+		//redraw the hero
+		HeroPlayer.isTeleporting = false
+		b.placeHero()
+	}
 
 	// Check if Robots are colliding
 	CheckRobotsCollision(Robots)

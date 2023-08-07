@@ -1,5 +1,24 @@
 package daleks
 
+// CheckPlayerBoundary - Ensures the players stay within the game grid
+func CheckPlayerBoundary(Player *Player) {
+	// Check if sprite goes off the left or right edge
+
+	if Player.xPos < 0 {
+		Player.xPos = 0
+	} else if Player.xPos > float64(ScreenWidth-Player.GetPlayerImageWidth()) {
+		Player.xPos = float64(ScreenWidth - Player.GetPlayerImageWidth())
+	}
+
+	// Check if sprite goes off the top or bottom edge
+	if Player.yPos < 0 {
+		Player.yPos = 0
+	} else if Player.yPos > float64(ScreenHeight-Player.GetPlayerImageHeight()) {
+		Player.yPos = float64(ScreenHeight - Player.GetPlayerImageHeight())
+	}
+
+}
+
 // ArePlayersColliding - Are the two sprites colliding?
 func ArePlayersColliding(Player1, Player2 *Player) bool {
 
