@@ -1,6 +1,6 @@
 module github.com/AaronSaikovski/gostarter
 
-go 1.20
+go 1.21
 
 require (
 	github.com/hajimehoshi/ebiten v1.12.12
