@@ -28,6 +28,7 @@ func (i *Input) Update() (ebiten.Key, bool) {
 		return ebiten.KeyN, true
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+		//fmt.Print("T pressed")
 		return ebiten.KeyT, true
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {

@@ -87,7 +87,9 @@ func (Player *Player) Move() {
 		//TeleportHero(HeroPlayer)
 		//Player.Teleport()
 		//Player.active = true
+		//fmt.Print("T pressed")
 		Player.isTeleporting = true
+
 	}
 	// New game
 	if ebiten.IsKeyPressed(ebiten.KeyN) {

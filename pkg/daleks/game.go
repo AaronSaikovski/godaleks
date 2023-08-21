@@ -31,8 +31,8 @@ var (
 	err             error
 	HeroImage       *ebiten.Image
 	RobotImage      *ebiten.Image
-	HeroPlayer Player
-	Robots     []*Player
+	HeroPlayer      Player
+	Robots          []*Player
 )
 
 // Game - Game struct
