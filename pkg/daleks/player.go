@@ -12,10 +12,23 @@ type Player struct {
 	xPos, yPos    float64
 	speed         float64
 	isAlive       bool
-	active        bool
+	isActive      bool
 	PlayerType    PlayerType
 	NewGame       bool
 	isTeleporting bool
+}
+
+// NewPlayer - Creates a new player object
+func NewPlayer(image *ebiten.Image, xPos, yPos, speed float64, isAlive, isActive bool, PlayerType PlayerType, NewGame, isTeleporting bool) *Player {
+	return &Player{image,
+		xPos,
+		yPos,
+		speed,
+		isAlive,
+		isActive,
+		PlayerType,
+		NewGame,
+		isTeleporting}
 }
 
 // GetPlayerImageWidth - Returns the Player Image width
@@ -108,9 +121,8 @@ func MoveRobot(HeroPlayer *Player, RobotPlayer []*Player) {
 
 }
 
-// DrawHero - Draws our Hero
-func (Player *Player) DrawHero(screen *ebiten.Image) {
-
+// Draw - Draws our Player
+func (Player *Player) Draw(screen *ebiten.Image) {
 	playerOp := &ebiten.DrawImageOptions{}
 	playerOp.GeoM.Translate(Player.xPos, Player.yPos)
 	screen.DrawImage(Player.image, playerOp)
@@ -127,22 +139,22 @@ func (Player *Player) DrawHero(screen *ebiten.Image) {
 // 	//Player.image.Clear()
 // }
 
-// DrawRobots - Draws a robot player(s)
-func (Player *Player) DrawRobots(screen *ebiten.Image, Robots []*Player) {
+// // DrawRobots - Draws a robot player(s)
+// func (Player *Player) DrawRobots(screen *ebiten.Image, Robots []*Player) {
 
-	//Setup the Robots slice
-	for index := range Robots {
+// 	//Setup the Robots slice
+// 	for index := range Robots {
 
-		robotOp := &ebiten.DrawImageOptions{}
-		robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
-		screen.DrawImage(Robots[index].image, robotOp)
+// 		robotOp := &ebiten.DrawImageOptions{}
+// 		robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
+// 		screen.DrawImage(Robots[index].image, robotOp)
 
-		// Only draw the robot if they are alive
-		// if Robots[index].isAlive {
-		// 	robotOp := &ebiten.DrawImageOptions{}
-		// 	robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
-		// 	screen.DrawImage(Robots[index].image, robotOp)
-		// }
+// 		// Only draw the robot if they are alive
+// 		// if Robots[index].isAlive {
+// 		// 	robotOp := &ebiten.DrawImageOptions{}
+// 		// 	robotOp.GeoM.Translate(Robots[index].xPos, Robots[index].yPos)
+// 		// 	screen.DrawImage(Robots[index].image, robotOp)
+// 		// }
 
-	}
-}
+// 	}
+// }

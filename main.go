@@ -10,7 +10,10 @@ import (
 // main - Main function
 func main() {
 
-	game := daleks.NewGame()
+	game, err := daleks.NewGame()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ebiten.SetWindowSize(daleks.ScreenWidth, daleks.ScreenHeight)
 	ebiten.SetWindowTitle("GoRobots")

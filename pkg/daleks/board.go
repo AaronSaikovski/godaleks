@@ -12,15 +12,15 @@ import (
 type Board struct {
 	//rows     int
 	//cols     int
-	player    *Player
+	theDoctor *Player
 	robots    []*Player
 	points    int
 	gameOver  bool
-	lastStand bool
-	timer     time.Time
+	//lastStand bool
+	timer time.Time
 }
 
-func NewBoard() *Board {
+func NewBoard() (*Board, error) {
 	//rand.Seed(time.Now().UnixNano())
 	//r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -28,33 +28,39 @@ func NewBoard() *Board {
 		timer: time.Now(),
 	}
 	// Place our hero
-	board.placeHero()
+	board.PositionHero()
 
 	//Place the robots
-	board.placeRobots()
+	board.PositionRobots()
 
-	return board
+	return board, nil
 }
 
-// placeHero - Puts our hero randomly on the board
-func (b *Board) placeHero() {
+// PositionHero - Puts our hero randomly on the board
+func (b *Board) PositionHero() {
+
+	// if theDoctor.isTeleporting {
+	// 	HeroImage = nil
+	// 	HeroPlayer = Player{}
+	// 	b.player = nil
+	// }
+
 	HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Create a new hero and start the hero in a random starting position
-	HeroPlayer = Player{HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false, false}
-	xHeroStart, yHeroStart := RandomPlayerStartPosition(&HeroPlayer)
-	HeroPlayer.xPos = xHeroStart
-	HeroPlayer.yPos = yHeroStart
-	HeroPlayer.isTeleporting = false
-	b.player = &HeroPlayer
+	b.theDoctor = NewPlayer(HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false, false)
+	xHeroStart, yHeroStart := randomPlayerStartPosition(b.theDoctor)
+	b.theDoctor.xPos = xHeroStart
+	b.theDoctor.yPos = yHeroStart
+	b.theDoctor.isTeleporting = false
 
 }
 
-// placeRobots - Place the robots on the board
-func (b *Board) placeRobots() {
+// PositionRobots - Place the robots on the board
+func (b *Board) PositionRobots() {
 	//Setup the Robots slice and add image and add random position
 	for i := 0; i < StartRobots; i++ {
 		//strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
@@ -65,8 +71,8 @@ func (b *Board) placeRobots() {
 		}
 
 		// Create a new robot struct and set start pos
-		newRobot := &Player{RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer, false, false}
-		xRobotStart, yRoboStart := RandomPlayerStartPosition(newRobot)
+		newRobot := NewPlayer(RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer, false, false)
+		xRobotStart, yRoboStart := randomPlayerStartPosition(newRobot)
 		newRobot.xPos = xRobotStart
 		newRobot.yPos = yRoboStart
 		Robots = append(Robots, newRobot)
@@ -74,133 +80,45 @@ func (b *Board) placeRobots() {
 	}
 }
 
-// Reset - Resets the game
-func (b *Board) Reset() {
-
-	// Clear the screen with a white color again after the reset
-	//ebiten.SetScreenTransparent(false)
-
-	//taken fom https://github.com/hajimehoshi/ebiten/commit/8e5ae8873878a32e27e0c87fb6b3fb9c7e0d4c0a
-	// and https://github.com/hajimehoshi/ebiten/issues/2378
-	// op := &ebiten.RunGameOptions{}
-	// op.ScreenTransparent = false
-	// if err := ebiten.RunGameWithOptions(g{}, op); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	//b.gameOver = false
-	//b.StartNewGame()
-}
-
-// StartNewGame - Starts a new game and resets everything
-func (b *Board) StartNewGame() {
-
-	// Reset everything
-	b.gameOver = false
-	b.points = 0
-
-	// Clear the screen with a white color again after the reset
-	//ebiten.SetScreenTransparent(false)
-
-	// Place our hero
-	//b.placeHero()
-
-	//Place the robots
-	//b.placeRobots()
-
-	// GameScore = 0
-	// GameEnded = false
-	// HeroImage = nil
-	// HeroPlayer = Player{}
-	// RobotImage = nil
-	// Robots = nil
-	// HighScore = 0
-
-	// var err error
-	// HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// // Create a new hero and start the hero in a random starting position
-	// HeroPlayer = Player{HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer}
-	// xHeroStart, yHeroStart := RandomPlayerStartPosition(&HeroPlayer)
-	// HeroPlayer.xPos = xHeroStart
-	// HeroPlayer.yPos = yHeroStart
-
-	// //Setup the Robots slice and add image and add random position
-	// for i := 0; i < StartRobots; i++ {
-	// 	//strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
-	// 	strRobotImg := "./assets/images/robot.png"
-	// 	RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-
-	// 	// Create a new robot struct and set start pos
-	// 	newRobot := &Player{RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer}
-	// 	xRobotStart, yRoboStart := RandomPlayerStartPosition(newRobot)
-	// 	newRobot.xPos = xRobotStart
-	// 	newRobot.yPos = yRoboStart
-	// 	Robots = append(Robots, newRobot)
-	// }
-
-}
-
+// MAIN Update method
+// Update  - updates the board state.
 func (b *Board) Update(input *Input) error {
+
 	if b.gameOver {
 		return nil
 	}
 
 	// Ensure the Hero doesnt go off the game
-	CheckPlayerBoundary(&HeroPlayer)
-
-	//Teleport our here
-	if HeroPlayer.isTeleporting {
-		HeroPlayer.image.Clear()
-
-		//delay redraw
-		time.Sleep(2 * time.Second)
-
-		//redraw the hero
-		HeroPlayer.isTeleporting = false
-		b.placeHero()
-	}
+	CheckPlayerBoundary(b.theDoctor)
 
 	// Check if Robots are colliding
-	CheckRobotsCollision(Robots)
+	CheckRobotsCollision(b.robots)
 
 	//Check if robots are all alive
-	if !CheckAllRobotsAlive(Robots) {
+	if !CheckAllRobotsAlive(b.robots) {
 		b.gameOver = true
 	} else {
 		b.gameOver = false
 	}
 
-	// Move the player
-	HeroPlayer.Move()
+	// Respond to moving the doctor - will move the robots too
+	b.theDoctor.Move()
 
-	// Check if Robots are colliding
-	CheckHeroCollision(&HeroPlayer, Robots)
+	// Check if Robots are colliding with player
+	CheckHeroCollision(b.theDoctor, b.robots)
 
 	// Is Hero alive?
-	if !HeroPlayer.isAlive {
+	if !b.theDoctor.isAlive {
 		b.gameOver = true
 	} else {
 		b.gameOver = false
 	}
-
-	// New game
-	// if ebiten.IsKeyPressed(ebiten.KeyN) {
-	// 	//b.Reset()
-	// 	//StartNewGame()
-	// }
 
 	return nil
 }
 
 // RandomPlayerStartPosition - Places our player(s) in a random coordinate on the grid
-func RandomPlayerStartPosition(Player *Player) (xPos, yPos float64) {
+func randomPlayerStartPosition(Player *Player) (xPos, yPos float64) {
 	// Retrieve the window size
 	windowWidth, windowHeight := ebiten.WindowSize()
 

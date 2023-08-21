@@ -11,7 +11,7 @@ func NewInput() *Input {
 	return &Input{}
 }
 
-func (i *Input) Dir() (ebiten.Key, bool) {
+func (i *Input) Update() (ebiten.Key, bool) {
 	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
 		return ebiten.KeyArrowUp, true
 	}

@@ -1,6 +1,6 @@
 module github.com/AaronSaikovski/gorobots
 
-go 1.21.0
+go 1.21
 
 require (
 	github.com/hajimehoshi/ebiten v1.12.12

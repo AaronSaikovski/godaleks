@@ -31,22 +31,33 @@ var (
 	err             error
 	HeroImage       *ebiten.Image
 	RobotImage      *ebiten.Image
-	HeroPlayer      Player
-	Robots          []*Player
+	HeroPlayer Player
+	Robots     []*Player
 )
 
 // Game - Game struct
 type Game struct {
-	input *Input
-	board *Board
+	input      *Input
+	board      *Board
+	boardImage *ebiten.Image
 }
 
-// NewGame - starts a new game
-func NewGame() *Game {
-	return &Game{
+func init() {
+	//rand.Seed(time.Now().UnixNano())
+}
+
+// NewGame - generates a new Game object.
+func NewGame() (*Game, error) {
+
+	g := &Game{
 		input: NewInput(),
-		board: NewBoard(),
 	}
+	var err error
+	g.board, err = NewBoard()
+	if err != nil {
+		return nil, err
+	}
+	return g, nil
 }
 
 // Layout - define the size of the screen
@@ -60,16 +71,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// set background
 	screen.Fill(backgroundColor)
 
+	// Check if the game is over
 	if g.board.gameOver {
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("Game Over. Score: %d", g.board.points))
 	} else {
-		// width := ScreenHeight / boardRows
 
-		// Draw our hero
-		g.board.player.DrawHero(screen)
+		// Draw the doctor
+		g.board.theDoctor.Draw(screen)
 
-		//Draw the robots
-		g.board.player.DrawRobots(screen, Robots)
+		//draw the robots
+		for index := range g.board.robots {
+			g.board.robots[index].Draw(screen)
+		}
 
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("Score: %d", g.board.points))
 	}
@@ -79,5 +92,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 // Update - update the logical state
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
-	return g.board.Update(g.input)
+	//return g.board.Update(g.input)
+	g.input.Update()
+	if err := g.board.Update(g.input); err != nil {
+		return err
+	}
+	return nil
 }
