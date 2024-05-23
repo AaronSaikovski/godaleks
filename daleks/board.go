@@ -1,12 +1,11 @@
 package daleks
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
+	"github.com/AaronSaikovski/gorobots/assets"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Board struct {
@@ -45,13 +44,13 @@ func (b *Board) PositionHero() {
 	// 	b.player = nil
 	// }
 
-	HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// HeroImage, _, err = ebitenutil.NewImageFromFile("./assets/images/hero.png")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// Create a new hero and start the hero in a random starting position
-	b.theDoctor = NewPlayer(HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false, false)
+	b.theDoctor = NewPlayer(assets.HeroImage, 0, 0, PlayerSpeed, true, true, HumanPlayer, false, false)
 	xHeroStart, yHeroStart := randomPlayerStartPosition(b.theDoctor)
 	b.theDoctor.xPos = xHeroStart
 	b.theDoctor.yPos = yHeroStart
@@ -64,14 +63,15 @@ func (b *Board) PositionRobots() {
 	//Setup the Robots slice and add image and add random position
 	for i := 0; i < StartRobots; i++ {
 		//strRobotImg := "./assets/images/robot0" + strconv.Itoa(i+1) + ".png"
-		strRobotImg := "./assets/images/robot.png"
-		RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
-		if err != nil {
-			log.Fatal(err)
-		}
+		//strRobotImg := "./assets/images/robot.png"
+		//RobotImage, _, err = ebitenutil.NewImageFromFile(strRobotImg)
+		// RobotImage, _, err = ebitenutil.NewImageFromFile(assets.Dalek)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 
 		// Create a new robot struct and set start pos
-		newRobot := NewPlayer(RobotImage, 0, 0, PlayerSpeed, true, true, RobotPlayer, false, false)
+		newRobot := NewPlayer(assets.Dalek, 0, 0, PlayerSpeed, true, true, RobotPlayer, false, false)
 		xRobotStart, yRoboStart := randomPlayerStartPosition(newRobot)
 		newRobot.xPos = xRobotStart
 		newRobot.yPos = yRoboStart

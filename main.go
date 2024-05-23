@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/AaronSaikovski/gorobots/pkg/daleks"
+	"github.com/AaronSaikovski/gorobots/daleks"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 

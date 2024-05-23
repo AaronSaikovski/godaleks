@@ -28,18 +28,18 @@ var (
 	//backgroundColor = color.RGBA{0, 0, 0, 0}
 	//backgroundColor = color.RGBA{255, 255, 255, 0}
 	backgroundColor = color.RGBA{50, 100, 50, 50}
-	err             error
-	HeroImage       *ebiten.Image
-	RobotImage      *ebiten.Image
-	HeroPlayer      Player
-	Robots          []*Player
+	//err             error
+	HeroImage  *ebiten.Image
+	RobotImage *ebiten.Image
+	HeroPlayer Player
+	Robots     []*Player
 )
 
 // Game - Game struct
 type Game struct {
-	input      *Input
-	board      *Board
-	boardImage *ebiten.Image
+	input *Input
+	board *Board
+	//boardImage *ebiten.Image
 }
 
 func init() {
