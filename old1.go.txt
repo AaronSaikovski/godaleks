@@ -1,0 +1,942 @@
+package main
+
+// import (
+// 	"fmt"
+// 	"image/color"
+// 	"log"
+// 	"math"
+// 	"math/rand"
+// 	"time"
+
+// 	"github.com/hajimehoshi/ebiten/v2"
+// 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+// 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+// 	"github.com/hajimehoshi/ebiten/v2/text"
+// 	"golang.org/x/image/font/basicfont"
+// )
+
+// const (
+// 	screenWidth  = 800
+// 	screenHeight = 600
+// 	gridWidth    = 50
+// 	gridHeight   = 37
+// 	cellSize     = 16
+// )
+
+// type Position struct {
+// 	X, Y int
+// }
+
+// type GameState int
+
+// const (
+// 	StateMenu GameState = iota
+// 	StatePlaying
+// 	StateGameOver
+// 	StateWin
+// )
+
+// type Game struct {
+// 	state           GameState
+// 	player          Position
+// 	daleks          []Position
+// 	scraps          []Position
+// 	level           int
+// 	score           int
+// 	teleports       int
+// 	safeTeleports   int
+// 	screwdrivers    int
+// 	lastStands      int
+// 	gameOverMessage string
+// 	lastMoveTime    time.Time
+// 	playerImage     *ebiten.Image
+// 	dalekImage      *ebiten.Image
+// 	scrapImage      *ebiten.Image
+// 	// Teleportation animation
+// 	teleportAnimation bool
+// 	teleportTimer     float64
+// 	teleportOldPos    Position
+// 	teleportNewPos    Position
+// }
+
+// // createPlayerImage creates a human-like player sprite
+// func createPlayerImage() *ebiten.Image {
+// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
+
+// 	size := cellSize - 2
+// 	centerX := size / 2
+
+// 	// Colors
+// 	skinColor := color.RGBA{0xff, 0xdb, 0xac, 0xff}  // Skin tone
+// 	hairColor := color.RGBA{0x8b, 0x45, 0x13, 0xff}  // Brown hair
+// 	shirtColor := color.RGBA{0x40, 0x80, 0xff, 0xff} // Blue shirt
+// 	pantsColor := color.RGBA{0x20, 0x20, 0x60, 0xff} // Dark blue pants
+// 	shoeColor := color.RGBA{0x40, 0x20, 0x20, 0xff}  // Brown shoes
+// 	// skinColor := color.Black
+// 	// hairColor := color.Black
+// 	// shirtColor := color.Black
+// 	// pantsColor := color.Black
+// 	// shoeColor := color.Black
+
+// 	// Draw head (top quarter)
+// 	headSize := size / 4
+// 	for y := 1; y < 1+headSize; y++ {
+// 		for x := centerX - 1; x <= centerX+1; x++ {
+// 			if x >= 0 && x < size && y >= 0 && y < size {
+// 				img.Set(x, y, skinColor)
+// 			}
+// 		}
+// 	}
+
+// 	// Draw hair (on top of head)
+// 	if 0 < size && centerX >= 0 && centerX < size {
+// 		img.Set(centerX-1, 0, hairColor)
+// 		img.Set(centerX, 0, hairColor)
+// 		img.Set(centerX+1, 0, hairColor)
+// 	}
+
+// 	// Draw torso/shirt (middle section)
+// 	torsoStart := 1 + headSize
+// 	torsoEnd := torsoStart + size/2
+// 	for y := torsoStart; y < torsoEnd && y < size; y++ {
+// 		// Body width
+// 		bodyWidth := 2
+// 		if y > torsoStart+1 {
+// 			bodyWidth = 3 // Slightly wider torso
+// 		}
+
+// 		for x := centerX - bodyWidth/2; x <= centerX+bodyWidth/2; x++ {
+// 			if x >= 0 && x < size {
+// 				img.Set(x, y, shirtColor)
+// 			}
+// 		}
+// 	}
+
+// 	// Draw arms (extending from torso)
+// 	armY := torsoStart + 2
+// 	if armY < size {
+// 		// Left arm
+// 		if centerX-2 >= 0 {
+// 			img.Set(centerX-2, armY, skinColor)
+// 		}
+// 		// Right arm
+// 		if centerX+2 < size {
+// 			img.Set(centerX+2, armY, skinColor)
+// 		}
+// 	}
+
+// 	// Draw legs/pants (bottom section)
+// 	legsStart := torsoEnd
+// 	for y := legsStart; y < size-1; y++ {
+// 		// Left leg
+// 		if centerX-1 >= 0 {
+// 			img.Set(centerX-1, y, pantsColor)
+// 		}
+// 		// Right leg
+// 		if centerX+1 < size {
+// 			img.Set(centerX+1, y, pantsColor)
+// 		}
+// 	}
+
+// 	// Draw feet/shoes (bottom row)
+// 	if size-1 >= 0 {
+// 		// Left shoe
+// 		if centerX-1 >= 0 {
+// 			img.Set(centerX-1, size-1, shoeColor)
+// 		}
+// 		// Right shoe
+// 		if centerX+1 < size {
+// 			img.Set(centerX+1, size-1, shoeColor)
+// 		}
+// 	}
+
+// 	return img
+// }
+
+// // createDalekImage creates a Dalek sprite that looks like the classic design
+// func createDalekImage() *ebiten.Image {
+// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
+
+// 	size := cellSize - 2
+// 	centerX := size / 2
+
+// 	// Colors
+// 	mainColor := color.RGBA{0x40, 0x40, 0x40, 0xff}   // Dark gray body
+// 	domeColor := color.RGBA{0x60, 0x60, 0x60, 0xff}   // Lighter gray dome
+// 	eyeColor := color.RGBA{0xff, 0x40, 0x40, 0xff}    // Red eye
+// 	detailColor := color.RGBA{0x20, 0x20, 0x20, 0xff} // Black details
+// 	// mainColor := color.Black
+// 	// domeColor := color.Black
+// 	// eyeColor := color.Black
+// 	// detailColor := color.Black
+
+// 	// Draw the base/skirt (bottom third, flared)
+// 	baseHeight := size / 3
+// 	for y := size - baseHeight; y < size; y++ {
+// 		// Flared base - wider at bottom
+// 		flare := (y - (size - baseHeight)) / 2
+// 		for x := centerX - 3 - flare; x <= centerX+3+flare; x++ {
+// 			if x >= 0 && x < size {
+// 				img.Set(x, y, mainColor)
+// 			}
+// 		}
+// 		// Base details (vertical lines)
+// 		if y == size-2 {
+// 			for x := centerX - 2 - flare; x <= centerX+2+flare; x += 2 {
+// 				if x >= 0 && x < size {
+// 					img.Set(x, y, detailColor)
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// Draw the middle section (middle third)
+// 	midStart := size / 3
+// 	midEnd := 2 * size / 3
+// 	for y := midStart; y < midEnd; y++ {
+// 		for x := centerX - 3; x <= centerX+3; x++ {
+// 			if x >= 0 && x < size {
+// 				img.Set(x, y, mainColor)
+// 			}
+// 		}
+// 		// Side details (bumps/sensors)
+// 		if y == midStart+2 || y == midEnd-3 {
+// 			img.Set(centerX-4, y, detailColor)
+// 			img.Set(centerX+4, y, detailColor)
+// 		}
+// 	}
+
+// 	// Draw the dome (top third, rounded)
+// 	domeHeight := size / 3
+// 	for y := 0; y < domeHeight; y++ {
+// 		for x := 0; x < size; x++ {
+// 			// Create dome shape (ellipse)
+// 			dx := float64(x - centerX)
+// 			dy := float64(y-domeHeight/2) * 1.5 // Stretch vertically
+// 			radius := 3.5
+
+// 			if dx*dx+dy*dy <= radius*radius {
+// 				img.Set(x, y, domeColor)
+// 			}
+// 		}
+// 	}
+
+// 	// Draw the eye stalk (coming from dome)
+// 	eyeY := domeHeight / 2
+// 	for x := centerX - 1; x <= centerX+1; x++ {
+// 		if eyeY >= 0 && eyeY < size {
+// 			img.Set(x, eyeY, detailColor)
+// 		}
+// 	}
+
+// 	// Draw the eye (red dot)
+// 	if eyeY >= 0 && eyeY < size {
+// 		img.Set(centerX, eyeY, eyeColor)
+// 	}
+
+// 	return img
+// }
+
+// // createScrapImage creates a simple scrap sprite
+// func createScrapImage() *ebiten.Image {
+// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
+
+// 	// Create random scrap pattern
+// 	for y := 0; y < cellSize-2; y += 2 {
+// 		for x := 0; x < cellSize-2; x += 2 {
+// 			if (x+y)%4 == 0 {
+// 				img.Set(x, y, color.RGBA{0x80, 0x80, 0x80, 0xff}) // Gray
+// 				//img.Set(x, y, color.Black)
+// 				if x+1 < cellSize-2 {
+// 					img.Set(x+1, y, color.RGBA{0x60, 0x60, 0x60, 0xff}) // Darker gray
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return img
+// }
+
+// func NewGame() *Game {
+// 	rand.Seed(time.Now().UnixNano())
+// 	g := &Game{
+// 		state:         StateMenu,
+// 		level:         1,
+// 		teleports:     10,
+// 		safeTeleports: 3,
+// 		screwdrivers:  2,
+// 		lastStands:    1,
+// 		lastMoveTime:  time.Now(),
+// 		playerImage:   createPlayerImage(),
+// 		dalekImage:    createDalekImage(),
+// 		scrapImage:    createScrapImage(),
+// 	}
+// 	return g
+// }
+
+// func (g *Game) startLevel() {
+// 	// Clear the board
+// 	g.scraps = nil
+
+// 	// Place player randomly
+// 	g.player = Position{
+// 		X: rand.Intn(gridWidth),
+// 		Y: rand.Intn(gridHeight),
+// 	}
+
+// 	// Place daleks (5 + level number)
+// 	dalekCount := 5 + g.level
+// 	g.daleks = make([]Position, 0, dalekCount)
+
+// 	for len(g.daleks) < dalekCount {
+// 		pos := Position{
+// 			X: rand.Intn(gridWidth),
+// 			Y: rand.Intn(gridHeight),
+// 		}
+
+// 		// Don't place dalek on player or too close
+// 		if g.distance(pos, g.player) > 3 && !g.positionOccupied(pos) {
+// 			g.daleks = append(g.daleks, pos)
+// 		}
+// 	}
+
+// 	g.state = StatePlaying
+// }
+
+// func (g *Game) distance(a, b Position) float64 {
+// 	dx := float64(a.X - b.X)
+// 	dy := float64(a.Y - b.Y)
+// 	return dx*dx + dy*dy // Using squared distance for efficiency
+// }
+
+// func (g *Game) positionOccupied(pos Position) bool {
+// 	for _, dalek := range g.daleks {
+// 		if dalek == pos {
+// 			return true
+// 		}
+// 	}
+// 	for _, scrap := range g.scraps {
+// 		if scrap == pos {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
+
+// func (g *Game) movePlayer(dx, dy int) {
+// 	if g.state != StatePlaying {
+// 		return
+// 	}
+
+// 	// Prevent too rapid movement
+// 	if time.Since(g.lastMoveTime) < 100*time.Millisecond {
+// 		return
+// 	}
+// 	g.lastMoveTime = time.Now()
+
+// 	newPos := Position{
+// 		X: g.player.X + dx,
+// 		Y: g.player.Y + dy,
+// 	}
+
+// 	// Check bounds
+// 	if newPos.X < 0 || newPos.X >= gridWidth || newPos.Y < 0 || newPos.Y >= gridHeight {
+// 		return
+// 	}
+
+// 	// Check if position is occupied by scrap
+// 	for _, scrap := range g.scraps {
+// 		if scrap == newPos {
+// 			return
+// 		}
+// 	}
+
+// 	g.player = newPos
+// 	g.moveDaleks()
+// 	g.checkCollisions()
+// }
+
+// func (g *Game) teleport(safe bool) {
+// 	if g.state != StatePlaying {
+// 		return
+// 	}
+
+// 	if safe && g.safeTeleports <= 0 {
+// 		return
+// 	}
+// 	if !safe && g.teleports <= 0 {
+// 		return
+// 	}
+
+// 	// Store old position for animation
+// 	g.teleportOldPos = g.player
+
+// 	var newPos Position
+// 	maxAttempts := 100
+
+// 	if safe {
+// 		// Safe teleport - find position with no daleks nearby
+// 		for i := 0; i < maxAttempts; i++ {
+// 			newPos = Position{
+// 				X: rand.Intn(gridWidth),
+// 				Y: rand.Intn(gridHeight),
+// 			}
+
+// 			if !g.positionOccupied(newPos) && g.isSafePosition(newPos) {
+// 				break
+// 			}
+// 		}
+// 		g.safeTeleports--
+// 	} else {
+// 		// Regular teleport - just find an empty spot
+// 		for i := 0; i < maxAttempts; i++ {
+// 			newPos = Position{
+// 				X: rand.Intn(gridWidth),
+// 				Y: rand.Intn(gridHeight),
+// 			}
+
+// 			if !g.positionOccupied(newPos) {
+// 				break
+// 			}
+// 		}
+// 		g.teleports--
+// 	}
+
+// 	// Start teleportation animation
+// 	g.teleportNewPos = newPos
+// 	g.teleportAnimation = true
+// 	g.teleportTimer = 0
+// 	g.player = newPos
+
+// 	g.moveDaleks()
+// 	g.checkCollisions()
+// }
+
+// func (g *Game) isSafePosition(pos Position) bool {
+// 	// Check if any dalek can reach this position in one move
+// 	for _, dalek := range g.daleks {
+// 		if g.distance(pos, dalek) <= 2 { // Within one move
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
+
+// func (g *Game) useScrewdriver() {
+// 	if g.state != StatePlaying || g.screwdrivers <= 0 {
+// 		return
+// 	}
+
+// 	g.screwdrivers--
+
+// 	// Find all daleks adjacent to player (including diagonally)
+// 	daleksToDestroy := make([]int, 0)
+
+// 	for i, dalek := range g.daleks {
+// 		dx := abs(dalek.X - g.player.X)
+// 		dy := abs(dalek.Y - g.player.Y)
+
+// 		// Adjacent includes all 8 surrounding cells
+// 		if dx <= 1 && dy <= 1 && (dx != 0 || dy != 0) {
+// 			daleksToDestroy = append(daleksToDestroy, i)
+// 		}
+// 	}
+
+// 	// Remove destroyed daleks and add scraps
+// 	newDaleks := make([]Position, 0, len(g.daleks))
+// 	for i, dalek := range g.daleks {
+// 		destroyed := false
+// 		for _, destroyIndex := range daleksToDestroy {
+// 			if i == destroyIndex {
+// 				destroyed = true
+// 				g.score += 5 // Bonus points for screwdriver kill
+// 				g.scraps = append(g.scraps, dalek)
+// 				break
+// 			}
+// 		}
+// 		if !destroyed {
+// 			newDaleks = append(newDaleks, dalek)
+// 		}
+// 	}
+
+// 	g.daleks = newDaleks
+
+// 	// Move remaining daleks after screwdriver use
+// 	g.moveDaleks()
+// 	g.checkCollisions()
+// }
+
+// func (g *Game) lastStand() {
+// 	if g.state != StatePlaying || g.lastStands <= 0 {
+// 		return
+// 	}
+
+// 	g.lastStands--
+
+// 	// Keep moving daleks until they all crash or reach the player
+// 	maxIterations := gridWidth + gridHeight // Prevent infinite loops
+
+// 	for iteration := 0; iteration < maxIterations && len(g.daleks) > 0; iteration++ {
+// 		// Move all daleks one step towards player
+// 		g.moveDaleks()
+
+// 		// Check for collisions after each move
+// 		g.checkCollisions()
+
+// 		// If player was caught, break out
+// 		if g.state != StatePlaying {
+// 			break
+// 		}
+
+// 		// Check if any dalek can still move (not blocked by scraps or other daleks)
+// 		canMove := false
+// 		for _, dalek := range g.daleks {
+// 			// Calculate next position towards player
+// 			dx := 0
+// 			dy := 0
+
+// 			if dalek.X < g.player.X {
+// 				dx = 1
+// 			} else if dalek.X > g.player.X {
+// 				dx = -1
+// 			}
+
+// 			if dalek.Y < g.player.Y {
+// 				dy = 1
+// 			} else if dalek.Y > g.player.Y {
+// 				dy = -1
+// 			}
+
+// 			nextPos := Position{X: dalek.X + dx, Y: dalek.Y + dy}
+
+// 			// If this dalek can move towards player and isn't blocked, continue
+// 			if (dx != 0 || dy != 0) && !g.positionOccupied(nextPos) {
+// 				canMove = true
+// 				break
+// 			}
+// 		}
+
+// 		// If no daleks can move towards player, stop
+// 		if !canMove {
+// 			break
+// 		}
+// 	}
+
+// 	// Bonus points for surviving last stand
+// 	if g.state == StatePlaying {
+// 		g.score += len(g.daleks) * 3 // Bonus for each dalek that didn't reach you
+// 	}
+// }
+
+// func abs(x int) int {
+// 	if x < 0 {
+// 		return -x
+// 	}
+// 	return x
+// }
+
+// func (g *Game) moveDaleks() {
+// 	for i := range g.daleks {
+// 		dalek := &g.daleks[i]
+
+// 		// Move towards player
+// 		dx := 0
+// 		dy := 0
+
+// 		if dalek.X < g.player.X {
+// 			dx = 1
+// 		} else if dalek.X > g.player.X {
+// 			dx = -1
+// 		}
+
+// 		if dalek.Y < g.player.Y {
+// 			dy = 1
+// 		} else if dalek.Y > g.player.Y {
+// 			dy = -1
+// 		}
+
+// 		newPos := Position{
+// 			X: dalek.X + dx,
+// 			Y: dalek.Y + dy,
+// 		}
+
+// 		dalek.X = newPos.X
+// 		dalek.Y = newPos.Y
+// 	}
+// }
+
+// func (g *Game) checkCollisions() {
+// 	// Check dalek-dalek and dalek-scrap collisions
+// 	newDaleks := make([]Position, 0, len(g.daleks))
+
+// 	for _, dalek := range g.daleks {
+// 		collided := false
+
+// 		// Check collision with scraps
+// 		for _, scrap := range g.scraps {
+// 			if dalek == scrap {
+// 				collided = true
+// 				g.score += 2
+// 				break
+// 			}
+// 		}
+
+// 		// Check collision with other daleks
+// 		if !collided {
+// 			for _, other := range g.daleks {
+// 				if dalek == other {
+// 					continue // Same dalek
+// 				}
+// 				if dalek.X == other.X && dalek.Y == other.Y {
+// 					collided = true
+// 					g.score += 2
+// 					break
+// 				}
+// 			}
+// 		}
+
+// 		if collided {
+// 			// Add to scrap heap if not already there
+// 			scrapExists := false
+// 			for _, scrap := range g.scraps {
+// 				if scrap == dalek {
+// 					scrapExists = true
+// 					break
+// 				}
+// 			}
+// 			if !scrapExists {
+// 				g.scraps = append(g.scraps, dalek)
+// 			}
+// 		} else {
+// 			newDaleks = append(newDaleks, dalek)
+// 		}
+// 	}
+
+// 	g.daleks = newDaleks
+
+// 	// Check player-dalek collision
+// 	for _, dalek := range g.daleks {
+// 		if g.player == dalek {
+// 			g.state = StateGameOver
+// 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
+// 			return
+// 		}
+// 	}
+
+// 	// Check if level is complete
+// 	if len(g.daleks) == 0 {
+// 		g.score += g.level * 10
+// 		g.level++
+// 		g.teleports += 2
+// 		if g.level%3 == 0 { // Bonus screwdriver every 3 levels
+// 			g.screwdrivers++
+// 		}
+// 		if g.level%5 == 0 { // Bonus last stand every 5 levels
+// 			g.lastStands++
+// 		}
+// 		if g.level > 10 {
+// 			g.state = StateWin
+// 			g.gameOverMessage = "Congratulations! You survived all levels!"
+// 		} else {
+// 			g.startLevel()
+// 		}
+// 	}
+// }
+
+// func (g *Game) Update() error {
+// 	// Update teleportation animation
+// 	if g.teleportAnimation {
+// 		g.teleportTimer += 1.0 / 60.0 // Assuming 60 FPS
+// 		if g.teleportTimer >= 0.5 {   // Animation duration: 0.5 seconds
+// 			g.teleportAnimation = false
+// 			g.teleportTimer = 0
+// 		}
+// 	}
+
+// 	switch g.state {
+// 	case StateMenu:
+// 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 			g.startLevel()
+// 		}
+
+// 	case StatePlaying:
+// 		// Movement keys
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
+// 			g.movePlayer(0, -1)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+// 			g.movePlayer(0, 1)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
+// 			g.movePlayer(-1, 0)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
+// 			g.movePlayer(1, 0)
+// 		}
+
+// 		// Diagonal movement
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyY) {
+// 			g.movePlayer(-1, -1)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+// 			g.movePlayer(1, -1)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+// 			g.movePlayer(-1, 1)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+// 			g.movePlayer(1, 1)
+// 		}
+
+// 		// Stay in place
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyPeriod) || inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 			g.moveDaleks()
+// 			g.checkCollisions()
+// 		}
+
+// 		// Teleport
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+// 			g.teleport(false)
+// 		}
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+// 			g.teleport(true)
+// 		}
+
+// 		// Sonic screwdriver
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+// 			g.useScrewdriver()
+// 		}
+
+// 		// Last stand
+// 		if inpututil.IsKeyJustPressed(ebiten.KeyL) {
+// 			g.lastStand()
+// 		}
+
+// 	case StateGameOver, StateWin:
+// 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 			// Restart game
+// 			g.level = 1
+// 			g.score = 0
+// 			g.teleports = 10
+// 			g.safeTeleports = 3
+// 			g.screwdrivers = 2
+// 			g.lastStands = 1
+// 			g.teleportAnimation = false
+// 			g.teleportTimer = 0
+// 			g.state = StateMenu
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+// func (g *Game) Draw(screen *ebiten.Image) {
+// 	screen.Fill(color.RGBA{0x10, 0x10, 0x30, 0xff})
+
+// 	//screen.Fill(color.RGBA{0xc0, 0xc0, 0xc0, 0xff}) // Classic Mac light gray
+
+// 	switch g.state {
+// 	case StateMenu:
+// 		g.drawMenu(screen)
+// 	case StatePlaying:
+// 		g.drawGame(screen)
+// 		g.drawHUD(screen)
+// 	case StateGameOver, StateWin:
+// 		g.drawGame(screen)
+// 		g.drawHUD(screen)
+// 		g.drawGameOver(screen)
+// 	}
+// }
+
+// func (g *Game) drawMenu(screen *ebiten.Image) {
+// 	title := "DALEKS"
+// 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.White)
+
+// 	instructions := []string{
+// 		"Use arrow keys or HJK to move",
+// 		"Y, U, B, N for diagonal movement",
+// 		"SPACE or . to wait",
+// 		"T to teleport randomly",
+// 		"R to teleport safely",
+// 		"S to use sonic screwdriver",
+// 		"L for Last Stand (all daleks rush you)",
+// 		"",
+// 		"Avoid the Daleks!",
+// 		"Make them crash into each other!",
+// 		"Screwdriver destroys adjacent Daleks!",
+// 		"Last Stand forces all daleks to move!",
+// 		"",
+// 		"Press SPACE to start",
+// 	}
+
+// 	for i, line := range instructions {
+// 		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*20, color.White)
+// 	}
+// }
+
+// func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress float64, offsetX, offsetY int) {
+// 	x := float64(offsetX + pos.X*cellSize + cellSize/2)
+// 	y := float64(offsetY + pos.Y*cellSize + cellSize/2)
+
+// 	// Create sparkle/energy effect
+// 	numParticles := 8
+// 	radius := float64(cellSize) * (1.0 + progress*2.0) // Expanding circle
+
+// 	for i := 0; i < numParticles; i++ {
+// 		angle := float64(i)*2.0*3.14159/float64(numParticles) + progress*6.28 // Rotating
+// 		px := x + radius*0.5*math.Cos(angle)
+// 		py := y + radius*0.5*math.Sin(angle)
+
+// 		// Fade out over time
+// 		alpha := uint8(255 * (1.0 - progress))
+// 		sparkleColor := color.RGBA{0xff, 0xff, 0x40, alpha} // Yellow sparkles
+
+// 		// Draw sparkle particles
+// 		for dx := -1; dx <= 1; dx++ {
+// 			for dy := -1; dy <= 1; dy++ {
+// 				if int(px)+dx >= 0 && int(px)+dx < screenWidth &&
+// 					int(py)+dy >= 0 && int(py)+dy < screenHeight {
+// 					screen.Set(int(px)+dx, int(py)+dy, sparkleColor)
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// Central flash effect
+// 	flashAlpha := uint8(255 * (1.0 - progress) * 0.8)
+// 	flashColor := color.RGBA{0x80, 0x80, 0xff, flashAlpha} // Blue flash
+
+// 	flashRadius := int(float64(cellSize/2) * (1.0 - progress*0.5))
+// 	for dx := -flashRadius; dx <= flashRadius; dx++ {
+// 		for dy := -flashRadius; dy <= flashRadius; dy++ {
+// 			if dx*dx+dy*dy <= flashRadius*flashRadius {
+// 				px := int(x) + dx
+// 				py := int(y) + dy
+// 				if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+// 					screen.Set(px, py, flashColor)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
+// func (g *Game) drawGame(screen *ebiten.Image) {
+// 	offsetX := (screenWidth - gridWidth*cellSize) / 2
+// 	offsetY := 50
+
+// 	// Draw grid
+// 	for x := 0; x <= gridWidth; x++ {
+// 		ebitenutil.DrawLine(screen,
+// 			float64(offsetX+x*cellSize), float64(offsetY),
+// 			float64(offsetX+x*cellSize), float64(offsetY+gridHeight*cellSize),
+// 			color.Black)
+// 		//color.RGBA{0x40, 0x40, 0x40, 0xff})
+// 	}
+// 	for y := 0; y <= gridHeight; y++ {
+// 		ebitenutil.DrawLine(screen,
+// 			float64(offsetX), float64(offsetY+y*cellSize),
+// 			float64(offsetX+gridWidth*cellSize), float64(offsetY+y*cellSize),
+// 			color.Black)
+// 		//color.RGBA{0x40, 0x40, 0x40, 0xff})
+// 	}
+
+// 	// Draw scraps
+// 	for _, scrap := range g.scraps {
+// 		x := float64(offsetX + scrap.X*cellSize + 1)
+// 		y := float64(offsetY + scrap.Y*cellSize + 1)
+
+// 		op := &ebiten.DrawImageOptions{}
+// 		op.GeoM.Translate(x, y)
+// 		screen.DrawImage(g.scrapImage, op)
+// 	}
+
+// 	// Draw daleks
+// 	for _, dalek := range g.daleks {
+// 		x := float64(offsetX + dalek.X*cellSize + 1)
+// 		y := float64(offsetY + dalek.Y*cellSize + 1)
+
+// 		op := &ebiten.DrawImageOptions{}
+// 		op.GeoM.Translate(x, y)
+// 		screen.DrawImage(g.dalekImage, op)
+// 	}
+
+// 	// Draw player with teleportation effects
+// 	if g.teleportAnimation {
+// 		progress := g.teleportTimer / 0.5 // 0.5 second animation
+
+// 		// Draw disappearing effect at old position
+// 		if progress < 0.5 {
+// 			g.drawTeleportEffect(screen, g.teleportOldPos, progress*2, offsetX, offsetY)
+// 		}
+
+// 		// Draw appearing effect at new position
+// 		if progress > 0.3 {
+// 			appearProgress := (progress - 0.3) / 0.7
+// 			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, offsetX, offsetY)
+// 		}
+
+// 		// Draw player with fade effect
+// 		x := float64(offsetX + g.player.X*cellSize + 1)
+// 		y := float64(offsetY + g.player.Y*cellSize + 1)
+
+// 		op := &ebiten.DrawImageOptions{}
+// 		op.GeoM.Translate(x, y)
+
+// 		// Fade in player at new position
+// 		if progress > 0.3 {
+// 			fadeAlpha := (progress - 0.3) / 0.7
+// 			op.ColorM.Scale(1, 1, 1, fadeAlpha)
+// 		} else {
+// 			op.ColorM.Scale(1, 1, 1, 0) // Invisible during first part
+// 		}
+
+// 		screen.DrawImage(g.playerImage, op)
+// 	} else {
+// 		// Normal player drawing
+// 		x := float64(offsetX + g.player.X*cellSize + 1)
+// 		y := float64(offsetY + g.player.Y*cellSize + 1)
+
+// 		op := &ebiten.DrawImageOptions{}
+// 		op.GeoM.Translate(x, y)
+// 		screen.DrawImage(g.playerImage, op)
+// 	}
+// }
+
+// func (g *Game) drawHUD(screen *ebiten.Image) {
+// 	// Status information
+// 	status := fmt.Sprintf("Level: %d  Score: %d  Teleports: %d  Safe: %d  Screwdrivers: %d  Last Stands: %d  Daleks: %d",
+// 		g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
+// 	text.Draw(screen, status, basicfont.Face7x13, 10, 20, color.White)
+// 	//text.Draw(screen, status, basicfont.Face7x13, 10, 20, color.Black)
+// }
+
+// func (g *Game) drawGameOver(screen *ebiten.Image) {
+// 	// Semi-transparent overlay
+// 	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, color.RGBA{0, 0, 0, 128})
+
+// 	// Game over message
+// 	text.Draw(screen, g.gameOverMessage, basicfont.Face7x13,
+// 		screenWidth/2-len(g.gameOverMessage)*3, screenHeight/2-20, color.White)
+
+// 	finalScore := fmt.Sprintf("Final Score: %d", g.score)
+// 	text.Draw(screen, finalScore, basicfont.Face7x13,
+// 		screenWidth/2-len(finalScore)*3, screenHeight/2+10, color.White)
+
+// 	restart := "Press SPACE to restart"
+// 	text.Draw(screen, restart, basicfont.Face7x13,
+// 		screenWidth/2-len(restart)*3, screenHeight/2+40, color.White)
+// }
+
+// func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+// 	return screenWidth, screenHeight
+// }
+
+// func main() {
+// 	ebiten.SetWindowSize(screenWidth, screenHeight)
+// 	ebiten.SetWindowTitle("Daleks")
+
+// 	game := NewGame()
+
+// 	if err := ebiten.RunGame(game); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }

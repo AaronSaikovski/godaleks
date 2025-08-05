@@ -1,6 +1,6 @@
 # MIT License
 
-# # Copyright (c) 2024 Aaron Saikovski
+# # Copyright (c) 2025 Aaron Saikovski
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,116 +26,119 @@ version: "3"
 
 #ENV VARS
 env:
-  TARGET: gorobots #Change this to suit
+  TARGET: godaleks.exe #Change this to suit
   APPPATH: ./main.go #Change this to suit
-  ENV: dev
+  VERSION: 1.0.0 #Change this to suit
+  PROJECT_NAME: godaleks #Change this to suit
 
-dotenv: ["./envs/{{.ENV}}.env"]
+###########################################################################
 
 tasks:
-  ## version - get the Go version
-  version:
-    desc: "Get the Go version."
-    cmds:
-      - go version
-
   ## release - Builds the project in preparation for (local)release
   release:
-    desc: "Builds the project in preparation for (local)release."
     deps: [vet, lint, seccheck]
     cmds:
-      - go generate $APPPATH
-      - go build -ldflags="-s -w" -o bin/$TARGET $APPPATH
-      - file bin/$TARGET
+      - go build -ldflags="-s -w -X main.version={{.VERSION}}" -o bin/$TARGET $APPPATH
+
+  ###############################################################################
 
   ## goreleaser - Builds the project in preparation for release
   goreleaser:
-    desc: "Builds a cross platform release using goreleaser."
     cmds:
       - goreleaser release --snapshot --clean
 
+  ###############################################################################
+
   ## build - Builds the project in preparation for debug
   build:
-    desc: "Builds the project in preparation for debug."
     cmds:
       - go build -o bin/$TARGET $APPPATH
-      - file bin/$TARGET
+
+  ###############################################################################
 
   ## run - builds and runs the program on the target platform
   run:
-    desc: "Builds and runs the program on the target platform."
     cmds:
       - go run $APPPATH
 
-    ## debug - builds and runs the program on the target platform
-  debug:
-    desc: "Runs a debug version of the application with input parameters from the environment file."
-    cmds:
-      - go run $APPPATH --param1 $VALUE1
-
-  ## watch - use air server for hot reloading
-  watch:
-    desc: "Use air server for hot reloading."
-    cmds:
-      - air
-
-  ## docs - updates the swagger docs
-  docs:
-    desc: "Updates the swagger docs - For APIs."
-    cmds:
-      - swag init
+  ###############################################################################
 
   ## clean - Remove the old builds and any debug information
   clean:
-    desc: "Removes the old builds and any debug information from the source tree."
     cmds:
       - go clean -cache
       - go clean
-      - rm -rf dist
-      - rm bin/$TARGET
+      - cmd /c "rmdir /s /q dist || exit 0"
+      - cmd /c "rmdir /s /q bin || exit 0"
+
+  ###############################################################################
 
   ## test - executes unit tests
   test:
-    desc: "Executes unit tests."
     cmds:
       - go test -v ./test/...
 
+  ###############################################################################
+
   ## deps - fetches any external dependencies and updates
   deps:
-    desc: "Fetches any external dependencies and updates."
     cmds:
       - go mod tidy
       - go mod download
       - go get -u ./...
 
+  ###############################################################################
+
   ## vet - Vet examines Go source code and reports suspicious constructs
   vet:
-    desc: "Vet examines Go source code and reports suspicious constructs."
     cmds:
       - go vet ./...
 
-  ## staticcheck - Runs static code analyzer staticcheck
+  ###############################################################################
+
+  ## staticcheck - Runs static code analyzer staticcheck - currently broken
   staticcheck:
-    desc: "Runs static code analyzer staticcheck."
     cmds:
       - staticcheck ./...
 
-    ## seccheck - Code vulnerability check
+  ###############################################################################
+
+  ## seccheck - Code vulnerability check
   seccheck:
-    desc: "Code vulnerability scanner check."
     cmds:
       - govulncheck ./...
 
+  ###############################################################################
+
   ## lint - format code and tidy modules
   lint:
-    desc: "Lint, format and tidy code."
     cmds:
       - go fmt ./...
       - go mod tidy -v
-      - golangci-lint run ./...
+      #- golangci-lint run ./...
+
+  ###############################################################################
 
   ## generate - update build version
   generate:
-    desc: "update binary build version using gogenerate."
     cmds:
       - go generate $APPPATH
+
+  ###############################################################################
+
+  ## docker-build - builds a docker image based on the docker file.
+  docker-build:
+    desc: "Builds a docker image based on the docker file."
+    cmds:
+      - docker build --platform linux/arm64 -t $PROJECT_NAME:latest .
+
+  ###############################################################################
+
+  ## docker-run - runs the docker container.
+  docker-run:
+    desc: "Runs the docker container."
+    deps: [docker-build]
+    cmds:
+      - docker run $PROJECT_NAME:latest
+
+  ###############################################################################
