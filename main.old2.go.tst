@@ -329,7 +329,7 @@ func NewGame() *Game {
 		playerImage:           createPlayerImage(),
 		dalekImage:            createDalekImage(),
 		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.6, // Increased from 0.3 to 0.6 seconds for slower movement
+		moveAnimationDuration: 0.3, // 0.3 seconds for smooth movement
 		daleksMoving:          false,
 	}
 	return g

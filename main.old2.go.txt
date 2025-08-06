@@ -27,10 +27,6 @@ type Position struct {
 	X, Y int
 }
 
-type FloatPosition struct {
-	X, Y float64
-}
-
 type GameState int
 
 const (
@@ -40,18 +36,10 @@ const (
 	StateWin
 )
 
-type Dalek struct {
-	GridPos   Position      // Current grid position
-	VisualPos FloatPosition // Interpolated visual position
-	TargetPos FloatPosition // Target visual position
-	IsMoving  bool          // Whether currently animating
-	MoveTimer float64       // Animation timer
-}
-
 type Game struct {
 	state           GameState
 	player          Position
-	daleks          []Dalek // Changed from []Position to []Dalek
+	daleks          []Position
 	scraps          []Position
 	level           int
 	score           int
@@ -64,9 +52,6 @@ type Game struct {
 	playerImage     *ebiten.Image
 	dalekImage      *ebiten.Image
 	scrapImage      *ebiten.Image
-	// Movement animation settings
-	moveAnimationDuration float64 // Duration for Dalek movement animation
-	daleksMoving          bool    // Whether daleks are currently moving
 	// Teleportation animation
 	teleportAnimation bool
 	teleportTimer     float64
@@ -319,18 +304,16 @@ func createScrapImage() *ebiten.Image {
 func NewGame() *Game {
 	rand.Seed(time.Now().UnixNano())
 	g := &Game{
-		state:                 StateMenu,
-		level:                 1,
-		teleports:             10,
-		safeTeleports:         3,
-		screwdrivers:          2,
-		lastStands:            1,
-		lastMoveTime:          time.Now(),
-		playerImage:           createPlayerImage(),
-		dalekImage:            createDalekImage(),
-		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.6, // Increased from 0.3 to 0.6 seconds for slower movement
-		daleksMoving:          false,
+		state:         StateMenu,
+		level:         1,
+		teleports:     10,
+		safeTeleports: 3,
+		screwdrivers:  2,
+		lastStands:    1,
+		lastMoveTime:  time.Now(),
+		playerImage:   createPlayerImage(),
+		dalekImage:    createDalekImage(),
+		scrapImage:    createScrapImage(),
 	}
 	return g
 }
@@ -338,7 +321,6 @@ func NewGame() *Game {
 func (g *Game) startLevel() {
 	// Clear the board
 	g.scraps = nil
-	g.daleksMoving = false
 
 	// Place player randomly
 	g.player = Position{
@@ -348,7 +330,7 @@ func (g *Game) startLevel() {
 
 	// Place daleks (5 + level number)
 	dalekCount := 5 + g.level
-	g.daleks = make([]Dalek, 0, dalekCount)
+	g.daleks = make([]Position, 0, dalekCount)
 
 	for len(g.daleks) < dalekCount {
 		pos := Position{
@@ -358,14 +340,7 @@ func (g *Game) startLevel() {
 
 		// Don't place dalek on player or too close
 		if g.distance(pos, g.player) > 3 && !g.positionOccupied(pos) {
-			dalek := Dalek{
-				GridPos:   pos,
-				VisualPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
-				TargetPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
-				IsMoving:  false,
-				MoveTimer: 0,
-			}
-			g.daleks = append(g.daleks, dalek)
+			g.daleks = append(g.daleks, pos)
 		}
 	}
 
@@ -380,7 +355,7 @@ func (g *Game) distance(a, b Position) float64 {
 
 func (g *Game) positionOccupied(pos Position) bool {
 	for _, dalek := range g.daleks {
-		if dalek.GridPos == pos {
+		if dalek == pos {
 			return true
 		}
 	}
@@ -393,7 +368,7 @@ func (g *Game) positionOccupied(pos Position) bool {
 }
 
 func (g *Game) movePlayer(dx, dy int) {
-	if g.state != StatePlaying || g.daleksMoving {
+	if g.state != StatePlaying {
 		return
 	}
 
@@ -422,10 +397,11 @@ func (g *Game) movePlayer(dx, dy int) {
 
 	g.player = newPos
 	g.moveDaleks()
+	g.checkCollisions()
 }
 
 func (g *Game) teleport(safe bool) {
-	if g.state != StatePlaying || g.daleksMoving {
+	if g.state != StatePlaying {
 		return
 	}
 
@@ -477,12 +453,13 @@ func (g *Game) teleport(safe bool) {
 	g.player = newPos
 
 	g.moveDaleks()
+	g.checkCollisions()
 }
 
 func (g *Game) isSafePosition(pos Position) bool {
 	// Check if any dalek can reach this position in one move
 	for _, dalek := range g.daleks {
-		if g.distance(pos, dalek.GridPos) <= 2 { // Within one move
+		if g.distance(pos, dalek) <= 2 { // Within one move
 			return false
 		}
 	}
@@ -490,7 +467,7 @@ func (g *Game) isSafePosition(pos Position) bool {
 }
 
 func (g *Game) useScrewdriver() {
-	if g.state != StatePlaying || g.screwdrivers <= 0 || g.daleksMoving {
+	if g.state != StatePlaying || g.screwdrivers <= 0 {
 		return
 	}
 
@@ -501,13 +478,13 @@ func (g *Game) useScrewdriver() {
 	g.screwdriverTargets = make([]Position, 0)
 
 	for i, dalek := range g.daleks {
-		dx := abs(dalek.GridPos.X - g.player.X)
-		dy := abs(dalek.GridPos.Y - g.player.Y)
+		dx := abs(dalek.X - g.player.X)
+		dy := abs(dalek.Y - g.player.Y)
 
 		// Adjacent includes all 8 surrounding cells
 		if dx <= 1 && dy <= 1 && (dx != 0 || dy != 0) {
 			daleksToDestroy = append(daleksToDestroy, i)
-			g.screwdriverTargets = append(g.screwdriverTargets, dalek.GridPos)
+			g.screwdriverTargets = append(g.screwdriverTargets, dalek)
 		}
 	}
 
@@ -518,7 +495,7 @@ func (g *Game) useScrewdriver() {
 	}
 
 	// Remove destroyed daleks and add scraps
-	newDaleks := make([]Dalek, 0, len(g.daleks))
+	newDaleks := make([]Position, 0, len(g.daleks))
 	for i, dalek := range g.daleks {
 		destroyed := false
 		for _, destroyIndex := range daleksToDestroy {
@@ -526,7 +503,7 @@ func (g *Game) useScrewdriver() {
 				destroyed = true
 				g.score += 5 // Bonus points for screwdriver kill
 				// Add debris pile at dalek's position
-				g.scraps = append(g.scraps, dalek.GridPos)
+				g.scraps = append(g.scraps, dalek)
 				break
 			}
 		}
@@ -539,10 +516,11 @@ func (g *Game) useScrewdriver() {
 
 	// Move remaining daleks after screwdriver use
 	g.moveDaleks()
+	g.checkCollisions()
 }
 
 func (g *Game) lastStand() {
-	if g.state != StatePlaying || g.lastStands <= 0 || g.daleksMoving {
+	if g.state != StatePlaying || g.lastStands <= 0 {
 		return
 	}
 
@@ -554,12 +532,6 @@ func (g *Game) lastStand() {
 	for iteration := 0; iteration < maxIterations && len(g.daleks) > 0; iteration++ {
 		// Move all daleks one step towards player
 		g.moveDaleks()
-
-		// Wait for movement animation to complete before next iteration
-		for g.daleksMoving {
-			// This would need to be handled differently in the actual game loop
-			// For now, we'll just continue with the logic
-		}
 
 		// Check for collisions after each move
 		g.checkCollisions()
@@ -576,19 +548,19 @@ func (g *Game) lastStand() {
 			dx := 0
 			dy := 0
 
-			if dalek.GridPos.X < g.player.X {
+			if dalek.X < g.player.X {
 				dx = 1
-			} else if dalek.GridPos.X > g.player.X {
+			} else if dalek.X > g.player.X {
 				dx = -1
 			}
 
-			if dalek.GridPos.Y < g.player.Y {
+			if dalek.Y < g.player.Y {
 				dy = 1
-			} else if dalek.GridPos.Y > g.player.Y {
+			} else if dalek.Y > g.player.Y {
 				dy = -1
 			}
 
-			nextPos := Position{X: dalek.GridPos.X + dx, Y: dalek.GridPos.Y + dy}
+			nextPos := Position{X: dalek.X + dx, Y: dalek.Y + dy}
 
 			// If this dalek can move towards player and isn't blocked, continue
 			if (dx != 0 || dy != 0) && !g.positionOccupied(nextPos) {
@@ -617,99 +589,38 @@ func abs(x int) int {
 }
 
 func (g *Game) moveDaleks() {
-	// Start movement animation for all daleks
-	g.daleksMoving = true
-
 	for i := range g.daleks {
 		dalek := &g.daleks[i]
 
-		// Calculate new grid position
+		// Move towards player
 		dx := 0
 		dy := 0
 
-		if dalek.GridPos.X < g.player.X {
+		if dalek.X < g.player.X {
 			dx = 1
-		} else if dalek.GridPos.X > g.player.X {
+		} else if dalek.X > g.player.X {
 			dx = -1
 		}
 
-		if dalek.GridPos.Y < g.player.Y {
+		if dalek.Y < g.player.Y {
 			dy = 1
-		} else if dalek.GridPos.Y > g.player.Y {
+		} else if dalek.Y > g.player.Y {
 			dy = -1
 		}
 
-		newGridPos := Position{
-			X: dalek.GridPos.X + dx,
-			Y: dalek.GridPos.Y + dy,
+		newPos := Position{
+			X: dalek.X + dx,
+			Y: dalek.Y + dy,
 		}
 
-		// Update dalek's positions for smooth animation
-		dalek.GridPos = newGridPos
-		dalek.TargetPos = FloatPosition{
-			X: float64(newGridPos.X),
-			Y: float64(newGridPos.Y),
-		}
-		dalek.IsMoving = true
-		dalek.MoveTimer = 0
-	}
-}
-
-func (g *Game) updateDalekAnimations(deltaTime float64) {
-	allFinished := true
-
-	for i := range g.daleks {
-		dalek := &g.daleks[i]
-
-		if dalek.IsMoving {
-			dalek.MoveTimer += deltaTime
-
-			// Calculate interpolation progress (0.0 to 1.0)
-			progress := dalek.MoveTimer / g.moveAnimationDuration
-			if progress >= 1.0 {
-				progress = 1.0
-				dalek.IsMoving = false
-				dalek.MoveTimer = 0
-			} else {
-				allFinished = false
-			}
-
-			// Smooth easing function (ease-out)
-			easedProgress := 1.0 - (1.0-progress)*(1.0-progress)
-
-			// Calculate current visual position
-			startX := dalek.VisualPos.X
-			startY := dalek.VisualPos.Y
-			targetX := dalek.TargetPos.X
-			targetY := dalek.TargetPos.Y
-
-			// If this is the start of movement, set the start position
-			if dalek.MoveTimer <= deltaTime {
-				startX = dalek.VisualPos.X
-				startY = dalek.VisualPos.Y
-			}
-
-			// Interpolate position
-			dalek.VisualPos.X = startX + (targetX-startX)*easedProgress
-			dalek.VisualPos.Y = startY + (targetY-startY)*easedProgress
-
-			// Ensure we end up exactly at target
-			if !dalek.IsMoving {
-				dalek.VisualPos = dalek.TargetPos
-			}
-		}
-	}
-
-	// Check if all daleks finished moving
-	if allFinished {
-		g.daleksMoving = false
-		g.checkCollisions()
+		dalek.X = newPos.X
+		dalek.Y = newPos.Y
 	}
 }
 
 func (g *Game) checkCollisions() {
 	// Check dalek-dalek and dalek-scrap collisions
-	newDaleks := make([]Dalek, 0, len(g.daleks))
+	newDaleks := make([]Position, 0, len(g.daleks))
 	collidedPositions := make(map[Position]bool)
 
 	// First pass: check for collisions with scraps
@@ -718,10 +629,10 @@ func (g *Game) checkCollisions() {
 
 		// Check collision with scraps
 		for _, scrap := range g.scraps {
-			if dalek.GridPos == scrap {
+			if dalek == scrap {
 				collided = true
 				g.score += 2
-				collidedPositions[dalek.GridPos] = true
+				collidedPositions[dalek] = true
 				break
 			}
 		}
@@ -732,17 +643,17 @@ func (g *Game) checkCollisions() {
 	}
 
 	// Second pass: check for dalek-dalek collisions
-	finalDaleks := make([]Dalek, 0, len(newDaleks))
+	finalDaleks := make([]Position, 0, len(newDaleks))
 
 	for i, dalek := range newDaleks {
 		collided := false
 
 		// Check if this dalek collides with any other dalek
 		for j, other := range newDaleks {
-			if i != j && dalek.GridPos.X == other.GridPos.X && dalek.GridPos.Y == other.GridPos.Y {
+			if i != j && dalek.X == other.X && dalek.Y == other.Y {
 				collided = true
 				g.score += 2
-				collidedPositions[dalek.GridPos] = true
+				collidedPositions[dalek] = true
 				break
 			}
 		}
@@ -771,7 +682,7 @@ func (g *Game) checkCollisions() {
 
 	// Check player-dalek collision
 	for _, dalek := range g.daleks {
-		if g.player == dalek.GridPos {
+		if g.player == dalek {
 			g.state = StateGameOver
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			return
@@ -799,17 +710,10 @@ func (g *Game) checkCollisions() {
 }
 
 func (g *Game) Update() error {
-	deltaTime := 1.0 / 60.0 // Assuming 60 FPS
-
-	// Update Dalek animations
-	if g.daleksMoving {
-		g.updateDalekAnimations(deltaTime)
-	}
-
 	// Update teleportation animation
 	if g.teleportAnimation {
-		g.teleportTimer += deltaTime
-		if g.teleportTimer >= 0.5 { // Animation duration: 0.5 seconds
+		g.teleportTimer += 1.0 / 60.0 // Assuming 60 FPS
+		if g.teleportTimer >= 0.5 {   // Animation duration: 0.5 seconds
 			g.teleportAnimation = false
 			g.teleportTimer = 0
 		}
@@ -817,8 +721,8 @@ func (g *Game) Update() error {
 
 	// Update screwdriver animation
 	if g.screwdriverAnimation {
-		g.screwdriverTimer += deltaTime
-		if g.screwdriverTimer >= 0.8 { // Animation duration: 0.8 seconds
+		g.screwdriverTimer += 1.0 / 60.0 // Assuming 60 FPS
+		if g.screwdriverTimer >= 0.8 {   // Animation duration: 0.8 seconds
 			g.screwdriverAnimation = false
 			g.screwdriverTimer = 0
 			g.screwdriverTargets = nil
@@ -832,58 +736,56 @@ func (g *Game) Update() error {
 		}
 
 	case StatePlaying:
-		// Only allow input if daleks are not moving
-		if !g.daleksMoving {
-			// Movement keys
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
-				g.movePlayer(0, -1)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
-				g.movePlayer(0, 1)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
-				g.movePlayer(-1, 0)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
-				g.movePlayer(1, 0)
-			}
+		// Movement keys
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
+			g.movePlayer(0, -1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+			g.movePlayer(0, 1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
+			g.movePlayer(-1, 0)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
+			g.movePlayer(1, 0)
+		}
 
-			// Diagonal movement
-			if inpututil.IsKeyJustPressed(ebiten.KeyY) {
-				g.movePlayer(-1, -1)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyU) {
-				g.movePlayer(1, -1)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyB) {
-				g.movePlayer(-1, 1)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyN) {
-				g.movePlayer(1, 1)
-			}
+		// Diagonal movement
+		if inpututil.IsKeyJustPressed(ebiten.KeyY) {
+			g.movePlayer(-1, -1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+			g.movePlayer(1, -1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+			g.movePlayer(-1, 1)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			g.movePlayer(1, 1)
+		}
 
-			// Stay in place
-			if inpututil.IsKeyJustPressed(ebiten.KeyPeriod) || inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-				g.moveDaleks()
-			}
+		// Stay in place
+		if inpututil.IsKeyJustPressed(ebiten.KeyPeriod) || inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			g.moveDaleks()
+			g.checkCollisions()
+		}
 
-			// Teleport
-			if inpututil.IsKeyJustPressed(ebiten.KeyT) {
-				g.teleport(false)
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyR) {
-				g.teleport(true)
-			}
+		// Teleport
+		if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+			g.teleport(false)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+			g.teleport(true)
+		}
 
-			// Sonic screwdriver
-			if inpututil.IsKeyJustPressed(ebiten.KeyS) {
-				g.useScrewdriver()
-			}
+		// Sonic screwdriver
+		if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+			g.useScrewdriver()
+		}
 
-			// Last stand
-			if inpututil.IsKeyJustPressed(ebiten.KeyL) {
-				g.lastStand()
-			}
+		// Last stand
+		if inpututil.IsKeyJustPressed(ebiten.KeyL) {
+			g.lastStand()
 		}
 
 	case StateGameOver, StateWin:
@@ -900,7 +802,6 @@ func (g *Game) Update() error {
 			g.screwdriverAnimation = false
 			g.screwdriverTimer = 0
 			g.screwdriverTargets = nil
-			g.daleksMoving = false
 			g.state = StateMenu
 		}
 	}
@@ -1083,11 +984,10 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		screen.DrawImage(g.scrapImage, op)
 	}
 
-	// Draw daleks using smooth interpolated positions
+	// Draw daleks
 	for _, dalek := range g.daleks {
-		// Use visual position for smooth movement
-		x := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + 1
-		y := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + 1
+		x := float64(offsetX + dalek.X*cellSize + 1)
+		y := float64(offsetY + dalek.Y*cellSize + 1)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
