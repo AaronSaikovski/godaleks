@@ -1,6 +1,6 @@
 module github.com/AaronSaikovski/godaleks
 
-go 1.24.5
+go 1.24.6
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
