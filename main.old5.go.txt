@@ -73,13 +73,11 @@ type Game struct {
 	teleportOldPos    Position
 	teleportNewPos    Position
 	// Sonic screwdriver animation
-	screwdriverAnimation  bool
-	screwdriverTimer      float64
-	screwdriverTargets    []Position
-	isLastStandActive     bool
-	showGrid              bool
-	gridToggleMessage     string
-	gridToggleMessageTime time.Time
+	screwdriverAnimation bool
+	screwdriverTimer     float64
+	screwdriverTargets   []Position
+
+	isLastStandActive bool
 }
 
 // createPlayerImage creates a human-like player sprite
@@ -335,7 +333,6 @@ func NewGame() *Game {
 		scrapImage:            createScrapImage(),
 		moveAnimationDuration: 0.6, // Increased from 0.3 to 0.6 seconds for slower movement
 		daleksMoving:          false,
-		showGrid:              true, // Default ON
 	}
 	return g
 }
@@ -554,6 +551,74 @@ func (g *Game) lastStand() {
 	g.lastStands--
 	g.isLastStandActive = true
 }
+
+// func (g *Game) lastStandOLD() {
+// 	if g.state != StatePlaying || g.lastStands <= 0 || g.daleksMoving {
+// 		return
+// 	}
+
+// 	g.lastStands--
+
+// 	// Keep moving daleks until they all crash or reach the player
+// 	maxIterations := gridWidth + gridHeight // Prevent infinite loops
+
+// 	for iteration := 0; iteration < maxIterations && len(g.daleks) > 0; iteration++ {
+// 		// Move all daleks one step towards player
+// 		g.moveDaleks()
+
+// 		// Wait for movement animation to complete before next iteration
+// 		for g.daleksMoving {
+// 			// This would need to be handled differently in the actual game loop
+// 			// For now, we'll just continue with the logic
+// 		}
+
+// 		// Check for collisions after each move
+// 		g.checkCollisions()
+
+// 		// If player was caught, break out
+// 		if g.state != StatePlaying {
+// 			break
+// 		}
+
+// 		// Check if any dalek can still move (not blocked by scraps or other daleks)
+// 		canMove := false
+// 		for _, dalek := range g.daleks {
+// 			// Calculate next position towards player
+// 			dx := 0
+// 			dy := 0
+
+// 			if dalek.GridPos.X < g.player.X {
+// 				dx = 1
+// 			} else if dalek.GridPos.X > g.player.X {
+// 				dx = -1
+// 			}
+
+// 			if dalek.GridPos.Y < g.player.Y {
+// 				dy = 1
+// 			} else if dalek.GridPos.Y > g.player.Y {
+// 				dy = -1
+// 			}
+
+// 			nextPos := Position{X: dalek.GridPos.X + dx, Y: dalek.GridPos.Y + dy}
+
+// 			// If this dalek can move towards player and isn't blocked, continue
+// 			if (dx != 0 || dy != 0) && !g.positionOccupied(nextPos) {
+// 				canMove = true
+// 				break
+// 			}
+// 		}
+
+// 		// If no daleks can move towards player, stop
+// 		if !canMove {
+// 			break
+// 		}
+// 	}
+
+// 	// Bonus points for surviving last stand
+// 	if g.state == StatePlaying {
+// 		g.score += len(g.daleks) * 3 // Bonus for each dalek that didn't reach you
+// 	}
+// }
 
 func abs(x int) int {
 	if x < 0 {
@@ -791,19 +856,6 @@ func (g *Game) Update() error {
 		}
 
 	case StatePlaying:
-
-		// Toggle grid
-		if inpututil.IsKeyJustPressed(ebiten.KeyG) {
-			g.showGrid = !g.showGrid
-
-			if g.showGrid {
-				g.gridToggleMessage = "Grid ON"
-			} else {
-				g.gridToggleMessage = "Grid OFF"
-			}
-			g.gridToggleMessageTime = time.Now()
-		}
-
 		if !g.daleksMoving && !g.isLastStandActive {
 			// Movement and actions
 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
@@ -879,6 +931,116 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// func (g *Game) UpdateOLD() error {
+// 	deltaTime := 1.0 / 60.0 // Assuming 60 FPS
+
+// 	// Update Dalek animations
+// 	if g.daleksMoving {
+// 		g.updateDalekAnimations(deltaTime)
+// 	}
+
+// 	// Update teleportation animation
+// 	if g.teleportAnimation {
+// 		g.teleportTimer += deltaTime
+// 		if g.teleportTimer >= 0.5 { // Animation duration: 0.5 seconds
+// 			g.teleportAnimation = false
+// 			g.teleportTimer = 0
+// 		}
+// 	}
+
+// 	// Update screwdriver animation
+// 	if g.screwdriverAnimation {
+// 		g.screwdriverTimer += deltaTime
+// 		if g.screwdriverTimer >= 0.8 { // Animation duration: 0.8 seconds
+// 			g.screwdriverAnimation = false
+// 			g.screwdriverTimer = 0
+// 			g.screwdriverTargets = nil
+// 		}
+// 	}
+
+// 	switch g.state {
+// 	case StateMenu:
+// 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 			g.startLevel()
+// 		}
+
+// 	case StatePlaying:
+// 		// Only allow input if daleks are not moving
+// 		if !g.daleksMoving {
+// 			// Movement keys
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
+// 				g.movePlayer(0, -1)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+// 				g.movePlayer(0, 1)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
+// 				g.movePlayer(-1, 0)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
+// 				g.movePlayer(1, 0)
+// 			}
+
+// 			// Diagonal movement
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyY) {
+// 				g.movePlayer(-1, -1)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+// 				g.movePlayer(1, -1)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+// 				g.movePlayer(-1, 1)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+// 				g.movePlayer(1, 1)
+// 			}
+
+// 			// Stay in place
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyPeriod) || inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 				g.moveDaleks()
+// 			}
+
+// 			// Teleport
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+// 				g.teleport(false)
+// 			}
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+// 				g.teleport(true)
+// 			}
+
+// 			// Sonic screwdriver
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+// 				g.useScrewdriver()
+// 			}
+
+// 			// Last stand
+// 			if inpututil.IsKeyJustPressed(ebiten.KeyL) {
+// 				g.lastStand()
+// 			}
+// 		}
+
+// 	case StateGameOver, StateWin:
+// 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+// 			// Restart game
+// 			g.level = 1
+// 			g.score = 0
+// 			g.teleports = 10
+// 			g.safeTeleports = 3
+// 			g.screwdrivers = 2
+// 			g.lastStands = 1
+// 			g.teleportAnimation = false
+// 			g.teleportTimer = 0
+// 			g.screwdriverAnimation = false
+// 			g.screwdriverTimer = 0
+// 			g.screwdriverTargets = nil
+// 			g.daleksMoving = false
+// 			g.state = StateMenu
+// 		}
+// 	}
+
+// 	return nil
+// }
+
 func (g *Game) Draw(screen *ebiten.Image) {
 	// White background
 	screen.Fill(color.White)
@@ -908,7 +1070,6 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 		"R to teleport safely",
 		"S to use sonic screwdriver",
 		"L for Last Stand (all daleks rush you)",
-		"G to turn game grid On/Off",
 		"",
 		"Avoid the Daleks!",
 		"Make them crash into each other!",
@@ -1031,98 +1192,6 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 	offsetX := (screenWidth - gridWidth*cellSize) / 2
 	offsetY := 50
 
-	// Draw grid only if enabled
-	if g.showGrid {
-		for x := 0; x <= gridWidth; x++ {
-			ebitenutil.DrawLine(screen,
-				float64(offsetX+x*cellSize), float64(offsetY),
-				float64(offsetX+x*cellSize), float64(offsetY+gridHeight*cellSize),
-				color.Black)
-		}
-		for y := 0; y <= gridHeight; y++ {
-			ebitenutil.DrawLine(screen,
-				float64(offsetX), float64(offsetY+y*cellSize),
-				float64(offsetX+gridWidth*cellSize), float64(offsetY+y*cellSize),
-				color.Black)
-		}
-	}
-
-	// Draw scraps
-	for _, scrap := range g.scraps {
-		x := float64(offsetX + scrap.X*cellSize + 1)
-		y := float64(offsetY + scrap.Y*cellSize + 1)
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.scrapImage, op)
-	}
-
-	// Draw daleks using smooth interpolated positions
-	for _, dalek := range g.daleks {
-		// Use visual position for smooth movement
-		x := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + 1
-		y := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + 1
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.dalekImage, op)
-	}
-
-	// Draw player with teleportation effects
-	if g.teleportAnimation {
-		progress := g.teleportTimer / 0.5 // 0.5 second animation
-
-		// Draw disappearing effect at old position
-		if progress < 0.5 {
-			g.drawTeleportEffect(screen, g.teleportOldPos, progress*2, offsetX, offsetY)
-		}
-
-		// Draw appearing effect at new position
-		if progress > 0.3 {
-			appearProgress := (progress - 0.3) / 0.7
-			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, offsetX, offsetY)
-		}
-
-		// Draw player with fade effect
-		x := float64(offsetX + g.player.X*cellSize + 1)
-		y := float64(offsetY + g.player.Y*cellSize + 1)
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-
-		// Fade in player at new position
-		if progress > 0.3 {
-			fadeAlpha := (progress - 0.3) / 0.7
-			op.ColorM.Scale(1, 1, 1, fadeAlpha)
-		} else {
-			op.ColorM.Scale(1, 1, 1, 0) // Invisible during first part
-		}
-
-		screen.DrawImage(g.playerImage, op)
-	} else {
-		// Normal player drawing
-		x := float64(offsetX + g.player.X*cellSize + 1)
-		y := float64(offsetY + g.player.Y*cellSize + 1)
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.playerImage, op)
-	}
-
-	// Draw screwdriver effects
-	if g.screwdriverAnimation {
-		progress := g.screwdriverTimer / 0.8 // 0.8 second animation
-
-		for _, target := range g.screwdriverTargets {
-			g.drawScrewdriverEffect(screen, target, progress, offsetX, offsetY)
-		}
-	}
-}
-
-func (g *Game) drawGameOLD(screen *ebiten.Image) {
-	offsetX := (screenWidth - gridWidth*cellSize) / 2
-	offsetY := 50
-
 	// Draw grid with black lines
 	for x := 0; x <= gridWidth; x++ {
 		ebitenutil.DrawLine(screen,
@@ -1209,6 +1278,13 @@ func (g *Game) drawGameOLD(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) drawHUD(screen *ebiten.Image) {
+	// Status information with black text
+	status := fmt.Sprintf("Level: %d  Score: %d  Teleports: %d  Safe: %d  Screwdrivers: %d  Last Stands: %d  Daleks: %d",
+		g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
+	text.Draw(screen, status, basicfont.Face7x13, 10, 20, color.Black)
+}
+
 func (g *Game) drawGameOver(screen *ebiten.Image) {
 	// Semi-transparent overlay
 	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, color.RGBA{0, 0, 0, 128})
@@ -1224,28 +1300,6 @@ func (g *Game) drawGameOver(screen *ebiten.Image) {
 	restart := "Press SPACE to restart"
 	text.Draw(screen, restart, basicfont.Face7x13,
 		screenWidth/2-len(restart)*3, screenHeight/2+40, color.White)
-}
-
-func (g *Game) drawHUD(screen *ebiten.Image) {
-	// Status information
-	status := fmt.Sprintf("Level: %d  Score: %d  Teleports: %d  Safe: %d  Screwdrivers: %d  Last Stands: %d  Daleks: %d",
-		g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
-	text.Draw(screen, status, basicfont.Face7x13, 10, 20, color.Black)
-
-	// Grid indicator
-	gridStatus := "Grid: OFF"
-	if g.showGrid {
-		gridStatus = "Grid: ON"
-	}
-	text.Draw(screen, gridStatus, basicfont.Face7x13, 10, 40, color.Black)
-
-	// Temporary center-screen notification for grid toggle
-	if g.gridToggleMessage != "" && time.Since(g.gridToggleMessageTime) < 1500*time.Millisecond {
-		msg := g.gridToggleMessage
-		x := screenWidth/2 - len(msg)*3
-		y := 60
-		text.Draw(screen, msg, basicfont.Face7x13, x, y, color.Black)
-	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
