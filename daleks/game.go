@@ -84,7 +84,7 @@ type Game struct {
 	lastStandAcceleration float64 // Acceleration multiplier per second
 	lastStandMaxSpeed     float64 // Maximum speed cap
 	// Mouse support
-	lastClickTime         time.Time
+	lastClickTime time.Time
 }
 
 // createPlayerImage creates a human-like player sprite
@@ -185,72 +185,101 @@ func createDalekImage() *ebiten.Image {
 
 	// Colors - using black for classic Mac style
 	mainColor := color.Black
-	domeColor := color.Black
-	eyeColor := color.Black
-	detailColor := color.Black
 
-	// Draw the base/skirt (bottom third, flared)
-	baseHeight := size / 3
+	// Draw the base/skirt (bottom section, wide and solid)
+	baseHeight := size / 2
+	//baseWidth := size - 2
 	for y := size - baseHeight; y < size; y++ {
-		// Flared base - wider at bottom
-		flare := (y - (size - baseHeight)) / 2
-		for x := centerX - 3 - flare; x <= centerX+3+flare; x++ {
-			if x >= 0 && x < size {
-				img.Set(x, y, mainColor)
-			}
+		// Draw solid base that's wide at bottom
+		for x := 1; x < size-1; x++ {
+			img.Set(x, y, mainColor)
 		}
-		// Base details (vertical lines)
-		if y == size-2 {
-			for x := centerX - 2 - flare; x <= centerX+2+flare; x += 2 {
-				if x >= 0 && x < size {
-					img.Set(x, y, detailColor)
-				}
+		// Add some detail lines for texture
+		if y == size-2 || y == size-4 {
+			for x := 2; x < size-2; x += 2 {
+				img.Set(x, y, mainColor)
 			}
 		}
 	}
 
-	// Draw the middle section (middle third)
+	// Draw the middle section (shoulder area, slightly narrower)
 	midStart := size / 3
-	midEnd := 2 * size / 3
+	midEnd := size - baseHeight
+	shoulderWidth := size - 4
 	for y := midStart; y < midEnd; y++ {
-		for x := centerX - 3; x <= centerX+3; x++ {
-			if x >= 0 && x < size {
-				img.Set(x, y, mainColor)
-			}
+		// Narrower shoulder section
+		startX := (size - shoulderWidth) / 2
+		endX := startX + shoulderWidth
+		for x := startX; x < endX; x++ {
+			img.Set(x, y, mainColor)
 		}
-		// Side details (bumps/sensors)
-		if y == midStart+2 || y == midEnd-3 {
-			img.Set(centerX-4, y, detailColor)
-			img.Set(centerX+4, y, detailColor)
+
+		// Add "bumps" or weapon ports on sides
+		if y == midStart+1 {
+			if startX-1 >= 0 {
+				img.Set(startX-1, y, mainColor) // Left bump
+			}
+			if endX < size {
+				img.Set(endX, y, mainColor) // Right bump
+			}
 		}
 	}
 
-	// Draw the dome (top third, rounded)
+	// Draw the head/dome (top section, rounded but more geometric)
 	domeHeight := size / 3
+	domeWidth := size - 6
 	for y := 0; y < domeHeight; y++ {
-		for x := 0; x < size; x++ {
-			// Create dome shape (ellipse)
-			dx := float64(x - centerX)
-			dy := float64(y-domeHeight/2) * 1.5 // Stretch vertically
-			radius := 3.5
+		// Create a more geometric dome shape
+		startX := (size - domeWidth) / 2
+		endX := startX + domeWidth
 
-			if dx*dx+dy*dy <= radius*radius {
-				img.Set(x, y, domeColor)
-			}
+		// Make it slightly rounded by adjusting width based on height
+		if y == 0 || y == domeHeight-1 {
+			startX += 1
+			endX -= 1
+		}
+
+		for x := startX; x < endX && x < size; x++ {
+			img.Set(x, y, mainColor)
 		}
 	}
 
-	// Draw the eye stalk (coming from dome)
+	// Draw the eye stalk (prominent feature)
 	eyeY := domeHeight / 2
-	for x := centerX - 1; x <= centerX+1; x++ {
+	eyeLength := 3
+	eyeStartX := centerX + domeWidth/2 - 1
+
+	// Horizontal eye stalk
+	for x := eyeStartX; x < eyeStartX+eyeLength && x < size; x++ {
 		if eyeY >= 0 && eyeY < size {
-			img.Set(x, eyeY, detailColor)
+			img.Set(x, eyeY, mainColor)
 		}
 	}
 
-	// Draw the eye (red dot)
-	if eyeY >= 0 && eyeY < size {
-		img.Set(centerX, eyeY, eyeColor)
+	// Eye ball at end of stalk
+	eyeX := eyeStartX + eyeLength - 1
+	if eyeX < size && eyeY >= 0 && eyeY < size {
+		img.Set(eyeX, eyeY, mainColor)
+		// Make eye slightly bigger
+		if eyeY+1 < size {
+			img.Set(eyeX, eyeY+1, mainColor)
+		}
+		if eyeY-1 >= 0 {
+			img.Set(eyeX, eyeY-1, mainColor)
+		}
+	}
+
+	// Add some detail dots/sensors on the dome
+	if centerX-1 >= 0 && 2 < size {
+		img.Set(centerX-1, 2, mainColor)
+		img.Set(centerX+1, 2, mainColor)
+	}
+
+	// Add vertical detail lines on the base for texture
+	for x := 2; x < size-2; x += 3 {
+		for y := size - baseHeight + 1; y < size-1; y++ {
+			img.Set(x, y, mainColor)
+		}
 	}
 
 	return img
@@ -1146,7 +1175,7 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 
 	// Get mouse position
 	mouseX, mouseY := ebiten.CursorPosition()
-	
+
 	// Convert to grid coordinates
 	gridX, gridY, valid := g.screenToGrid(mouseX, mouseY)
 	if !valid {
@@ -1154,19 +1183,19 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 	}
 
 	targetPos := Position{X: gridX, Y: gridY}
-	
+
 	// Check if it's a valid move (adjacent to player)
 	dx := abs(targetPos.X - g.player.X)
 	dy := abs(targetPos.Y - g.player.Y)
-	
+
 	// Only show indicator for valid moves or current position
 	if dx <= 1 && dy <= 1 {
 		offsetX := (screenWidth - gridWidth*cellSize) / 2
 		offsetY := 50
-		
+
 		x := float64(offsetX + gridX*cellSize)
 		y := float64(offsetY + gridY*cellSize)
-		
+
 		// Choose color based on move type
 		var indicatorColor color.Color
 		if targetPos == g.player {
@@ -1180,17 +1209,17 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 					break
 				}
 			}
-			
+
 			if occupied {
 				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
 			} else {
 				indicatorColor = color.RGBA{0, 0, 255, 100} // Blue for valid move
 			}
 		}
-		
+
 		// Draw semi-transparent overlay on the cell
 		ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
-		
+
 		// Draw border
 		ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
 		ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
