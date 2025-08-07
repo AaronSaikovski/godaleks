@@ -369,7 +369,7 @@ func NewGame() *Game {
 		scrapImage:            createScrapImage(),
 		moveAnimationDuration: 0.6, // Duration for normal movement
 		daleksMoving:          false,
-		showGrid:              true, // Default ON
+		showGrid:              false, // Default OFF
 		// Last Stand smooth movement settings
 		lastStandSpeed:        2.0,  // Start speed in cells per second
 		lastStandAcceleration: 1.5,  // Speed multiplier per second
@@ -1157,7 +1157,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 		"",
 		"Avoid the Daleks!",
 		"Make them crash into each other!",
-		"Screwdriver destroys adjacent Daleks!",
+		"Sonic Screwdriver destroys adjacent Daleks!",
 		"Last Stand forces all daleks to move!",
 		"",
 		"Press SPACE or click to start",
