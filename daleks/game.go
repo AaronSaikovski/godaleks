@@ -18,7 +18,7 @@ const (
 	screenWidth  = 800
 	screenHeight = 600
 	gridWidth    = 50
-	gridHeight   = 37
+	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
 	cellSize     = 16
 )
 
@@ -219,6 +219,8 @@ func NewGame() *Game {
 
 	return g
 }
+
+
 
 func (g *Game) startLevel() {
 	// Clear the board and reset all states
