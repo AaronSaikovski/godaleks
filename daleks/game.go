@@ -83,6 +83,8 @@ type Game struct {
 	lastStandSpeed        float64 // Speed in cells per second during Last Stand
 	lastStandAcceleration float64 // Acceleration multiplier per second
 	lastStandMaxSpeed     float64 // Maximum speed cap
+	// Mouse support
+	lastClickTime time.Time
 }
 
 // createPlayerImage creates a human-like player sprite
@@ -343,14 +345,22 @@ func NewGame() *Game {
 		lastStandSpeed:        2.0,  // Start speed in cells per second
 		lastStandAcceleration: 1.5,  // Speed multiplier per second
 		lastStandMaxSpeed:     20.0, // Maximum speed cap
+		lastClickTime:         time.Now(),
 	}
 	return g
 }
 
 func (g *Game) startLevel() {
-	// Clear the board
+	// Clear the board and reset all states
 	g.scraps = nil
 	g.daleksMoving = false
+	g.isLastStandActive = false
+	g.lastStandSpeed = 2.0
+	g.teleportAnimation = false
+	g.teleportTimer = 0
+	g.screwdriverAnimation = false
+	g.screwdriverTimer = 0
+	g.screwdriverTargets = nil
 
 	// Place player randomly
 	g.player = Position{
@@ -402,6 +412,67 @@ func (g *Game) positionOccupied(pos Position) bool {
 		}
 	}
 	return false
+}
+
+// Convert screen coordinates to grid coordinates
+func (g *Game) screenToGrid(screenX, screenY int) (int, int, bool) {
+	offsetX := (screenWidth - gridWidth*cellSize) / 2
+	offsetY := 50
+
+	gridX := (screenX - offsetX) / cellSize
+	gridY := (screenY - offsetY) / cellSize
+
+	// Check if within grid bounds
+	if gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight {
+		return gridX, gridY, true
+	}
+	return 0, 0, false
+}
+
+// Handle mouse click for player movement
+func (g *Game) handleMouseClick(x, y int) {
+	// Prevent too rapid clicking
+	if time.Since(g.lastClickTime) < 100*time.Millisecond {
+		return
+	}
+	g.lastClickTime = time.Now()
+
+	// Convert to grid coordinates
+	gridX, gridY, valid := g.screenToGrid(x, y)
+	if !valid {
+		return
+	}
+
+	targetPos := Position{X: gridX, Y: gridY}
+
+	// Check if clicking on current player position (stay in place)
+	if targetPos == g.player {
+		if !g.isLastStandActive {
+			g.moveDaleks()
+		}
+		return
+	}
+
+	// Calculate movement direction
+	dx := 0
+	dy := 0
+
+	if targetPos.X > g.player.X {
+		dx = 1
+	} else if targetPos.X < g.player.X {
+		dx = -1
+	}
+
+	if targetPos.Y > g.player.Y {
+		dy = 1
+	} else if targetPos.Y < g.player.Y {
+		dy = -1
+	}
+
+	// Only allow one-step moves (adjacent cells including diagonal)
+	if abs(dx) <= 1 && abs(dy) <= 1 {
+		g.movePlayer(dx, dy)
+	}
 }
 
 func (g *Game) movePlayer(dx, dy int) {
@@ -618,6 +689,13 @@ func (g *Game) moveDaleks() {
 }
 
 func (g *Game) updateDalekAnimations(deltaTime float64) {
+	// Ensure Last Stand is properly disabled if game is not in playing state
+	if g.state != StatePlaying {
+		g.isLastStandActive = false
+		g.daleksMoving = false
+		return
+	}
+
 	if g.isLastStandActive {
 		// Smooth continuous movement during Last Stand
 		g.updateLastStandMovement(deltaTime)
@@ -873,6 +951,12 @@ func (g *Game) checkCollisions() {
 func (g *Game) Update() error {
 	deltaTime := 1.0 / 60.0 // Assuming 60 FPS
 
+	// Handle mouse input for player movement
+	if g.state == StatePlaying && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		g.handleMouseClick(x, y)
+	}
+
 	// Update Dalek animations (handles both normal and Last Stand movement)
 	if g.daleksMoving || g.isLastStandActive {
 		g.updateDalekAnimations(deltaTime)
@@ -905,7 +989,7 @@ func (g *Game) Update() error {
 
 	switch g.state {
 	case StateMenu:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			g.startLevel()
 		}
 
@@ -980,7 +1064,7 @@ func (g *Game) Update() error {
 		}
 
 	case StateGameOver, StateWin:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			g.level = 1
 			g.score = 0
 			g.teleports = 10
@@ -994,6 +1078,12 @@ func (g *Game) Update() error {
 			g.screwdriverTargets = nil
 			g.daleksMoving = false
 			g.isLastStandActive = false
+			// Reset Last Stand speed settings
+			g.lastStandSpeed = 2.0
+			// Clear any remaining game state
+			g.daleks = nil
+			g.scraps = nil
+			g.gameOverMessage = ""
 			g.state = StateMenu
 		}
 	}
@@ -1011,6 +1101,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StatePlaying:
 		g.drawGame(screen)
 		g.drawHUD(screen)
+		g.drawMouseIndicator(screen)
 	case StateGameOver, StateWin:
 		g.drawGame(screen)
 		g.drawHUD(screen)
@@ -1032,16 +1123,79 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 		"L for Last Stand (all daleks rush you)",
 		"G to turn game grid On/Off",
 		"",
+		"MOUSE: Click adjacent cell to move there",
+		"Click on player to wait in place",
+		"",
 		"Avoid the Daleks!",
 		"Make them crash into each other!",
 		"Screwdriver destroys adjacent Daleks!",
 		"Last Stand forces all daleks to move!",
 		"",
-		"Press SPACE to start",
+		"Press SPACE or click to start",
 	}
 
 	for i, line := range instructions {
 		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*20, color.Black)
+	}
+}
+
+func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
+	if g.state != StatePlaying {
+		return
+	}
+
+	// Get mouse position
+	mouseX, mouseY := ebiten.CursorPosition()
+
+	// Convert to grid coordinates
+	gridX, gridY, valid := g.screenToGrid(mouseX, mouseY)
+	if !valid {
+		return
+	}
+
+	targetPos := Position{X: gridX, Y: gridY}
+
+	// Check if it's a valid move (adjacent to player)
+	dx := abs(targetPos.X - g.player.X)
+	dy := abs(targetPos.Y - g.player.Y)
+
+	// Only show indicator for valid moves or current position
+	if dx <= 1 && dy <= 1 {
+		offsetX := (screenWidth - gridWidth*cellSize) / 2
+		offsetY := 50
+
+		x := float64(offsetX + gridX*cellSize)
+		y := float64(offsetY + gridY*cellSize)
+
+		// Choose color based on move type
+		var indicatorColor color.Color
+		if targetPos == g.player {
+			indicatorColor = color.RGBA{0, 255, 0, 100} // Green for wait/current position
+		} else {
+			// Check if position is occupied by scrap
+			occupied := false
+			for _, scrap := range g.scraps {
+				if scrap == targetPos {
+					occupied = true
+					break
+				}
+			}
+
+			if occupied {
+				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
+			} else {
+				indicatorColor = color.RGBA{0, 0, 255, 100} // Blue for valid move
+			}
+		}
+
+		// Draw semi-transparent overlay on the cell
+		ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
+
+		// Draw border
+		ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
+		ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
+		ebitenutil.DrawRect(screen, x+cellSize-1, y, 1, cellSize, color.Black)
+		ebitenutil.DrawRect(screen, x, y+cellSize-1, cellSize, 1, color.Black)
 	}
 }
 
@@ -1253,7 +1407,7 @@ func (g *Game) drawGameOver(screen *ebiten.Image) {
 	text.Draw(screen, finalScore, basicfont.Face7x13,
 		screenWidth/2-len(finalScore)*3, screenHeight/2+10, color.White)
 
-	restart := "Press SPACE to restart"
+	restart := "Press SPACE or click to restart"
 	text.Draw(screen, restart, basicfont.Face7x13,
 		screenWidth/2-len(restart)*3, screenHeight/2+40, color.White)
 }
