@@ -102,203 +102,23 @@ func loadImages() *DalekGameImages {
 	return gameImages
 }
 
-// createPlayerImage creates a human-like player sprite
-// func createPlayerImage() *ebiten.Image {
-// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
-
-// 	size := cellSize - 2
-// 	centerX := size / 2
-
-// 	// Colors - using black for classic Mac style
-// 	skinColor := color.Black
-// 	hairColor := color.Black
-// 	shirtColor := color.Black
-// 	pantsColor := color.Black
-// 	shoeColor := color.Black
-
-// 	// Draw head (top quarter)
-// 	headSize := size / 4
-// 	for y := 1; y < 1+headSize; y++ {
-// 		for x := centerX - 1; x <= centerX+1; x++ {
-// 			if x >= 0 && x < size && y >= 0 && y < size {
-// 				img.Set(x, y, skinColor)
-// 			}
-// 		}
-// 	}
-
-// 	// Draw hair (on top of head)
-// 	if 0 < size && centerX >= 0 && centerX < size {
-// 		img.Set(centerX-1, 0, hairColor)
-// 		img.Set(centerX, 0, hairColor)
-// 		img.Set(centerX+1, 0, hairColor)
-// 	}
-
-// 	// Draw torso/shirt (middle section)
-// 	torsoStart := 1 + headSize
-// 	torsoEnd := torsoStart + size/2
-// 	for y := torsoStart; y < torsoEnd && y < size; y++ {
-// 		// Body width
-// 		bodyWidth := 2
-// 		if y > torsoStart+1 {
-// 			bodyWidth = 3 // Slightly wider torso
-// 		}
-
-// 		for x := centerX - bodyWidth/2; x <= centerX+bodyWidth/2; x++ {
-// 			if x >= 0 && x < size {
-// 				img.Set(x, y, shirtColor)
-// 			}
-// 		}
-// 	}
-
-// 	// Draw arms (extending from torso)
-// 	armY := torsoStart + 2
-// 	if armY < size {
-// 		// Left arm
-// 		if centerX-2 >= 0 {
-// 			img.Set(centerX-2, armY, skinColor)
-// 		}
-// 		// Right arm
-// 		if centerX+2 < size {
-// 			img.Set(centerX+2, armY, skinColor)
-// 		}
-// 	}
-
-// 	// Draw legs/pants (bottom section)
-// 	legsStart := torsoEnd
-// 	for y := legsStart; y < size-1; y++ {
-// 		// Left leg
-// 		if centerX-1 >= 0 {
-// 			img.Set(centerX-1, y, pantsColor)
-// 		}
-// 		// Right leg
-// 		if centerX+1 < size {
-// 			img.Set(centerX+1, y, pantsColor)
-// 		}
-// 	}
-
-// 	// Draw feet/shoes (bottom row)
-// 	if size-1 >= 0 {
-// 		// Left shoe
-// 		if centerX-1 >= 0 {
-// 			img.Set(centerX-1, size-1, shoeColor)
-// 		}
-// 		// Right shoe
-// 		if centerX+1 < size {
-// 			img.Set(centerX+1, size-1, shoeColor)
-// 		}
-// 	}
-
-// 	return img
-// }
-
-// createDalekImage creates a Dalek sprite that looks like the classic design
-// func createDalekImage() *ebiten.Image {
-// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
-
-// 	size := cellSize - 2
-// 	centerX := size / 2
-
-// 	// Colors - using black for classic Mac style
-// 	mainColor := color.Black
-
-// 	// Draw the base/skirt (bottom section, wide and solid)
-// 	baseHeight := size / 2
-// 	//baseWidth := size - 2
-// 	for y := size - baseHeight; y < size; y++ {
-// 		// Draw solid base that's wide at bottom
-// 		for x := 1; x < size-1; x++ {
-// 			img.Set(x, y, mainColor)
-// 		}
-// 		// Add some detail lines for texture
-// 		if y == size-2 || y == size-4 {
-// 			for x := 2; x < size-2; x += 2 {
-// 				img.Set(x, y, mainColor)
-// 			}
-// 		}
-// 	}
-
-// 	// Draw the middle section (shoulder area, slightly narrower)
-// 	midStart := size / 3
-// 	midEnd := size - baseHeight
-// 	shoulderWidth := size - 4
-// 	for y := midStart; y < midEnd; y++ {
-// 		// Narrower shoulder section
-// 		startX := (size - shoulderWidth) / 2
-// 		endX := startX + shoulderWidth
-// 		for x := startX; x < endX; x++ {
-// 			img.Set(x, y, mainColor)
-// 		}
-
-// 		// Add "bumps" or weapon ports on sides
-// 		if y == midStart+1 {
-// 			if startX-1 >= 0 {
-// 				img.Set(startX-1, y, mainColor) // Left bump
-// 			}
-// 			if endX < size {
-// 				img.Set(endX, y, mainColor) // Right bump
-// 			}
-// 		}
-// 	}
-
-// 	// Draw the head/dome (top section, rounded but more geometric)
-// 	domeHeight := size / 3
-// 	domeWidth := size - 6
-// 	for y := 0; y < domeHeight; y++ {
-// 		// Create a more geometric dome shape
-// 		startX := (size - domeWidth) / 2
-// 		endX := startX + domeWidth
-
-// 		// Make it slightly rounded by adjusting width based on height
-// 		if y == 0 || y == domeHeight-1 {
-// 			startX += 1
-// 			endX -= 1
-// 		}
-
-// 		for x := startX; x < endX && x < size; x++ {
-// 			img.Set(x, y, mainColor)
-// 		}
-// 	}
-
-// 	// Draw the eye stalk (prominent feature)
-// 	eyeY := domeHeight / 2
-// 	eyeLength := 3
-// 	eyeStartX := centerX + domeWidth/2 - 1
-
-// 	// Horizontal eye stalk
-// 	for x := eyeStartX; x < eyeStartX+eyeLength && x < size; x++ {
-// 		if eyeY >= 0 && eyeY < size {
-// 			img.Set(x, eyeY, mainColor)
-// 		}
-// 	}
-
-// 	// Eye ball at end of stalk
-// 	eyeX := eyeStartX + eyeLength - 1
-// 	if eyeX < size && eyeY >= 0 && eyeY < size {
-// 		img.Set(eyeX, eyeY, mainColor)
-// 		// Make eye slightly bigger
-// 		if eyeY+1 < size {
-// 			img.Set(eyeX, eyeY+1, mainColor)
-// 		}
-// 		if eyeY-1 >= 0 {
-// 			img.Set(eyeX, eyeY-1, mainColor)
-// 		}
-// 	}
-
-// 	// Add some detail dots/sensors on the dome
-// 	if centerX-1 >= 0 && 2 < size {
-// 		img.Set(centerX-1, 2, mainColor)
-// 		img.Set(centerX+1, 2, mainColor)
-// 	}
-
-// 	// Add vertical detail lines on the base for texture
-// 	for x := 2; x < size-2; x += 3 {
-// 		for y := size - baseHeight + 1; y < size-1; y++ {
-// 			img.Set(x, y, mainColor)
-// 		}
-// 	}
-
-// 	return img
-// }
+// Helper function to calculate centered sprite position
+func getCenteredSpritePosition(gridX, gridY, offsetX, offsetY int, spriteImage *ebiten.Image) (float64, float64) {
+	// Get sprite dimensions
+	spriteBounds := spriteImage.Bounds()
+	spriteWidth := spriteBounds.Dx()
+	spriteHeight := spriteBounds.Dy()
+	
+	// Calculate center position within the grid cell
+	cellCenterX := float64(offsetX + gridX*cellSize + cellSize/2)
+	cellCenterY := float64(offsetY + gridY*cellSize + cellSize/2)
+	
+	// Subtract half sprite size to center it
+	x := cellCenterX - float64(spriteWidth)/2
+	y := cellCenterY - float64(spriteHeight)/2
+	
+	return x, y
+}
 
 // createScrapImage creates a Dalek debris pile sprite like in the classic game
 func createScrapImage() *ebiten.Image {
@@ -690,6 +510,7 @@ func (g *Game) lastStand() {
 	g.lastStands--
 	g.isLastStandActive = true
 	g.lastStandSpeed = 2.0 // Reset speed to starting value
+	g.daleksMoving = true  // Enable daleks movement for Last Stand
 }
 
 func abs(x int) int {
@@ -833,7 +654,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		dy := playerPos.Y - dalek.VisualPos.Y
 		dist := math.Sqrt(dx*dx + dy*dy)
 
-		if dist > 0.05 { // Still has distance to cover
+		if dist > 0.1 { // Still has distance to cover (increased threshold)
 			// Normalize direction
 			dx /= dist
 			dy /= dist
@@ -868,8 +689,11 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		}
 	}
 
-	// Check collisions every frame for immediate feedback
-	g.checkCollisions()
+	// Check collisions every few frames for better performance
+	// but still frequent enough for good responsiveness
+	if int(g.lastStandSpeed*deltaTime*60) % 2 == 0 {
+		g.checkCollisions()
+	}
 
 	// If player died during collision check, end Last Stand immediately
 	if g.state != StatePlaying {
@@ -1111,6 +935,12 @@ func (g *Game) Update() error {
 			if inpututil.IsKeyJustPressed(ebiten.KeyL) {
 				g.lastStand()
 			}
+		}
+
+		// Debug info - add this temporarily to see Last Stand status
+		if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			fmt.Printf("Last Stand Debug - Active: %v, Moving: %v, Speed: %.2f, Daleks: %d, Last Stands Available: %d\n", 
+				g.isLastStandActive, g.daleksMoving, g.lastStandSpeed, len(g.daleks), g.lastStands)
 		}
 
 	case StateGameOver, StateWin:
@@ -1373,28 +1203,35 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		}
 	}
 
-	// Draw scraps
+	// Draw scraps (centered)
 	for _, scrap := range g.scraps {
-		x := float64(offsetX + scrap.X*cellSize + 1)
-		y := float64(offsetY + scrap.Y*cellSize + 1)
+		x, y := getCenteredSpritePosition(scrap.X, scrap.Y, offsetX, offsetY, g.scrapImage)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
 		screen.DrawImage(g.scrapImage, op)
 	}
 
-	// Draw daleks using smooth interpolated positions
+	// Draw daleks using smooth interpolated positions (centered)
 	for _, dalek := range g.daleks {
-		// Use visual position for smooth movement
-		x := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + 1
-		y := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + 1
+		// Use visual position for smooth movement, but calculate centered position
+		cellCenterX := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + float64(cellSize)/2
+		cellCenterY := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + float64(cellSize)/2
+		
+		// Get sprite dimensions and center it
+		spriteBounds := g.dalekImage.Bounds()
+		spriteWidth := spriteBounds.Dx()
+		spriteHeight := spriteBounds.Dy()
+		
+		x := cellCenterX - float64(spriteWidth)/2
+		y := cellCenterY - float64(spriteHeight)/2
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
 		screen.DrawImage(g.dalekImage, op)
 	}
 
-	// Draw player with teleportation effects
+	// Draw player with teleportation effects (centered)
 	if g.teleportAnimation {
 		progress := g.teleportTimer / 0.5 // 0.5 second animation
 
@@ -1409,9 +1246,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, offsetX, offsetY)
 		}
 
-		// Draw player with fade effect
-		x := float64(offsetX + g.player.X*cellSize + 1)
-		y := float64(offsetY + g.player.Y*cellSize + 1)
+		// Draw player with fade effect (centered)
+		x, y := getCenteredSpritePosition(g.player.X, g.player.Y, offsetX, offsetY, g.playerImage)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
@@ -1426,9 +1262,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 
 		screen.DrawImage(g.playerImage, op)
 	} else {
-		// Normal player drawing
-		x := float64(offsetX + g.player.X*cellSize + 1)
-		y := float64(offsetY + g.player.Y*cellSize + 1)
+		// Normal player drawing (centered)
+		x, y := getCenteredSpritePosition(g.player.X, g.player.Y, offsetX, offsetY, g.playerImage)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
