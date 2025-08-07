@@ -72,13 +72,17 @@ type Game struct {
 	teleportOldPos    Position
 	teleportNewPos    Position
 	// Sonic screwdriver animation
-	screwdriverAnimation  bool
-	screwdriverTimer      float64
-	screwdriverTargets    []Position
-	isLastStandActive     bool
-	showGrid              bool
-	gridToggleMessage     string
-	gridToggleMessageTime time.Time
+	screwdriverAnimation     bool
+	screwdriverTimer         float64
+	screwdriverTargets       []Position
+	isLastStandActive        bool
+	showGrid                 bool
+	gridToggleMessage        string
+	gridToggleMessageTime    time.Time
+	lastStandSpeedMultiplier float64
+	dalekBaseSpeed           float64
+	dalekCurrentSpeed        float64
+	lastStandAcceleration    float64
 }
 
 // createPlayerImage creates a human-like player sprite
@@ -322,19 +326,24 @@ func createScrapImage() *ebiten.Image {
 func NewGame() *Game {
 	rand.Seed(time.Now().UnixNano())
 	g := &Game{
-		state:                 StateMenu,
-		level:                 1,
-		teleports:             10,
-		safeTeleports:         3,
-		screwdrivers:          2,
-		lastStands:            1,
-		lastMoveTime:          time.Now(),
-		playerImage:           createPlayerImage(),
-		dalekImage:            createDalekImage(),
-		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.6, // Increased from 0.3 to 0.6 seconds for slower movement
-		daleksMoving:          false,
-		showGrid:              true, // Default ON
+		state:                    StateMenu,
+		level:                    1,
+		teleports:                10,
+		safeTeleports:            3,
+		screwdrivers:             2,
+		lastStands:               1,
+		lastMoveTime:             time.Now(),
+		playerImage:              createPlayerImage(),
+		dalekImage:               createDalekImage(),
+		scrapImage:               createScrapImage(),
+		moveAnimationDuration:    0.6, // Increased from 0.3 to 0.6 seconds for slower movement
+		daleksMoving:             false,
+		showGrid:                 true, // Default ON
+		lastStandSpeedMultiplier: 0.6,  // Start at 60% of normal speed
+		dalekBaseSpeed:           5.0,  // Normal speed in cells per second
+		dalekCurrentSpeed:        5.0,
+		lastStandAcceleration:    1.04, // 4% speed increase per frame in Last Stand
+
 	}
 	return g
 }
@@ -554,6 +563,16 @@ func (g *Game) lastStand() {
 	g.isLastStandActive = true
 }
 
+// func (g *Game) lastStand() {
+// 	if g.state != StatePlaying || g.lastStands <= 0 || g.daleksMoving {
+// 		return
+// 	}
+
+// 	g.lastStands--
+// 	g.isLastStandActive = true
+// 	g.dalekCurrentSpeed = g.dalekBaseSpeed * 1.5 // Start faster
+// }
+
 func abs(x int) int {
 	if x < 0 {
 		return -x
@@ -651,6 +670,50 @@ func (g *Game) updateDalekAnimations(deltaTime float64) {
 		g.checkCollisions()
 	}
 }
+
+// func (g *Game) updateDalekAnimations(deltaTime float64) {
+// 	allFinished := true
+
+// 	for i := range g.daleks {
+// 		dalek := &g.daleks[i]
+
+// 		// Accelerate during Last Stand
+// 		if g.isLastStandActive {
+// 			g.dalekCurrentSpeed *= g.lastStandAcceleration
+// 			if g.dalekCurrentSpeed > g.dalekBaseSpeed*6 { // Cap speed
+// 				g.dalekCurrentSpeed = g.dalekBaseSpeed * 6
+// 			}
+// 		} else {
+// 			g.dalekCurrentSpeed = g.dalekBaseSpeed
+// 		}
+
+// 		// Direction toward player
+// 		dx := float64(g.player.X) - dalek.VisualPos.X
+// 		dy := float64(g.player.Y) - dalek.VisualPos.Y
+// 		dist := math.Hypot(dx, dy)
+
+// 		if dist > 0.001 {
+// 			dx /= dist
+// 			dy /= dist
+// 			dalek.VisualPos.X += dx * g.dalekCurrentSpeed * deltaTime
+// 			dalek.VisualPos.Y += dy * g.dalekCurrentSpeed * deltaTime
+
+// 			// Update grid position based on VisualPos (for collisions)
+// 			dalek.GridPos.X = int(math.Round(dalek.VisualPos.X))
+// 			dalek.GridPos.Y = int(math.Round(dalek.VisualPos.Y))
+// 			allFinished = false
+// 		}
+// 	}
+
+// Check collisions every frame for smooth impact detection
+// 	g.checkCollisions()
+
+// 	if allFinished && g.isLastStandActive {
+// 		// End Last Stand if no Daleks can move or they are all gone
+// 		g.isLastStandActive = false
+// 		g.dalekCurrentSpeed = g.dalekBaseSpeed // Reset for next time
+// 	}
+// }
 
 func (g *Game) checkCollisions() {
 	// Check dalek-dalek and dalek-scrap collisions
@@ -771,14 +834,42 @@ func (g *Game) Update() error {
 	}
 
 	// Handle Last Stand: move daleks step-by-step
+	// if g.isLastStandActive && !g.daleksMoving && g.state == StatePlaying {
+	// 	g.moveDaleks()
+
+	// 	// If no daleks or player died, end Last Stand
+	// 	if len(g.daleks) == 0 || g.state != StatePlaying {
+	// 		g.isLastStandActive = false
+	// 		if g.state == StatePlaying {
+	// 			g.score += len(g.daleks) * 3 // Bonus for surviving
+	// 		}
+	// 	}
+	// }
+
+	// Handle Last Stand: move daleks step-by-step smoothly with acceleration
 	if g.isLastStandActive && !g.daleksMoving && g.state == StatePlaying {
+		// Apply current speed multiplier
+		originalDuration := g.moveAnimationDuration
+		g.moveAnimationDuration *= g.lastStandSpeedMultiplier
+
+		// Move daleks for this step
 		g.moveDaleks()
 
-		// If no daleks or player died, end Last Stand
+		// Accelerate for the next step
+		g.lastStandSpeedMultiplier *= g.lastStandAcceleration
+		if g.lastStandSpeedMultiplier < 0.2 { // Cap minimum speed for sanity
+			g.lastStandSpeedMultiplier = 0.2
+		}
+
+		// Restore the original movement duration (only temporary override per move)
+		g.moveAnimationDuration = originalDuration
+
+		// End Last Stand if daleks are gone or player died
 		if len(g.daleks) == 0 || g.state != StatePlaying {
 			g.isLastStandActive = false
+			g.lastStandSpeedMultiplier = 0.6 // Reset for next time
 			if g.state == StatePlaying {
-				g.score += len(g.daleks) * 3 // Bonus for surviving
+				g.score += len(g.daleks) * 3
 			}
 		}
 	}
