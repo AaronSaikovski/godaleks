@@ -84,7 +84,7 @@ type Game struct {
 	lastStandAcceleration float64 // Acceleration multiplier per second
 	lastStandMaxSpeed     float64 // Maximum speed cap
 	// Mouse support
-	lastClickTime time.Time
+	lastClickTime         time.Time
 }
 
 // createPlayerImage creates a human-like player sprite
@@ -1146,7 +1146,7 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 
 	// Get mouse position
 	mouseX, mouseY := ebiten.CursorPosition()
-
+	
 	// Convert to grid coordinates
 	gridX, gridY, valid := g.screenToGrid(mouseX, mouseY)
 	if !valid {
@@ -1154,19 +1154,19 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 	}
 
 	targetPos := Position{X: gridX, Y: gridY}
-
+	
 	// Check if it's a valid move (adjacent to player)
 	dx := abs(targetPos.X - g.player.X)
 	dy := abs(targetPos.Y - g.player.Y)
-
+	
 	// Only show indicator for valid moves or current position
 	if dx <= 1 && dy <= 1 {
 		offsetX := (screenWidth - gridWidth*cellSize) / 2
 		offsetY := 50
-
+		
 		x := float64(offsetX + gridX*cellSize)
 		y := float64(offsetY + gridY*cellSize)
-
+		
 		// Choose color based on move type
 		var indicatorColor color.Color
 		if targetPos == g.player {
@@ -1180,17 +1180,17 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 					break
 				}
 			}
-
+			
 			if occupied {
 				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
 			} else {
 				indicatorColor = color.RGBA{0, 0, 255, 100} // Blue for valid move
 			}
 		}
-
+		
 		// Draw semi-transparent overlay on the cell
 		ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
-
+		
 		// Draw border
 		ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
 		ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
