@@ -32,6 +32,8 @@ type FloatPosition struct {
 
 type GameState int
 
+var gameImages *DalekGameImages
+
 const (
 	StateMenu GameState = iota
 	StatePlaying
@@ -60,9 +62,11 @@ type Game struct {
 	lastStands      int
 	gameOverMessage string
 	lastMoveTime    time.Time
-	playerImage     *ebiten.Image
-	dalekImage      *ebiten.Image
-	scrapImage      *ebiten.Image
+	//GameImages      *DalekGameImages
+
+	playerImage *ebiten.Image
+	dalekImage  *ebiten.Image
+	scrapImage  *ebiten.Image
 	// Movement animation settings
 	moveAnimationDuration float64 // Duration for Dalek movement animation
 	daleksMoving          bool    // Whether daleks are currently moving
@@ -87,203 +91,214 @@ type Game struct {
 	lastClickTime time.Time
 }
 
-// createPlayerImage creates a human-like player sprite
-func createPlayerImage() *ebiten.Image {
-	img := ebiten.NewImage(cellSize-2, cellSize-2)
-
-	size := cellSize - 2
-	centerX := size / 2
-
-	// Colors - using black for classic Mac style
-	skinColor := color.Black
-	hairColor := color.Black
-	shirtColor := color.Black
-	pantsColor := color.Black
-	shoeColor := color.Black
-
-	// Draw head (top quarter)
-	headSize := size / 4
-	for y := 1; y < 1+headSize; y++ {
-		for x := centerX - 1; x <= centerX+1; x++ {
-			if x >= 0 && x < size && y >= 0 && y < size {
-				img.Set(x, y, skinColor)
-			}
-		}
-	}
-
-	// Draw hair (on top of head)
-	if 0 < size && centerX >= 0 && centerX < size {
-		img.Set(centerX-1, 0, hairColor)
-		img.Set(centerX, 0, hairColor)
-		img.Set(centerX+1, 0, hairColor)
-	}
-
-	// Draw torso/shirt (middle section)
-	torsoStart := 1 + headSize
-	torsoEnd := torsoStart + size/2
-	for y := torsoStart; y < torsoEnd && y < size; y++ {
-		// Body width
-		bodyWidth := 2
-		if y > torsoStart+1 {
-			bodyWidth = 3 // Slightly wider torso
-		}
-
-		for x := centerX - bodyWidth/2; x <= centerX+bodyWidth/2; x++ {
-			if x >= 0 && x < size {
-				img.Set(x, y, shirtColor)
-			}
-		}
-	}
-
-	// Draw arms (extending from torso)
-	armY := torsoStart + 2
-	if armY < size {
-		// Left arm
-		if centerX-2 >= 0 {
-			img.Set(centerX-2, armY, skinColor)
-		}
-		// Right arm
-		if centerX+2 < size {
-			img.Set(centerX+2, armY, skinColor)
-		}
-	}
-
-	// Draw legs/pants (bottom section)
-	legsStart := torsoEnd
-	for y := legsStart; y < size-1; y++ {
-		// Left leg
-		if centerX-1 >= 0 {
-			img.Set(centerX-1, y, pantsColor)
-		}
-		// Right leg
-		if centerX+1 < size {
-			img.Set(centerX+1, y, pantsColor)
-		}
-	}
-
-	// Draw feet/shoes (bottom row)
-	if size-1 >= 0 {
-		// Left shoe
-		if centerX-1 >= 0 {
-			img.Set(centerX-1, size-1, shoeColor)
-		}
-		// Right shoe
-		if centerX+1 < size {
-			img.Set(centerX+1, size-1, shoeColor)
-		}
-	}
-
-	return img
+func init() {
+	gameImages = loadImages()
 }
+
+// Loads images
+func loadImages() *DalekGameImages {
+	gameImages := &DalekGameImages{}
+	gameImages.LoadImages()
+	return gameImages
+}
+
+// createPlayerImage creates a human-like player sprite
+// func createPlayerImage() *ebiten.Image {
+// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
+
+// 	size := cellSize - 2
+// 	centerX := size / 2
+
+// 	// Colors - using black for classic Mac style
+// 	skinColor := color.Black
+// 	hairColor := color.Black
+// 	shirtColor := color.Black
+// 	pantsColor := color.Black
+// 	shoeColor := color.Black
+
+// 	// Draw head (top quarter)
+// 	headSize := size / 4
+// 	for y := 1; y < 1+headSize; y++ {
+// 		for x := centerX - 1; x <= centerX+1; x++ {
+// 			if x >= 0 && x < size && y >= 0 && y < size {
+// 				img.Set(x, y, skinColor)
+// 			}
+// 		}
+// 	}
+
+// 	// Draw hair (on top of head)
+// 	if 0 < size && centerX >= 0 && centerX < size {
+// 		img.Set(centerX-1, 0, hairColor)
+// 		img.Set(centerX, 0, hairColor)
+// 		img.Set(centerX+1, 0, hairColor)
+// 	}
+
+// 	// Draw torso/shirt (middle section)
+// 	torsoStart := 1 + headSize
+// 	torsoEnd := torsoStart + size/2
+// 	for y := torsoStart; y < torsoEnd && y < size; y++ {
+// 		// Body width
+// 		bodyWidth := 2
+// 		if y > torsoStart+1 {
+// 			bodyWidth = 3 // Slightly wider torso
+// 		}
+
+// 		for x := centerX - bodyWidth/2; x <= centerX+bodyWidth/2; x++ {
+// 			if x >= 0 && x < size {
+// 				img.Set(x, y, shirtColor)
+// 			}
+// 		}
+// 	}
+
+// 	// Draw arms (extending from torso)
+// 	armY := torsoStart + 2
+// 	if armY < size {
+// 		// Left arm
+// 		if centerX-2 >= 0 {
+// 			img.Set(centerX-2, armY, skinColor)
+// 		}
+// 		// Right arm
+// 		if centerX+2 < size {
+// 			img.Set(centerX+2, armY, skinColor)
+// 		}
+// 	}
+
+// 	// Draw legs/pants (bottom section)
+// 	legsStart := torsoEnd
+// 	for y := legsStart; y < size-1; y++ {
+// 		// Left leg
+// 		if centerX-1 >= 0 {
+// 			img.Set(centerX-1, y, pantsColor)
+// 		}
+// 		// Right leg
+// 		if centerX+1 < size {
+// 			img.Set(centerX+1, y, pantsColor)
+// 		}
+// 	}
+
+// 	// Draw feet/shoes (bottom row)
+// 	if size-1 >= 0 {
+// 		// Left shoe
+// 		if centerX-1 >= 0 {
+// 			img.Set(centerX-1, size-1, shoeColor)
+// 		}
+// 		// Right shoe
+// 		if centerX+1 < size {
+// 			img.Set(centerX+1, size-1, shoeColor)
+// 		}
+// 	}
+
+// 	return img
+// }
 
 // createDalekImage creates a Dalek sprite that looks like the classic design
-func createDalekImage() *ebiten.Image {
-	img := ebiten.NewImage(cellSize-2, cellSize-2)
+// func createDalekImage() *ebiten.Image {
+// 	img := ebiten.NewImage(cellSize-2, cellSize-2)
 
-	size := cellSize - 2
-	centerX := size / 2
+// 	size := cellSize - 2
+// 	centerX := size / 2
 
-	// Colors - using black for classic Mac style
-	mainColor := color.Black
+// 	// Colors - using black for classic Mac style
+// 	mainColor := color.Black
 
-	// Draw the base/skirt (bottom section, wide and solid)
-	baseHeight := size / 2
-	//baseWidth := size - 2
-	for y := size - baseHeight; y < size; y++ {
-		// Draw solid base that's wide at bottom
-		for x := 1; x < size-1; x++ {
-			img.Set(x, y, mainColor)
-		}
-		// Add some detail lines for texture
-		if y == size-2 || y == size-4 {
-			for x := 2; x < size-2; x += 2 {
-				img.Set(x, y, mainColor)
-			}
-		}
-	}
+// 	// Draw the base/skirt (bottom section, wide and solid)
+// 	baseHeight := size / 2
+// 	//baseWidth := size - 2
+// 	for y := size - baseHeight; y < size; y++ {
+// 		// Draw solid base that's wide at bottom
+// 		for x := 1; x < size-1; x++ {
+// 			img.Set(x, y, mainColor)
+// 		}
+// 		// Add some detail lines for texture
+// 		if y == size-2 || y == size-4 {
+// 			for x := 2; x < size-2; x += 2 {
+// 				img.Set(x, y, mainColor)
+// 			}
+// 		}
+// 	}
 
-	// Draw the middle section (shoulder area, slightly narrower)
-	midStart := size / 3
-	midEnd := size - baseHeight
-	shoulderWidth := size - 4
-	for y := midStart; y < midEnd; y++ {
-		// Narrower shoulder section
-		startX := (size - shoulderWidth) / 2
-		endX := startX + shoulderWidth
-		for x := startX; x < endX; x++ {
-			img.Set(x, y, mainColor)
-		}
+// 	// Draw the middle section (shoulder area, slightly narrower)
+// 	midStart := size / 3
+// 	midEnd := size - baseHeight
+// 	shoulderWidth := size - 4
+// 	for y := midStart; y < midEnd; y++ {
+// 		// Narrower shoulder section
+// 		startX := (size - shoulderWidth) / 2
+// 		endX := startX + shoulderWidth
+// 		for x := startX; x < endX; x++ {
+// 			img.Set(x, y, mainColor)
+// 		}
 
-		// Add "bumps" or weapon ports on sides
-		if y == midStart+1 {
-			if startX-1 >= 0 {
-				img.Set(startX-1, y, mainColor) // Left bump
-			}
-			if endX < size {
-				img.Set(endX, y, mainColor) // Right bump
-			}
-		}
-	}
+// 		// Add "bumps" or weapon ports on sides
+// 		if y == midStart+1 {
+// 			if startX-1 >= 0 {
+// 				img.Set(startX-1, y, mainColor) // Left bump
+// 			}
+// 			if endX < size {
+// 				img.Set(endX, y, mainColor) // Right bump
+// 			}
+// 		}
+// 	}
 
-	// Draw the head/dome (top section, rounded but more geometric)
-	domeHeight := size / 3
-	domeWidth := size - 6
-	for y := 0; y < domeHeight; y++ {
-		// Create a more geometric dome shape
-		startX := (size - domeWidth) / 2
-		endX := startX + domeWidth
+// 	// Draw the head/dome (top section, rounded but more geometric)
+// 	domeHeight := size / 3
+// 	domeWidth := size - 6
+// 	for y := 0; y < domeHeight; y++ {
+// 		// Create a more geometric dome shape
+// 		startX := (size - domeWidth) / 2
+// 		endX := startX + domeWidth
 
-		// Make it slightly rounded by adjusting width based on height
-		if y == 0 || y == domeHeight-1 {
-			startX += 1
-			endX -= 1
-		}
+// 		// Make it slightly rounded by adjusting width based on height
+// 		if y == 0 || y == domeHeight-1 {
+// 			startX += 1
+// 			endX -= 1
+// 		}
 
-		for x := startX; x < endX && x < size; x++ {
-			img.Set(x, y, mainColor)
-		}
-	}
+// 		for x := startX; x < endX && x < size; x++ {
+// 			img.Set(x, y, mainColor)
+// 		}
+// 	}
 
-	// Draw the eye stalk (prominent feature)
-	eyeY := domeHeight / 2
-	eyeLength := 3
-	eyeStartX := centerX + domeWidth/2 - 1
+// 	// Draw the eye stalk (prominent feature)
+// 	eyeY := domeHeight / 2
+// 	eyeLength := 3
+// 	eyeStartX := centerX + domeWidth/2 - 1
 
-	// Horizontal eye stalk
-	for x := eyeStartX; x < eyeStartX+eyeLength && x < size; x++ {
-		if eyeY >= 0 && eyeY < size {
-			img.Set(x, eyeY, mainColor)
-		}
-	}
+// 	// Horizontal eye stalk
+// 	for x := eyeStartX; x < eyeStartX+eyeLength && x < size; x++ {
+// 		if eyeY >= 0 && eyeY < size {
+// 			img.Set(x, eyeY, mainColor)
+// 		}
+// 	}
 
-	// Eye ball at end of stalk
-	eyeX := eyeStartX + eyeLength - 1
-	if eyeX < size && eyeY >= 0 && eyeY < size {
-		img.Set(eyeX, eyeY, mainColor)
-		// Make eye slightly bigger
-		if eyeY+1 < size {
-			img.Set(eyeX, eyeY+1, mainColor)
-		}
-		if eyeY-1 >= 0 {
-			img.Set(eyeX, eyeY-1, mainColor)
-		}
-	}
+// 	// Eye ball at end of stalk
+// 	eyeX := eyeStartX + eyeLength - 1
+// 	if eyeX < size && eyeY >= 0 && eyeY < size {
+// 		img.Set(eyeX, eyeY, mainColor)
+// 		// Make eye slightly bigger
+// 		if eyeY+1 < size {
+// 			img.Set(eyeX, eyeY+1, mainColor)
+// 		}
+// 		if eyeY-1 >= 0 {
+// 			img.Set(eyeX, eyeY-1, mainColor)
+// 		}
+// 	}
 
-	// Add some detail dots/sensors on the dome
-	if centerX-1 >= 0 && 2 < size {
-		img.Set(centerX-1, 2, mainColor)
-		img.Set(centerX+1, 2, mainColor)
-	}
+// 	// Add some detail dots/sensors on the dome
+// 	if centerX-1 >= 0 && 2 < size {
+// 		img.Set(centerX-1, 2, mainColor)
+// 		img.Set(centerX+1, 2, mainColor)
+// 	}
 
-	// Add vertical detail lines on the base for texture
-	for x := 2; x < size-2; x += 3 {
-		for y := size - baseHeight + 1; y < size-1; y++ {
-			img.Set(x, y, mainColor)
-		}
-	}
+// 	// Add vertical detail lines on the base for texture
+// 	for x := 2; x < size-2; x += 3 {
+// 		for y := size - baseHeight + 1; y < size-1; y++ {
+// 			img.Set(x, y, mainColor)
+// 		}
+// 	}
 
-	return img
-}
+// 	return img
+// }
 
 // createScrapImage creates a Dalek debris pile sprite like in the classic game
 func createScrapImage() *ebiten.Image {
@@ -357,15 +372,20 @@ func createScrapImage() *ebiten.Image {
 func NewGame() *Game {
 	rand.Seed(time.Now().UnixNano())
 	g := &Game{
-		state:                 StateMenu,
-		level:                 1,
-		teleports:             10,
-		safeTeleports:         3,
-		screwdrivers:          2,
-		lastStands:            1,
-		lastMoveTime:          time.Now(),
-		playerImage:           createPlayerImage(),
-		dalekImage:            createDalekImage(),
+		state:         StateMenu,
+		level:         1,
+		teleports:     10,
+		safeTeleports: 3,
+		screwdrivers:  2,
+		lastStands:    1,
+		lastMoveTime:  time.Now(),
+
+		//playerImage:           createPlayerImage(),
+		//dalekImage:            createDalekImage(),
+
+		playerImage: gameImages.Human,
+		dalekImage:  gameImages.Dalek,
+
 		scrapImage:            createScrapImage(),
 		moveAnimationDuration: 0.6, // Duration for normal movement
 		daleksMoving:          false,
@@ -376,6 +396,7 @@ func NewGame() *Game {
 		lastStandMaxSpeed:     20.0, // Maximum speed cap
 		lastClickTime:         time.Now(),
 	}
+
 	return g
 }
 
