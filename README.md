@@ -4,10 +4,6 @@
 
 A modern Go/Ebiten (and faithful) recreation of the classic Mac game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks.
-
-[![Build Status](https://github.com/AaronSaikovski/godaleks/workflows/build/badge.svg)](https://github.com/AaronSaikovski/godaleks/actions)
-[![Licence](https://img.shields.io/github/license/AaronSaikovski/godaleks)](LICENSE)
-
 </div>
 
 ## 📜 Background
