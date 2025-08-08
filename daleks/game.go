@@ -14,81 +14,81 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
-const (
-	screenWidth  = 800
-	screenHeight = 600
-	gridWidth    = 50
-	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
-	cellSize     = 16
-)
+// const (
+// 	screenWidth  = 800
+// 	screenHeight = 600
+// 	gridWidth    = 50
+// 	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
+// 	cellSize     = 16
+// )
 
-type Position struct {
-	X, Y int
-}
+// type Position struct {
+// 	X, Y int
+// }
 
-type FloatPosition struct {
-	X, Y float64
-}
+// type FloatPosition struct {
+// 	X, Y float64
+// }
 
 type GameState int
 
 var gameImages *DalekGameImages
 
-const (
-	StateMenu GameState = iota
-	StatePlaying
-	StateGameOver
-	StateWin
-)
+// const (
+// 	StateMenu GameState = iota
+// 	StatePlaying
+// 	StateGameOver
+// 	StateWin
+// )
 
-type Dalek struct {
-	GridPos   Position      // Current grid position
-	VisualPos FloatPosition // Interpolated visual position
-	TargetPos FloatPosition // Target visual position
-	IsMoving  bool          // Whether currently animating
-	MoveTimer float64       // Animation timer
-}
+// type Dalek struct {
+// 	GridPos   Position      // Current grid position
+// 	VisualPos FloatPosition // Interpolated visual position
+// 	TargetPos FloatPosition // Target visual position
+// 	IsMoving  bool          // Whether currently animating
+// 	MoveTimer float64       // Animation timer
+// }
 
-type Game struct {
-	state           GameState
-	player          Position
-	daleks          []Dalek // Changed from []Position to []Dalek
-	scraps          []Position
-	level           int
-	score           int
-	teleports       int
-	safeTeleports   int
-	screwdrivers    int
-	lastStands      int
-	gameOverMessage string
-	lastMoveTime    time.Time
+// type Game struct {
+// 	state           GameState
+// 	player          Position
+// 	daleks          []Dalek // Changed from []Position to []Dalek
+// 	scraps          []Position
+// 	level           int
+// 	score           int
+// 	teleports       int
+// 	safeTeleports   int
+// 	screwdrivers    int
+// 	lastStands      int
+// 	gameOverMessage string
+// 	lastMoveTime    time.Time
 
-	playerImage *ebiten.Image
-	dalekImage  *ebiten.Image
-	scrapImage  *ebiten.Image
-	// Movement animation settings
-	moveAnimationDuration float64 // Duration for Dalek movement animation
-	daleksMoving          bool    // Whether daleks are currently moving
-	// Teleportation animation
-	teleportAnimation bool
-	teleportTimer     float64
-	teleportOldPos    Position
-	teleportNewPos    Position
-	// Sonic screwdriver animation
-	screwdriverAnimation  bool
-	screwdriverTimer      float64
-	screwdriverTargets    []Position
-	isLastStandActive     bool
-	showGrid              bool
-	gridToggleMessage     string
-	gridToggleMessageTime time.Time
-	// Last Stand smooth movement
-	lastStandSpeed        float64 // Speed in cells per second during Last Stand
-	lastStandAcceleration float64 // Acceleration multiplier per second
-	lastStandMaxSpeed     float64 // Maximum speed cap
-	// Mouse support
-	lastClickTime time.Time
-}
+// 	playerImage *ebiten.Image
+// 	dalekImage  *ebiten.Image
+// 	scrapImage  *ebiten.Image
+// 	// Movement animation settings
+// 	moveAnimationDuration float64 // Duration for Dalek movement animation
+// 	daleksMoving          bool    // Whether daleks are currently moving
+// 	// Teleportation animation
+// 	teleportAnimation bool
+// 	teleportTimer     float64
+// 	teleportOldPos    Position
+// 	teleportNewPos    Position
+// 	// Sonic screwdriver animation
+// 	screwdriverAnimation  bool
+// 	screwdriverTimer      float64
+// 	screwdriverTargets    []Position
+// 	isLastStandActive     bool
+// 	showGrid              bool
+// 	gridToggleMessage     string
+// 	gridToggleMessageTime time.Time
+// 	// Last Stand smooth movement
+// 	lastStandSpeed        float64 // Speed in cells per second during Last Stand
+// 	lastStandAcceleration float64 // Acceleration multiplier per second
+// 	lastStandMaxSpeed     float64 // Maximum speed cap
+// 	// Mouse support
+// 	lastClickTime time.Time
+// }
 
 func init() {
 	gameImages = loadImages()
@@ -198,12 +198,8 @@ func NewGame() *Game {
 		screwdrivers:  2,
 		lastStands:    1,
 		lastMoveTime:  time.Now(),
-
-		//playerImage:           createPlayerImage(),
-		//dalekImage:            createDalekImage(),
-
-		playerImage: gameImages.Human,
-		dalekImage:  gameImages.Dalek,
+		playerImage:   gameImages.Human,
+		dalekImage:    gameImages.Dalek,
 
 		scrapImage:            createScrapImage(),
 		moveAnimationDuration: 0.6, // Duration for normal movement
