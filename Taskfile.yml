@@ -1,0 +1,122 @@
+# using - https://taskfile.dev/
+
+version: "3"
+
+#ENV VARS
+env:
+  TARGET: godaleks.exe #Change this to suit
+  APPPATH: ./main.go #Change this to suit
+  VERSION: 1.0.0 #Change this to suit
+  PROJECT_NAME: godaleks #Change this to suit
+
+###########################################################################
+
+tasks:
+  ## release - Builds the project in preparation for (local)release
+  release:
+    deps: [vet, lint, seccheck]
+    cmds:
+      - go build -ldflags="-s -w -X main.version={{.VERSION}}" -o bin/$TARGET $APPPATH
+
+  ###############################################################################
+
+  ## goreleaser - Builds the project in preparation for release
+  goreleaser:
+    cmds:
+      - goreleaser release --snapshot --clean
+
+  ###############################################################################
+
+  ## build - Builds the project in preparation for debug
+  build:
+    cmds:
+      - go build -o bin/$TARGET $APPPATH
+
+  ###############################################################################
+
+  ## run - builds and runs the program on the target platform
+  run:
+    cmds:
+      - go run $APPPATH
+
+  ###############################################################################
+
+  ## clean - Remove the old builds and any debug information
+  clean:
+    cmds:
+      - go clean -cache
+      - go clean
+      - cmd /c "rmdir /s /q dist || exit 0"
+      - cmd /c "rmdir /s /q bin || exit 0"
+
+  ###############################################################################
+
+  ## test - executes unit tests
+  test:
+    cmds:
+      - go test -v ./test/...
+
+  ###############################################################################
+
+  ## deps - fetches any external dependencies and updates
+  deps:
+    cmds:
+      - go mod tidy
+      - go mod download
+      - go get -u ./...
+
+  ###############################################################################
+
+  ## vet - Vet examines Go source code and reports suspicious constructs
+  vet:
+    cmds:
+      - go vet ./...
+
+  ###############################################################################
+
+  ## staticcheck - Runs static code analyzer staticcheck - currently broken
+  staticcheck:
+    cmds:
+      - staticcheck ./...
+
+  ###############################################################################
+
+  ## seccheck - Code vulnerability check
+  seccheck:
+    cmds:
+      - govulncheck ./...
+
+  ###############################################################################
+
+  ## lint - format code and tidy modules
+  lint:
+    cmds:
+      - go fmt ./...
+      - go mod tidy -v
+      #- golangci-lint run ./...
+
+  ###############################################################################
+
+  ## generate - update build version
+  generate:
+    cmds:
+      - go generate $APPPATH
+
+  ###############################################################################
+
+  ## docker-build - builds a docker image based on the docker file.
+  docker-build:
+    desc: "Builds a docker image based on the docker file."
+    cmds:
+      - docker build --platform linux/arm64 -t $PROJECT_NAME:latest .
+
+  ###############################################################################
+
+  ## docker-run - runs the docker container.
+  docker-run:
+    desc: "Runs the docker container."
+    deps: [docker-build]
+    cmds:
+      - docker run $PROJECT_NAME:latest
+
+  ###############################################################################
