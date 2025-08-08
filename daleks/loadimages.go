@@ -18,6 +18,13 @@ type DalekGameImages struct {
 	Dalek *ebiten.Image
 }
 
+// Loads images
+func loadImages() *DalekGameImages {
+	gameImages := &DalekGameImages{}
+	gameImages.LoadImages()
+	return gameImages
+}
+
 // loadImage loads an image from the assets directory
 func loadImage(filename string) (*ebiten.Image, error) {
 	data, err := assets.ReadFile("assets/" + filename)

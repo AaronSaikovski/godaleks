@@ -6,6 +6,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type GameState int
+
 type Position struct {
 	X, Y int
 }
@@ -61,4 +63,11 @@ type Game struct {
 	lastStandMaxSpeed     float64 // Maximum speed cap
 	// Mouse support
 	lastClickTime time.Time
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
