@@ -108,15 +108,15 @@ func getCenteredSpritePosition(gridX, gridY, offsetX, offsetY int, spriteImage *
 	spriteBounds := spriteImage.Bounds()
 	spriteWidth := spriteBounds.Dx()
 	spriteHeight := spriteBounds.Dy()
-	
+
 	// Calculate center position within the grid cell
 	cellCenterX := float64(offsetX + gridX*cellSize + cellSize/2)
 	cellCenterY := float64(offsetY + gridY*cellSize + cellSize/2)
-	
+
 	// Subtract half sprite size to center it
 	x := cellCenterX - float64(spriteWidth)/2
 	y := cellCenterY - float64(spriteHeight)/2
-	
+
 	return x, y
 }
 
@@ -219,8 +219,6 @@ func NewGame() *Game {
 
 	return g
 }
-
-
 
 func (g *Game) startLevel() {
 	// Clear the board and reset all states
@@ -693,7 +691,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 
 	// Check collisions every few frames for better performance
 	// but still frequent enough for good responsiveness
-	if int(g.lastStandSpeed*deltaTime*60) % 2 == 0 {
+	if int(g.lastStandSpeed*deltaTime*60)%2 == 0 {
 		g.checkCollisions()
 	}
 
@@ -941,7 +939,7 @@ func (g *Game) Update() error {
 
 		// Debug info - add this temporarily to see Last Stand status
 		if inpututil.IsKeyJustPressed(ebiten.KeyD) {
-			fmt.Printf("Last Stand Debug - Active: %v, Moving: %v, Speed: %.2f, Daleks: %d, Last Stands Available: %d\n", 
+			fmt.Printf("Last Stand Debug - Active: %v, Moving: %v, Speed: %.2f, Daleks: %d, Last Stands Available: %d\n",
 				g.isLastStandActive, g.daleksMoving, g.lastStandSpeed, len(g.daleks), g.lastStands)
 		}
 
@@ -1219,12 +1217,12 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		// Use visual position for smooth movement, but calculate centered position
 		cellCenterX := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + float64(cellSize)/2
 		cellCenterY := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + float64(cellSize)/2
-		
+
 		// Get sprite dimensions and center it
 		spriteBounds := g.dalekImage.Bounds()
 		spriteWidth := spriteBounds.Dx()
 		spriteHeight := spriteBounds.Dy()
-		
+
 		x := cellCenterX - float64(spriteWidth)/2
 		y := cellCenterY - float64(spriteHeight)/2
 
