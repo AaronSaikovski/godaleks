@@ -1,6 +1,5 @@
 # CHANGELOG
 
-## v1.0.0. (2023-05-29)
+## v0.0.1. (2025-08-08)
 
-- initial version
-- fixed makefile
+- initial alpha release version

@@ -3,20 +3,21 @@ package main
 import (
 	"log"
 
-	"github.com/AaronSaikovski/gorobots/daleks"
+	"github.com/AaronSaikovski/godaleks/daleks"
 	"github.com/hajimehoshi/ebiten/v2"
+)
+
+const (
+	screenWidth  = 800
+	screenHeight = 600
 )
 
 // main - Main function
 func main() {
 
-	game, err := daleks.NewGame()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ebiten.SetWindowSize(daleks.ScreenWidth, daleks.ScreenHeight)
-	ebiten.SetWindowTitle("GoRobots")
+	game := daleks.NewGame()
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowTitle("GoDaleks")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
