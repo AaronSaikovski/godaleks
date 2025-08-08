@@ -62,7 +62,6 @@ type Game struct {
 	lastStands      int
 	gameOverMessage string
 	lastMoveTime    time.Time
-	//GameImages      *DalekGameImages
 
 	playerImage *ebiten.Image
 	dalekImage  *ebiten.Image
