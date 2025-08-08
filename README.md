@@ -17,6 +17,8 @@ For the history of the original and its Macintosh versions, see [About Daleks Fo
 
 ## 🎮 Gameplay
 
+[Daleks- Online Playable version](https://AaronSaikovski.github.io/godaleks)
+
 The player is a lone human on a grid, hunted by deadly Daleks.  
 Daleks move one step per turn toward you. Survive by making them crash into each other, creating scrap heaps, or by destroying them with your **Sonic Screwdriver**.
 
