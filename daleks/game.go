@@ -1043,7 +1043,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
-		"Use arrow keys to move",
+		"Use arrow keys or mouse to move",
 		"Q, E, Z, C for diagonal movement",
 		"N To start a new game",
 		"SPACE or . to wait",
