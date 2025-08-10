@@ -219,6 +219,28 @@ func NewGame() *Game {
 	return g
 }
 
+// resetGame resets the game to initial state and starts from level 1
+func (g *Game) resetGame() {
+	g.level = 1
+	g.score = 0
+	g.teleports = 10
+	g.safeTeleports = 3
+	g.screwdrivers = 2
+	g.lastStands = 1
+	g.teleportAnimation = false
+	g.teleportTimer = 0
+	g.screwdriverAnimation = false
+	g.screwdriverTimer = 0
+	g.screwdriverTargets = nil
+	g.daleksMoving = false
+	g.isLastStandActive = false
+	g.lastStandSpeed = 2.0
+	g.daleks = nil
+	g.scraps = nil
+	g.gameOverMessage = ""
+	g.startLevel()
+}
+
 func (g *Game) startLevel() {
 	// Clear the board and reset all states
 	g.scraps = nil
@@ -868,6 +890,12 @@ func (g *Game) Update() error {
 
 	case StatePlaying:
 
+		// New Game - press N to start a new game
+		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			g.resetGame()
+			return nil
+		}
+
 		// Toggle grid
 		if inpututil.IsKeyJustPressed(ebiten.KeyG) {
 			g.showGrid = !g.showGrid
@@ -882,31 +910,53 @@ func (g *Game) Update() error {
 
 		// Allow movement during Last Stand, but not during normal dalek movement
 		if !g.daleksMoving || g.isLastStandActive {
+
 			// Movement and actions
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
+
+			// //UP
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW) {
+			// 	g.movePlayer(0, -1)
+			// }
+			// //Down
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			// 	g.movePlayer(0, 1)
+			// }
+			// //Left
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyA) {
+			// 	g.movePlayer(-1, 0)
+			// }
+			// //Right
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) || inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			// 	g.movePlayer(1, 0)
+			// }
+			//UP
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
 				g.movePlayer(0, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+			//Down
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
 				g.movePlayer(0, 1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
+			//Left
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) {
 				g.movePlayer(-1, 0)
 			}
+			//Right
 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
 				g.movePlayer(1, 0)
 			}
 
 			// Diagonal movement
-			if inpututil.IsKeyJustPressed(ebiten.KeyY) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 				g.movePlayer(-1, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyE) {
 				g.movePlayer(1, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyZ) {
 				g.movePlayer(-1, 1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 				g.movePlayer(1, 1)
 			}
 
@@ -993,8 +1043,9 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
-		"Use arrow keys or HJK to move",
-		"Y, U, B, N for diagonal movement",
+		"Use arrow keys to move",
+		"Q, E, Z, C for diagonal movement",
+		"N To start a new game",
 		"SPACE or . to wait",
 		"T to teleport randomly",
 		"R to teleport safely",
