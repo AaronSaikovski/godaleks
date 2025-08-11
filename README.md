@@ -4,6 +4,7 @@
 
 A modern Go/Ebiten (and faithful) recreation of the classic Mac game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks.
+Also game sounds have been added.
 </div>
 
 ## 📜 Background
@@ -33,10 +34,12 @@ Daleks move one step per turn toward you. Survive by making them crash into each
 
 | Key                | Action                                          |
 | ------------------ | ----------------------------------------------- |
-| Arrow Keys / H J K | Move up, left, down                             |
-| Y / U / B / N      | Diagonal movement                               |
-| `SPACE` or `.`     | Wait in place                                   |
+| Arrow Keys / Mouse | Move up, down, left, right and down             |
+| Q / E / Z / C      | Diagonal movement                               |
+| `SPACE` or `.`     | Wait in                                         |
+| place              |
 | `T`                | Teleport randomly                               |
+| `N`                | Start a New game                                |
 | `R`                | Safe teleport (avoid near Daleks)               |
 | `S`                | Use Sonic Screwdriver (destroy adjacent Daleks) |
 | `L`                | Last Stand (Daleks rush continuously)           |
@@ -98,7 +101,6 @@ The list of commands is as follows:
 * docker-build:     Builds a docker image based on the docker file.
 * docker-run:       Runs the docker container.
 ```
-
 
 ## Reporting an issue
 
