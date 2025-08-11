@@ -623,6 +623,14 @@ func (g *Game) updateDalekAnimations(deltaTime float64) {
 	}
 }
 
+// Add this function to check for collision with a threshold
+func (g *Game) checkCollisionWithThreshold(pos1, pos2 FloatPosition, threshold float64) bool {
+	dx := pos1.X - pos2.X
+	dy := pos1.Y - pos2.Y
+	distSquared := dx*dx + dy*dy
+	return distSquared < threshold*threshold
+}
+
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
 
@@ -691,11 +699,25 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 
 	anyMoving := false
 
+	// Convert player position to FloatPosition for consistent comparison
+	playerPos := FloatPosition{X: float64(g.player.X), Y: float64(g.player.Y)}
+	collisionThreshold := 0.5 // Adjust this value to fine-tune collision detection
+
+	// Check player-dalek collisions first
+	for _, dalek := range g.daleks {
+		if g.checkCollisionWithThreshold(playerPos, dalek.VisualPos, collisionThreshold) {
+			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
+			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
+			g.isLastStandActive = false
+			g.daleksMoving = false
+			return
+		}
+	}
+
+	// Update dalek positions
 	for i := range g.daleks {
 		dalek := &g.daleks[i]
-
-		// Calculate direction toward player
-		playerPos := FloatPosition{X: float64(g.player.X), Y: float64(g.player.Y)}
 
 		dx := playerPos.X - dalek.VisualPos.X
 		dy := playerPos.Y - dalek.VisualPos.Y
@@ -706,33 +728,57 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			dx /= dist
 			dy /= dist
 
+			// Store old position for collision check
+			oldPos := dalek.VisualPos
+
 			// Move toward player at current speed
 			moveDistance := g.lastStandSpeed * deltaTime
 			dalek.VisualPos.X += dx * moveDistance
 			dalek.VisualPos.Y += dy * moveDistance
 
+			// Clamp to grid bounds
+			dalek.VisualPos.X = math.Max(0, math.Min(float64(gridWidth-1), dalek.VisualPos.X))
+			dalek.VisualPos.Y = math.Max(0, math.Min(float64(gridHeight-1), dalek.VisualPos.Y))
+
 			// Update grid position for collision detection
 			dalek.GridPos.X = int(math.Round(dalek.VisualPos.X))
 			dalek.GridPos.Y = int(math.Round(dalek.VisualPos.Y))
 
-			// Clamp to grid bounds
-			if dalek.GridPos.X < 0 {
-				dalek.GridPos.X = 0
-				dalek.VisualPos.X = 0
-			} else if dalek.GridPos.X >= gridWidth {
-				dalek.GridPos.X = gridWidth - 1
-				dalek.VisualPos.X = float64(gridWidth - 1)
-			}
-
-			if dalek.GridPos.Y < 0 {
-				dalek.GridPos.Y = 0
-				dalek.VisualPos.Y = 0
-			} else if dalek.GridPos.Y >= gridHeight {
-				dalek.GridPos.Y = gridHeight - 1
-				dalek.VisualPos.Y = float64(gridHeight - 1)
-			}
-
 			anyMoving = true
+
+			// Check for collisions with scraps
+			for _, scrap := range g.scraps {
+				scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
+				if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
+					dalek.VisualPos = oldPos // Prevent moving through scraps
+					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
+					g.score += 2
+					g.soundPlayer.Play("crash")
+					// Don't add duplicate scraps
+					if !g.positionOccupied(Position{X: int(oldPos.X), Y: int(oldPos.Y)}) {
+						g.scraps = append(g.scraps, Position{X: int(oldPos.X), Y: int(oldPos.Y)})
+					}
+					return
+				}
+			}
+
+			// Check for collisions with other daleks
+			for j := i + 1; j < len(g.daleks); j++ {
+				if g.checkCollisionWithThreshold(dalek.VisualPos, g.daleks[j].VisualPos, collisionThreshold) {
+					collisionPos := Position{
+						X: int((dalek.VisualPos.X + g.daleks[j].VisualPos.X) / 2),
+						Y: int((dalek.VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
+					}
+					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
+					g.daleks = append(g.daleks[:j-1], g.daleks[j:]...)
+					g.score += 4 // 2 points per dalek
+					g.soundPlayer.Play("crash")
+					if !g.positionOccupied(collisionPos) {
+						g.scraps = append(g.scraps, collisionPos)
+					}
+					return
+				}
+			}
 		}
 	}
 
