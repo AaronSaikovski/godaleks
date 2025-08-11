@@ -34,6 +34,8 @@ type GameState int
 
 var gameImages *DalekGameImages
 
+//r soundPlayer *SoundPlayer
+
 const (
 	StateMenu GameState = iota
 	StatePlaying
@@ -88,10 +90,19 @@ type Game struct {
 	lastStandMaxSpeed     float64 // Maximum speed cap
 	// Mouse support
 	lastClickTime time.Time
+	soundPlayer   *SoundPlayer
 }
 
 func init() {
 	gameImages = loadImages()
+
+	// ...existing code...
+	// soundPlayer, err := NewSoundPlayer()
+	// if err != nil {
+	// 	// Handle error appropriately for your game
+	// 	panic(err)
+	// }
+
 }
 
 // Loads images
@@ -190,6 +201,13 @@ func createScrapImage() *ebiten.Image {
 
 func NewGame() *Game {
 	rand.Seed(time.Now().UnixNano())
+
+	soundPlayer, err := NewSoundPlayer()
+	if err != nil {
+		// Handle error appropriately for your game
+		panic(err)
+	}
+
 	g := &Game{
 		state:         StateMenu,
 		level:         1,
@@ -214,9 +232,32 @@ func NewGame() *Game {
 		lastStandAcceleration: 1.5,  // Speed multiplier per second
 		lastStandMaxSpeed:     20.0, // Maximum speed cap
 		lastClickTime:         time.Now(),
+		soundPlayer:           soundPlayer,
 	}
 
 	return g
+}
+
+// resetGame resets the game to initial state and starts from level 1
+func (g *Game) resetGame() {
+	g.level = 1
+	g.score = 0
+	g.teleports = 10
+	g.safeTeleports = 3
+	g.screwdrivers = 2
+	g.lastStands = 1
+	g.teleportAnimation = false
+	g.teleportTimer = 0
+	g.screwdriverAnimation = false
+	g.screwdriverTimer = 0
+	g.screwdriverTargets = nil
+	g.daleksMoving = false
+	g.isLastStandActive = false
+	g.lastStandSpeed = 2.0
+	g.daleks = nil
+	g.scraps = nil
+	g.gameOverMessage = ""
+	g.startLevel()
 }
 
 func (g *Game) startLevel() {
@@ -261,6 +302,7 @@ func (g *Game) startLevel() {
 	}
 
 	g.state = StatePlaying
+	g.soundPlayer.Play("gamestart")
 }
 
 func (g *Game) distance(a, b Position) float64 {
@@ -381,6 +423,10 @@ func (g *Game) movePlayer(dx, dy int) {
 }
 
 func (g *Game) teleport(safe bool) {
+
+	// ...existing code...
+	g.soundPlayer.Play("teleport")
+
 	if g.state != StatePlaying || (g.daleksMoving && !g.isLastStandActive) {
 		return
 	}
@@ -448,6 +494,7 @@ func (g *Game) isSafePosition(pos Position) bool {
 }
 
 func (g *Game) useScrewdriver() {
+
 	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
 		return
 	}
@@ -472,6 +519,7 @@ func (g *Game) useScrewdriver() {
 	// Start screwdriver animation if there are targets
 	if len(g.screwdriverTargets) > 0 {
 		g.screwdriverAnimation = true
+		g.soundPlayer.Play("screwdriver")
 		g.screwdriverTimer = 0
 	}
 
@@ -575,6 +623,14 @@ func (g *Game) updateDalekAnimations(deltaTime float64) {
 	}
 }
 
+// Add this function to check for collision with a threshold
+func (g *Game) checkCollisionWithThreshold(pos1, pos2 FloatPosition, threshold float64) bool {
+	dx := pos1.X - pos2.X
+	dy := pos1.Y - pos2.Y
+	distSquared := dx*dx + dy*dy
+	return distSquared < threshold*threshold
+}
+
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
 
@@ -643,11 +699,25 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 
 	anyMoving := false
 
+	// Convert player position to FloatPosition for consistent comparison
+	playerPos := FloatPosition{X: float64(g.player.X), Y: float64(g.player.Y)}
+	collisionThreshold := 0.5 // Adjust this value to fine-tune collision detection
+
+	// Check player-dalek collisions first
+	for _, dalek := range g.daleks {
+		if g.checkCollisionWithThreshold(playerPos, dalek.VisualPos, collisionThreshold) {
+			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
+			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
+			g.isLastStandActive = false
+			g.daleksMoving = false
+			return
+		}
+	}
+
+	// Update dalek positions
 	for i := range g.daleks {
 		dalek := &g.daleks[i]
-
-		// Calculate direction toward player
-		playerPos := FloatPosition{X: float64(g.player.X), Y: float64(g.player.Y)}
 
 		dx := playerPos.X - dalek.VisualPos.X
 		dy := playerPos.Y - dalek.VisualPos.Y
@@ -658,33 +728,57 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			dx /= dist
 			dy /= dist
 
+			// Store old position for collision check
+			oldPos := dalek.VisualPos
+
 			// Move toward player at current speed
 			moveDistance := g.lastStandSpeed * deltaTime
 			dalek.VisualPos.X += dx * moveDistance
 			dalek.VisualPos.Y += dy * moveDistance
 
+			// Clamp to grid bounds
+			dalek.VisualPos.X = math.Max(0, math.Min(float64(gridWidth-1), dalek.VisualPos.X))
+			dalek.VisualPos.Y = math.Max(0, math.Min(float64(gridHeight-1), dalek.VisualPos.Y))
+
 			// Update grid position for collision detection
 			dalek.GridPos.X = int(math.Round(dalek.VisualPos.X))
 			dalek.GridPos.Y = int(math.Round(dalek.VisualPos.Y))
 
-			// Clamp to grid bounds
-			if dalek.GridPos.X < 0 {
-				dalek.GridPos.X = 0
-				dalek.VisualPos.X = 0
-			} else if dalek.GridPos.X >= gridWidth {
-				dalek.GridPos.X = gridWidth - 1
-				dalek.VisualPos.X = float64(gridWidth - 1)
-			}
-
-			if dalek.GridPos.Y < 0 {
-				dalek.GridPos.Y = 0
-				dalek.VisualPos.Y = 0
-			} else if dalek.GridPos.Y >= gridHeight {
-				dalek.GridPos.Y = gridHeight - 1
-				dalek.VisualPos.Y = float64(gridHeight - 1)
-			}
-
 			anyMoving = true
+
+			// Check for collisions with scraps
+			for _, scrap := range g.scraps {
+				scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
+				if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
+					dalek.VisualPos = oldPos // Prevent moving through scraps
+					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
+					g.score += 2
+					g.soundPlayer.Play("crash")
+					// Don't add duplicate scraps
+					if !g.positionOccupied(Position{X: int(oldPos.X), Y: int(oldPos.Y)}) {
+						g.scraps = append(g.scraps, Position{X: int(oldPos.X), Y: int(oldPos.Y)})
+					}
+					return
+				}
+			}
+
+			// Check for collisions with other daleks
+			for j := i + 1; j < len(g.daleks); j++ {
+				if g.checkCollisionWithThreshold(dalek.VisualPos, g.daleks[j].VisualPos, collisionThreshold) {
+					collisionPos := Position{
+						X: int((dalek.VisualPos.X + g.daleks[j].VisualPos.X) / 2),
+						Y: int((dalek.VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
+					}
+					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
+					g.daleks = append(g.daleks[:j-1], g.daleks[j:]...)
+					g.score += 4 // 2 points per dalek
+					g.soundPlayer.Play("crash")
+					if !g.positionOccupied(collisionPos) {
+						g.scraps = append(g.scraps, collisionPos)
+					}
+					return
+				}
+			}
 		}
 	}
 
@@ -721,6 +815,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -740,6 +835,7 @@ func (g *Game) checkCollisions() {
 		for _, scrap := range g.scraps {
 			if dalek.GridPos == scrap {
 				collided = true
+				g.soundPlayer.Play("crash")
 				g.score += 2
 				collidedPositions[dalek.GridPos] = true
 				break
@@ -763,6 +859,7 @@ func (g *Game) checkCollisions() {
 				collided = true
 				g.score += 2
 				collidedPositions[dalek.GridPos] = true
+				g.soundPlayer.Play("crash")
 				break
 			}
 		}
@@ -770,6 +867,7 @@ func (g *Game) checkCollisions() {
 		if !collided {
 			finalDaleks = append(finalDaleks, dalek)
 		}
+
 	}
 
 	// Add debris piles for all collided positions
@@ -794,6 +892,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -815,6 +914,7 @@ func (g *Game) checkCollisions() {
 		if g.level > 10 {
 			g.state = StateWin
 			g.gameOverMessage = "Congratulations! You survived all levels!"
+			g.soundPlayer.Play("gameover")
 		} else {
 			g.startLevel()
 		}
@@ -868,6 +968,12 @@ func (g *Game) Update() error {
 
 	case StatePlaying:
 
+		// New Game - press N to start a new game
+		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			g.resetGame()
+			return nil
+		}
+
 		// Toggle grid
 		if inpututil.IsKeyJustPressed(ebiten.KeyG) {
 			g.showGrid = !g.showGrid
@@ -882,31 +988,53 @@ func (g *Game) Update() error {
 
 		// Allow movement during Last Stand, but not during normal dalek movement
 		if !g.daleksMoving || g.isLastStandActive {
+
 			// Movement and actions
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyK) {
+
+			// //UP
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW) {
+			// 	g.movePlayer(0, -1)
+			// }
+			// //Down
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			// 	g.movePlayer(0, 1)
+			// }
+			// //Left
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyA) {
+			// 	g.movePlayer(-1, 0)
+			// }
+			// //Right
+			// if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) || inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			// 	g.movePlayer(1, 0)
+			// }
+			//UP
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
 				g.movePlayer(0, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+			//Down
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
 				g.movePlayer(0, 1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyH) {
+			//Left
+			if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) {
 				g.movePlayer(-1, 0)
 			}
+			//Right
 			if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
 				g.movePlayer(1, 0)
 			}
 
 			// Diagonal movement
-			if inpututil.IsKeyJustPressed(ebiten.KeyY) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 				g.movePlayer(-1, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyE) {
 				g.movePlayer(1, -1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyZ) {
 				g.movePlayer(-1, 1)
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 				g.movePlayer(1, 1)
 			}
 
@@ -993,8 +1121,9 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
-		"Use arrow keys or HJK to move",
-		"Y, U, B, N for diagonal movement",
+		"Use arrow keys or mouse to move",
+		"Q, E, Z, C for diagonal movement",
+		"N To start a new game",
 		"SPACE or . to wait",
 		"T to teleport randomly",
 		"R to teleport safely",

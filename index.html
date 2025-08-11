@@ -1,8 +1,38 @@
 <!DOCTYPE html>
-<script src="wasm_exec.js"></script>
-<script>
-const go = new Go();
-WebAssembly.instantiateStreaming(fetch("godaleks.wasm"), go.importObject).then(result => {
-    go.run(result.instance);
-});
-</script>
+<html>
+<head>
+  <style>
+    /* Container for your WASM app fixed at 800x600 */
+    #wasm-container {
+      width: 800px;
+      height: 600px;
+      border: 1px solid #333;
+      overflow: auto; /* if needed */
+      margin: 0 auto; /* center horizontally */
+      background: #f0f0f0;
+    }
+    body {
+      display: flex;
+      justify-content: center; /* center container horizontally */
+      align-items: start;
+      min-height: 100vh;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="wasm-container"></div>
+
+  <script src="wasm_exec.js"></script>
+  <script>
+    const go = new Go();
+
+    WebAssembly.instantiateStreaming(fetch("godaleks.wasm"), go.importObject).then(result => {
+      // Redirect stdout/stderr if needed, e.g. to console or to the container
+
+      // Run the wasm in the current document — you can modify your app if it requires
+      go.run(result.instance);
+    });
+  </script>
+</body>
+</html>
