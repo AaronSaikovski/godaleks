@@ -34,6 +34,8 @@ type GameState int
 
 var gameImages *DalekGameImages
 
+//r soundPlayer *SoundPlayer
+
 const (
 	StateMenu GameState = iota
 	StatePlaying
@@ -88,10 +90,19 @@ type Game struct {
 	lastStandMaxSpeed     float64 // Maximum speed cap
 	// Mouse support
 	lastClickTime time.Time
+	soundPlayer   *SoundPlayer
 }
 
 func init() {
 	gameImages = loadImages()
+
+	// ...existing code...
+	// soundPlayer, err := NewSoundPlayer()
+	// if err != nil {
+	// 	// Handle error appropriately for your game
+	// 	panic(err)
+	// }
+
 }
 
 // Loads images
@@ -190,6 +201,13 @@ func createScrapImage() *ebiten.Image {
 
 func NewGame() *Game {
 	rand.Seed(time.Now().UnixNano())
+
+	soundPlayer, err := NewSoundPlayer()
+	if err != nil {
+		// Handle error appropriately for your game
+		panic(err)
+	}
+
 	g := &Game{
 		state:         StateMenu,
 		level:         1,
@@ -214,6 +232,7 @@ func NewGame() *Game {
 		lastStandAcceleration: 1.5,  // Speed multiplier per second
 		lastStandMaxSpeed:     20.0, // Maximum speed cap
 		lastClickTime:         time.Now(),
+		soundPlayer:           soundPlayer,
 	}
 
 	return g
@@ -403,6 +422,10 @@ func (g *Game) movePlayer(dx, dy int) {
 }
 
 func (g *Game) teleport(safe bool) {
+
+	// ...existing code...
+	g.soundPlayer.Play("teleport")
+
 	if g.state != StatePlaying || (g.daleksMoving && !g.isLastStandActive) {
 		return
 	}
@@ -470,6 +493,7 @@ func (g *Game) isSafePosition(pos Position) bool {
 }
 
 func (g *Game) useScrewdriver() {
+
 	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
 		return
 	}
@@ -494,6 +518,7 @@ func (g *Game) useScrewdriver() {
 	// Start screwdriver animation if there are targets
 	if len(g.screwdriverTargets) > 0 {
 		g.screwdriverAnimation = true
+		g.soundPlayer.Play("screwdriver")
 		g.screwdriverTimer = 0
 	}
 
@@ -743,6 +768,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -762,6 +788,7 @@ func (g *Game) checkCollisions() {
 		for _, scrap := range g.scraps {
 			if dalek.GridPos == scrap {
 				collided = true
+				g.soundPlayer.Play("crash")
 				g.score += 2
 				collidedPositions[dalek.GridPos] = true
 				break
@@ -785,6 +812,7 @@ func (g *Game) checkCollisions() {
 				collided = true
 				g.score += 2
 				collidedPositions[dalek.GridPos] = true
+				g.soundPlayer.Play("crash")
 				break
 			}
 		}
@@ -792,6 +820,7 @@ func (g *Game) checkCollisions() {
 		if !collided {
 			finalDaleks = append(finalDaleks, dalek)
 		}
+
 	}
 
 	// Add debris piles for all collided positions
@@ -816,6 +845,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
+			g.soundPlayer.Play("gameover")
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -837,6 +867,7 @@ func (g *Game) checkCollisions() {
 		if g.level > 10 {
 			g.state = StateWin
 			g.gameOverMessage = "Congratulations! You survived all levels!"
+			g.soundPlayer.Play("gameover")
 		} else {
 			g.startLevel()
 		}
