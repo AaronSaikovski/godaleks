@@ -1118,7 +1118,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "DALEKS"
+	title := "DALEKS - alpha v0.02"
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
