@@ -3,6 +3,7 @@ package daleks
 import (
 	"bytes"
 	_ "embed"
+
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 )
@@ -18,6 +19,9 @@ var crashData []byte
 
 //go:embed assets/gameover.wav
 var gameoverData []byte
+
+//go:embed assets/gamestart.wav
+var gamestartData []byte
 
 const (
 	sampleRate = 44100
@@ -39,6 +43,7 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 		"teleport":    teleportData,
 		"screwdriver": screwdriverData,
 		"crash":       crashData,
+		"gamestart":   gamestartData,
 		"gameover":    gameoverData,
 	}
 

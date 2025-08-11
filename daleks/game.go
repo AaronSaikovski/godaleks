@@ -302,6 +302,7 @@ func (g *Game) startLevel() {
 	}
 
 	g.state = StatePlaying
+	g.soundPlayer.Play("gamestart")
 }
 
 func (g *Game) distance(a, b Position) float64 {
