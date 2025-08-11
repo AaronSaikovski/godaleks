@@ -271,6 +271,7 @@ func (g *Game) startLevel() {
 	g.screwdriverAnimation = false
 	g.screwdriverTimer = 0
 	g.screwdriverTargets = nil
+	g.lastStands = 1
 
 	// Place player randomly
 	g.player = Position{
