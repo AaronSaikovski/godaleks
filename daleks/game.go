@@ -906,9 +906,10 @@ func (g *Game) checkCollisions() {
 		g.score += g.level * 10
 		g.level++
 		g.teleports += 2
-		if g.level%3 == 0 { // Bonus screwdriver every 3 levels
-			g.screwdrivers++
-		}
+		// if g.level%3 == 0 { // Bonus screwdriver every 3 levels
+		// 	g.screwdrivers++
+		// }
+		g.screwdrivers += 2 // Increase screwdrivers by 2 every level
 		if g.level%5 == 0 { // Bonus last stand every 5 levels
 			g.lastStands++
 		}
@@ -1118,7 +1119,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "DALEKS - alpha v0.02"
+	title := "DALEKS - alpha v0.03"
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
