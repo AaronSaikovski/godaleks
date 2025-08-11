@@ -224,13 +224,13 @@ func NewGame() *Game {
 		dalekImage:  gameImages.Dalek,
 
 		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.6, // Duration for normal movement
+		moveAnimationDuration: 0.8, // Changed from 0.6 to 0.8 for slower movement
 		daleksMoving:          false,
 		showGrid:              false, // Default OFF
 		// Last Stand smooth movement settings
-		lastStandSpeed:        2.0,  // Start speed in cells per second
-		lastStandAcceleration: 1.5,  // Speed multiplier per second
-		lastStandMaxSpeed:     20.0, // Maximum speed cap
+		lastStandSpeed:        1.5,  // Changed from 2.0 to 1.5 for slower initial speed
+		lastStandAcceleration: 1.2,  // Changed from 1.5 to 1.2 for gentler acceleration
+		lastStandMaxSpeed:     15.0, // Changed from 20.0 to 15.0 for lower max speed
 		lastClickTime:         time.Now(),
 		soundPlayer:           soundPlayer,
 	}
@@ -651,20 +651,20 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 				allFinished = false
 			}
 
-			// Smooth easing function (ease-out)
-			easedProgress := 1.0 - (1.0-progress)*(1.0-progress)
+			// Smoother easing function (cubic ease-in-out)
+			var easedProgress float64
+			if progress < 0.5 {
+				easedProgress = 4 * progress * progress * progress
+			} else {
+				p := progress - 1
+				easedProgress = 1 + 4*p*p*p
+			}
 
 			// Calculate current visual position
 			startX := dalek.VisualPos.X
 			startY := dalek.VisualPos.Y
 			targetX := dalek.TargetPos.X
 			targetY := dalek.TargetPos.Y
-
-			// If this is the start of movement, set the start position
-			if dalek.MoveTimer <= deltaTime {
-				startX = dalek.VisualPos.X
-				startY = dalek.VisualPos.Y
-			}
 
 			// Interpolate position
 			dalek.VisualPos.X = startX + (targetX-startX)*easedProgress
@@ -1119,7 +1119,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "DALEKS - alpha v0.03"
+	title := "DALEKS - alpha v0.04"
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	instructions := []string{
