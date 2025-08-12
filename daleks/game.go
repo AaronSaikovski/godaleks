@@ -494,6 +494,63 @@ func (g *Game) isSafePosition(pos Position) bool {
 	return true
 }
 
+// func (g *Game) useScrewdriverOLD() {
+
+// 	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
+// 		return
+// 	}
+
+// 	g.screwdrivers--
+
+// 	// Find all daleks adjacent to player (including diagonally)
+// 	daleksToDestroy := make([]int, 0)
+// 	g.screwdriverTargets = make([]Position, 0)
+
+// 	for i, dalek := range g.daleks {
+// 		dx := abs(dalek.GridPos.X - g.player.X)
+// 		dy := abs(dalek.GridPos.Y - g.player.Y)
+
+// 		// Adjacent includes all 8 surrounding cells
+// 		if dx <= 1 && dy <= 1 && (dx != 0 || dy != 0) {
+// 			daleksToDestroy = append(daleksToDestroy, i)
+// 			g.screwdriverTargets = append(g.screwdriverTargets, dalek.GridPos)
+// 		}
+// 	}
+
+// 	// Start screwdriver animation if there are targets
+// 	if len(g.screwdriverTargets) > 0 {
+// 		g.screwdriverAnimation = true
+// 		g.soundPlayer.Play("screwdriver")
+// 		g.screwdriverTimer = 0
+// 	}
+
+// 	// Remove destroyed daleks and add scraps
+// 	newDaleks := make([]Dalek, 0, len(g.daleks))
+// 	for i, dalek := range g.daleks {
+// 		destroyed := false
+// 		for _, destroyIndex := range daleksToDestroy {
+// 			if i == destroyIndex {
+// 				destroyed = true
+// 				g.score += 5 // Bonus points for screwdriver kill
+// 				// Add debris pile at dalek's position
+// 				g.scraps = append(g.scraps, dalek.GridPos)
+// 				break
+// 			}
+// 		}
+// 		if !destroyed {
+// 			newDaleks = append(newDaleks, dalek)
+// 		}
+// 	}
+
+// 	g.daleks = newDaleks
+
+// 	// Move remaining daleks after screwdriver use (if not in Last Stand)
+// 	if !g.isLastStandActive {
+// 		g.moveDaleks()
+// 	}
+// }
+
+// Updated version to not use debris field when using screwdriver
 func (g *Game) useScrewdriver() {
 
 	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
@@ -524,7 +581,7 @@ func (g *Game) useScrewdriver() {
 		g.screwdriverTimer = 0
 	}
 
-	// Remove destroyed daleks and add scraps
+	// Remove destroyed daleks but DON'T add scraps
 	newDaleks := make([]Dalek, 0, len(g.daleks))
 	for i, dalek := range g.daleks {
 		destroyed := false
@@ -532,8 +589,8 @@ func (g *Game) useScrewdriver() {
 			if i == destroyIndex {
 				destroyed = true
 				g.score += 5 // Bonus points for screwdriver kill
-				// Add debris pile at dalek's position
-				g.scraps = append(g.scraps, dalek.GridPos)
+				// REMOVED: Don't add debris pile at dalek's position
+				// g.scraps = append(g.scraps, dalek.GridPos)
 				break
 			}
 		}
