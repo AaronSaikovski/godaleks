@@ -3,6 +3,7 @@
 ## v0.0.4. (2025-08-12)
 - Bug fixes and performance improvements.
 - When using sonic screwdriver, not leaving behind a debris field.
+- Smoother Dalek movement, less jerky.
 
 ## v0.0.3. (2025-08-11)
 - Bug fixes and performance improvements.

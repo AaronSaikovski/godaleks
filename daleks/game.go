@@ -689,6 +689,58 @@ func (g *Game) checkCollisionWithThreshold(pos1, pos2 FloatPosition, threshold f
 	return distSquared < threshold*threshold
 }
 
+// func (g *Game) updateNormalMovementOLD(deltaTime float64) {
+// 	allFinished := true
+
+// 	for i := range g.daleks {
+// 		dalek := &g.daleks[i]
+
+// 		if dalek.IsMoving {
+// 			dalek.MoveTimer += deltaTime
+
+// 			// Calculate interpolation progress (0.0 to 1.0)
+// 			progress := dalek.MoveTimer / g.moveAnimationDuration
+// 			if progress >= 1.0 {
+// 				progress = 1.0
+// 				dalek.IsMoving = false
+// 				dalek.MoveTimer = 0
+// 			} else {
+// 				allFinished = false
+// 			}
+
+// 			// Smoother easing function (cubic ease-in-out)
+// 			var easedProgress float64
+// 			if progress < 0.5 {
+// 				easedProgress = 4 * progress * progress * progress
+// 			} else {
+// 				p := progress - 1
+// 				easedProgress = 1 + 4*p*p*p
+// 			}
+
+// 			// Calculate current visual position
+// 			startX := dalek.VisualPos.X
+// 			startY := dalek.VisualPos.Y
+// 			targetX := dalek.TargetPos.X
+// 			targetY := dalek.TargetPos.Y
+
+// 			// Interpolate position
+// 			dalek.VisualPos.X = startX + (targetX-startX)*easedProgress
+// 			dalek.VisualPos.Y = startY + (targetY-startY)*easedProgress
+
+// 			// Ensure we end up exactly at target
+// 			if !dalek.IsMoving {
+// 				dalek.VisualPos = dalek.TargetPos
+// 			}
+// 		}
+// 	}
+
+// 	// Check if all daleks finished moving
+// 	if allFinished {
+// 		g.daleksMoving = false
+// 		g.checkCollisions()
+// 	}
+// }
+
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
 
@@ -708,14 +760,13 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 				allFinished = false
 			}
 
-			// Smoother easing function (cubic ease-in-out)
+			// Much smoother easing function - smoothstep interpolation
+			// This gives a very smooth start and end with consistent middle speed
 			var easedProgress float64
-			if progress < 0.5 {
-				easedProgress = 4 * progress * progress * progress
-			} else {
-				p := progress - 1
-				easedProgress = 1 + 4*p*p*p
-			}
+			easedProgress = progress * progress * (3.0 - 2.0*progress)
+
+			// Alternative: Even smoother with smootherstep (quintic) - uncomment to try
+			// easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0)+10.0)
 
 			// Calculate current visual position
 			startX := dalek.VisualPos.X
