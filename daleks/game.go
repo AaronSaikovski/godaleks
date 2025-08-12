@@ -95,14 +95,6 @@ type Game struct {
 
 func init() {
 	gameImages = loadImages()
-
-	// ...existing code...
-	// soundPlayer, err := NewSoundPlayer()
-	// if err != nil {
-	// 	// Handle error appropriately for your game
-	// 	panic(err)
-	// }
-
 }
 
 // Loads images
@@ -494,62 +486,6 @@ func (g *Game) isSafePosition(pos Position) bool {
 	return true
 }
 
-// func (g *Game) useScrewdriverOLD() {
-
-// 	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
-// 		return
-// 	}
-
-// 	g.screwdrivers--
-
-// 	// Find all daleks adjacent to player (including diagonally)
-// 	daleksToDestroy := make([]int, 0)
-// 	g.screwdriverTargets = make([]Position, 0)
-
-// 	for i, dalek := range g.daleks {
-// 		dx := abs(dalek.GridPos.X - g.player.X)
-// 		dy := abs(dalek.GridPos.Y - g.player.Y)
-
-// 		// Adjacent includes all 8 surrounding cells
-// 		if dx <= 1 && dy <= 1 && (dx != 0 || dy != 0) {
-// 			daleksToDestroy = append(daleksToDestroy, i)
-// 			g.screwdriverTargets = append(g.screwdriverTargets, dalek.GridPos)
-// 		}
-// 	}
-
-// 	// Start screwdriver animation if there are targets
-// 	if len(g.screwdriverTargets) > 0 {
-// 		g.screwdriverAnimation = true
-// 		g.soundPlayer.Play("screwdriver")
-// 		g.screwdriverTimer = 0
-// 	}
-
-// 	// Remove destroyed daleks and add scraps
-// 	newDaleks := make([]Dalek, 0, len(g.daleks))
-// 	for i, dalek := range g.daleks {
-// 		destroyed := false
-// 		for _, destroyIndex := range daleksToDestroy {
-// 			if i == destroyIndex {
-// 				destroyed = true
-// 				g.score += 5 // Bonus points for screwdriver kill
-// 				// Add debris pile at dalek's position
-// 				g.scraps = append(g.scraps, dalek.GridPos)
-// 				break
-// 			}
-// 		}
-// 		if !destroyed {
-// 			newDaleks = append(newDaleks, dalek)
-// 		}
-// 	}
-
-// 	g.daleks = newDaleks
-
-// 	// Move remaining daleks after screwdriver use (if not in Last Stand)
-// 	if !g.isLastStandActive {
-// 		g.moveDaleks()
-// 	}
-// }
-
 // Updated version to not use debris field when using screwdriver
 func (g *Game) useScrewdriver() {
 
@@ -688,58 +624,6 @@ func (g *Game) checkCollisionWithThreshold(pos1, pos2 FloatPosition, threshold f
 	distSquared := dx*dx + dy*dy
 	return distSquared < threshold*threshold
 }
-
-// func (g *Game) updateNormalMovementOLD(deltaTime float64) {
-// 	allFinished := true
-
-// 	for i := range g.daleks {
-// 		dalek := &g.daleks[i]
-
-// 		if dalek.IsMoving {
-// 			dalek.MoveTimer += deltaTime
-
-// 			// Calculate interpolation progress (0.0 to 1.0)
-// 			progress := dalek.MoveTimer / g.moveAnimationDuration
-// 			if progress >= 1.0 {
-// 				progress = 1.0
-// 				dalek.IsMoving = false
-// 				dalek.MoveTimer = 0
-// 			} else {
-// 				allFinished = false
-// 			}
-
-// 			// Smoother easing function (cubic ease-in-out)
-// 			var easedProgress float64
-// 			if progress < 0.5 {
-// 				easedProgress = 4 * progress * progress * progress
-// 			} else {
-// 				p := progress - 1
-// 				easedProgress = 1 + 4*p*p*p
-// 			}
-
-// 			// Calculate current visual position
-// 			startX := dalek.VisualPos.X
-// 			startY := dalek.VisualPos.Y
-// 			targetX := dalek.TargetPos.X
-// 			targetY := dalek.TargetPos.Y
-
-// 			// Interpolate position
-// 			dalek.VisualPos.X = startX + (targetX-startX)*easedProgress
-// 			dalek.VisualPos.Y = startY + (targetY-startY)*easedProgress
-
-// 			// Ensure we end up exactly at target
-// 			if !dalek.IsMoving {
-// 				dalek.VisualPos = dalek.TargetPos
-// 			}
-// 		}
-// 	}
-
-// 	// Check if all daleks finished moving
-// 	if allFinished {
-// 		g.daleksMoving = false
-// 		g.checkCollisions()
-// 	}
-// }
 
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
@@ -1014,9 +898,7 @@ func (g *Game) checkCollisions() {
 		g.score += g.level * 10
 		g.level++
 		g.teleports += 2
-		// if g.level%3 == 0 { // Bonus screwdriver every 3 levels
-		// 	g.screwdrivers++
-		// }
+
 		g.screwdrivers += 2 // Increase screwdrivers by 2 every level
 		if g.level%5 == 0 { // Bonus last stand every 5 levels
 			g.lastStands++
