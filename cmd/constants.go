@@ -20,43 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package daleks
+package cmd
 
-import (
-	"image/color"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"golang.org/x/image/font/basicfont"
+const (
+	screenWidth  = 800
+	screenHeight = 600
+	gridWidth    = 50
+	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
+	cellSize     = 16
 )
 
-func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GODALEKS - alpha v0.04"
-	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
-
-	instructions := []string{
-		"Use arrow keys or mouse to move",
-		"Q, E, Z, C for diagonal movement",
-		"N To start a new game",
-		"SPACE or . to wait",
-		"T to teleport randomly",
-		"R to teleport safely",
-		"S to use sonic screwdriver",
-		"L for Last Stand (all daleks rush you)",
-		"G to turn game grid On/Off",
-		"",
-		"MOUSE: Click adjacent cell to move there",
-		"Click on player to wait in place",
-		"",
-		"Avoid the Daleks!",
-		"Make them crash into each other!",
-		"Sonic Screwdriver destroys adjacent Daleks!",
-		"Last Stand forces all daleks to move!",
-		"",
-		"Press SPACE or click to start",
-	}
-
-	for i, line := range instructions {
-		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*20, color.Black)
-	}
-}
+const (
+	StateMenu GameState = iota
+	StatePlaying
+	StateGameOver
+	StateWin
+)

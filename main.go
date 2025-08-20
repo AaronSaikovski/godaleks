@@ -24,7 +24,7 @@ package main
 import (
 	"log"
 
-	"github.com/AaronSaikovski/godaleks/daleks"
+	"github.com/AaronSaikovski/godaleks/cmd"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -36,7 +36,7 @@ const (
 // main - Main function
 func main() {
 
-	game := daleks.NewGame()
+	game := cmd.NewGame()
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("GoDaleks")
 
