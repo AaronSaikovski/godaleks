@@ -19,28 +19,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package main
 
-import (
-	"log"
-
-	"github.com/AaronSaikovski/godaleks/daleks"
-	"github.com/hajimehoshi/ebiten/v2"
-)
+package daleks
 
 const (
 	screenWidth  = 800
 	screenHeight = 600
+	gridWidth    = 50
+	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
+	cellSize     = 16
 )
 
-// main - Main function
-func main() {
-
-	game := daleks.NewGame()
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("GoDaleks")
-
-	if err := ebiten.RunGame(game); err != nil {
-		log.Fatal(err)
-	}
-}
+const (
+	StateMenu GameState = iota
+	StatePlaying
+	StateGameOver
+	StateWin
+)

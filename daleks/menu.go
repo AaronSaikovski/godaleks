@@ -19,28 +19,44 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package main
+
+package daleks
 
 import (
-	"log"
+	"image/color"
 
-	"github.com/AaronSaikovski/godaleks/daleks"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"golang.org/x/image/font/basicfont"
 )
 
-const (
-	screenWidth  = 800
-	screenHeight = 600
-)
+func (g *Game) drawMenu(screen *ebiten.Image) {
+	title := "GODALEKS - alpha v0.04"
+	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
-// main - Main function
-func main() {
+	instructions := []string{
+		"Use arrow keys or mouse to move",
+		"Q, E, Z, C for diagonal movement",
+		"N To start a new game",
+		"SPACE or . to wait",
+		"T to teleport randomly",
+		"R to teleport safely",
+		"S to use sonic screwdriver",
+		"L for Last Stand (all daleks rush you)",
+		"G to turn game grid On/Off",
+		"",
+		"MOUSE: Click adjacent cell to move there",
+		"Click on player to wait in place",
+		"",
+		"Avoid the Daleks!",
+		"Make them crash into each other!",
+		"Sonic Screwdriver destroys adjacent Daleks!",
+		"Last Stand forces all daleks to move!",
+		"",
+		"Press SPACE or click to start",
+	}
 
-	game := daleks.NewGame()
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("GoDaleks")
-
-	if err := ebiten.RunGame(game); err != nil {
-		log.Fatal(err)
+	for i, line := range instructions {
+		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*20, color.Black)
 	}
 }
