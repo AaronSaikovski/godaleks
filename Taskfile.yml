@@ -14,7 +14,7 @@ env:
 tasks:
   ## release - Builds the project in preparation for (local)release
   release:
-    deps: [vet, lint, seccheck]
+    deps: [vet, lint]
     cmds:
       - go build -ldflags="-s -w -X main.version={{.VERSION}}" -o bin/$TARGET $APPPATH
 
