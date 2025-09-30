@@ -104,19 +104,3 @@ tasks:
 
   ###############################################################################
 
-  ## docker-build - builds a docker image based on the docker file.
-  docker-build:
-    desc: "Builds a docker image based on the docker file."
-    cmds:
-      - docker build --platform linux/arm64 -t $PROJECT_NAME:latest .
-
-  ###############################################################################
-
-  ## docker-run - runs the docker container.
-  docker-run:
-    desc: "Runs the docker container."
-    deps: [docker-build]
-    cmds:
-      - docker run $PROJECT_NAME:latest
-
-  ###############################################################################

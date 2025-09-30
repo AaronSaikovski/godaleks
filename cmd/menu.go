@@ -23,15 +23,19 @@
 package cmd
 
 import (
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font/basicfont"
-	"image/color"
 )
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GODALEKS - alpha v0.05"
+	title := "GoDaleks - v1.0"
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
+
+	gameDesc := "Based on the original 1984 'Daleks' Macintosh Classic game by Johan Strandberg."
+	text.Draw(screen, gameDesc, basicfont.Face7x13, screenWidth/2-len(gameDesc)*7/2, 120, color.Black)
 
 	instructions := []string{
 		"Use arrow keys or mouse to move",
@@ -56,6 +60,9 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	}
 
 	for i, line := range instructions {
-		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*20, color.Black)
+		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*15, color.Black)
 	}
+
+	authorInfo := "Go 2025 version by: Aaron Saikovski - https://github.com/AaronSaikovski/godaleks"
+	text.Draw(screen, authorInfo, basicfont.Face7x13, screenWidth/2-len(authorInfo)*7/2, screenHeight-30, color.Black)
 }

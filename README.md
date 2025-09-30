@@ -1,26 +1,35 @@
 <div align="center">
 
-# GoDaleks
+# GoDaleks v1.0
 
-A modern Go/Ebiten (and faithful) recreation of the classic Mac game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
-This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks.
-Also game sounds have been added.
+A modern Go/Ebiten (and faithful) recreation of the classic Apple Macintosh game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
+This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks including sounds.
+
 </div>
 
 ## 📜 Background
 
-_"Daleks Forever"_ was originally written by Mike Gleason in 2010 as a tribute to the Mac classic, featuring smooth Dalek movement, advanced gameplay tweaks, and faithful sound/graphics.  
-The Go/Ebiten edition you see here is a modern port designed to run cross-platform on today’s systems, preserving the tension and strategy that made the game addictive.
+The version you see here is a modern port designed to run cross-platform on today’s systems, preserving the tension and strategy that made the original game so addictive.
+All efforts have been made to make this game as faithful to the original as possible.
 
-For the history of the original and its Macintosh versions, see [About Daleks Forever](About%20Daleks%20Forever.txt).
+This code is written in Go and can be played locally or on the web via a Web assembly compiled version and is fully self contained.
+
+See [here](https://www.macintoshrepository.org/3913-daleks)
 
 ---
 
 ## 🎮 Gameplay
 
-[Daleks- Online Playable version](https://AaronSaikovski.github.io/godaleks)
+[GoDaleks- Online Playable version](https://AaronSaikovski.github.io/godaleks)
 
-The player is a lone human on a grid, hunted by deadly Daleks.  
+In this game, you attempt to survive by avoiding steadily converging robots If you are overrun by the robots, or move into their immediate zone of control, you are disintegrated.
+By guiding the robots with your actions, you can get them to destroy themselves as they collide with each other.
+You can escape by teleporting out of range, or you can destroy adjacent robots once each round with a sonic screwdriver.
+
+![Dalek main screen](./images/daleks1.jpg)
+
+![Dalek game play screen](./images/daleks2.jpg)
+
 Daleks move one step per turn toward you. Survive by making them crash into each other, creating scrap heaps, or by destroying them with your **Sonic Screwdriver**.
 
 **You win a level** when all Daleks are destroyed.  
@@ -36,8 +45,7 @@ Daleks move one step per turn toward you. Survive by making them crash into each
 | ------------------ | ----------------------------------------------- |
 | Arrow Keys / Mouse | Move up, down, left, right and down             |
 | Q / E / Z / C      | Diagonal movement                               |
-| `SPACE` or `.`     | Wait in                                         |
-| place              |
+| `SPACE` or `.`     | Wait in place                                   |
 | `T`                | Teleport randomly                               |
 | `N`                | Start a New game                                |
 | `R`                | Safe teleport (avoid near Daleks)               |
@@ -55,7 +63,8 @@ Daleks move one step per turn toward you. Survive by making them crash into each
 
 ## 🛠 Features
 
-- Smooth Dalek movement animations
+- Smooth Dalek movement
+- Cool sounds
 - Mouse and keyboard control
 - Teleportation effects & Sonic Screwdriver visual effects
 - Scrap heaps from Dalek collisions
@@ -98,8 +107,6 @@ The list of commands is as follows:
 * test:             Executes and tests for the project.
 * generate:         Updates the project build version.
 * vet:              Vet examines Go source code and reports suspicious constructs.
-* docker-build:     Builds a docker image based on the docker file.
-* docker-run:       Runs the docker container.
 ```
 
 ## Reporting an issue
