@@ -84,13 +84,10 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 				allFinished = false
 			}
 
-			// Much smoother easing function - smoothstep interpolation
-			// This gives a very smooth start and end with consistent middle speed
+			// Ultra-smooth easing function - smootherstep (quintic) interpolation
+			// This gives the smoothest possible interpolation with no visible jerk
 			var easedProgress float64
-			easedProgress = progress * progress * (3.0 - 2.0*progress)
-
-			// Alternative: Even smoother with smootherstep (quintic) - uncomment to try
-			// easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0)+10.0)
+			easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
 
 			// Calculate current visual position
 			startX := dalek.VisualPos.X

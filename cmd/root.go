@@ -67,13 +67,13 @@ func NewGame() *Game {
 		dalekImage:  gameImages.Dalek,
 
 		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.8, // Changed from 0.6 to 0.8 for slower movement
+		moveAnimationDuration: 0.5, // Smoother, faster animation for more fluid movement
 		daleksMoving:          false,
 		showGrid:              false, // Default OFF
 		// Last Stand smooth movement settings
-		lastStandSpeed:        1.5,  // Changed from 2.0 to 1.5 for slower initial speed
-		lastStandAcceleration: 1.2,  // Changed from 1.5 to 1.2 for gentler acceleration
-		lastStandMaxSpeed:     15.0, // Changed from 20.0 to 15.0 for lower max speed
+		lastStandSpeed:        3.0,  // Smoother initial speed
+		lastStandAcceleration: 1.15, // Gentler acceleration for smoother ramping
+		lastStandMaxSpeed:     12.0, // Controlled max speed for smooth gameplay
 		lastClickTime:         time.Now(),
 		soundPlayer:           soundPlayer,
 	}
@@ -246,7 +246,7 @@ func (g *Game) Update() error {
 			g.daleksMoving = false
 			g.isLastStandActive = false
 			// Reset Last Stand speed settings
-			g.lastStandSpeed = 2.0
+			g.lastStandSpeed = 3.0
 			// Clear any remaining game state
 			g.daleks = nil
 			g.scraps = nil

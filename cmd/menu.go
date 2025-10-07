@@ -31,7 +31,7 @@ import (
 )
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GoDaleks - v1.0"
+	title := "GoDaleks - v1.1.0"
 	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
 
 	gameDesc := "Based on the original 1984 'Daleks' Macintosh Classic game by Johan Strandberg."
