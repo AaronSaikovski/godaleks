@@ -137,6 +137,12 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 			g.drawScrewdriverEffect(screen, target, progress, offsetX, offsetY)
 		}
 	}
+
+	// Draw collision explosion effects
+	for _, effect := range g.collisionEffects {
+		progress := effect.Timer / effect.Duration
+		g.drawCollisionEffect(screen, effect.Pos, progress, offsetX, offsetY)
+	}
 }
 
 func (g *Game) drawGameOver(screen *ebiten.Image) {

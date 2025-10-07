@@ -35,6 +35,12 @@ type FloatPosition struct {
 	X, Y float64
 }
 
+type CollisionEffect struct {
+	Pos      FloatPosition // Position of the collision
+	Timer    float64       // Animation timer
+	Duration float64       // Total duration
+}
+
 type Dalek struct {
 	GridPos   Position      // Current grid position
 	VisualPos FloatPosition // Interpolated visual position (current frame)
@@ -95,4 +101,7 @@ type Game struct {
 	scrapHalfHeight  float64
 	hudStatusText    string    // Cached HUD text
 	lastHUDUpdate    time.Time // Track when HUD needs refresh
+
+	// Collision animations
+	collisionEffects []CollisionEffect // Active collision effects
 }

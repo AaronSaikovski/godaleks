@@ -137,6 +137,9 @@ func (g *Game) Update() error {
 		}
 	}
 
+	// Update collision effects
+	g.updateCollisionEffects(deltaTime)
+
 	switch g.state {
 	case StateMenu:
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {

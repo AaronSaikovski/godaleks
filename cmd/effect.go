@@ -305,3 +305,95 @@ func (g *Game) updateDalekAnimations(deltaTime float64) {
 		g.updateNormalMovement(deltaTime)
 	}
 }
+
+// Draw collision explosion effect
+func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, progress float64, offsetX, offsetY int) {
+	x := float64(offsetX) + pos.X*float64(cellSize) + float64(cellSize)/2
+	y := float64(offsetY) + pos.Y*float64(cellSize) + float64(cellSize)/2
+
+	// Create expanding explosion effect with particle burst
+	numParticles := 16
+	maxRadius := float64(cellSize) * 1.5
+	radius := maxRadius * progress
+
+	// Outer expanding ring
+	for i := 0; i < numParticles; i++ {
+		angle := float64(i) * 2.0 * 3.14159 / float64(numParticles)
+
+		// Particles fly outward
+		px := x + radius*math.Cos(angle)
+		py := y + radius*math.Sin(angle)
+
+		// Fade out over time
+		alpha := uint8(255 * (1.0 - progress))
+		particleColor := color.RGBA{0x00, 0x00, 0x00, alpha}
+
+		// Draw particle clusters
+		for dx := -2; dx <= 2; dx++ {
+			for dy := -2; dy <= 2; dy++ {
+				if dx*dx+dy*dy <= 4 { // Circular particles
+					if int(px)+dx >= 0 && int(px)+dx < screenWidth &&
+						int(py)+dy >= 0 && int(py)+dy < screenHeight {
+						screen.Set(int(px)+dx, int(py)+dy, particleColor)
+					}
+				}
+			}
+		}
+	}
+
+	// Inner explosion flash
+	if progress < 0.5 {
+		flashAlpha := uint8(255 * (1.0 - progress*2))
+		flashColor := color.RGBA{0x00, 0x00, 0x00, flashAlpha}
+
+		flashRadius := int(float64(cellSize/2) * (1.0 + progress))
+		for dx := -flashRadius; dx <= flashRadius; dx++ {
+			for dy := -flashRadius; dy <= flashRadius; dy++ {
+				if dx*dx+dy*dy <= flashRadius*flashRadius {
+					px := int(x) + dx
+					py := int(y) + dy
+					if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+						screen.Set(px, py, flashColor)
+					}
+				}
+			}
+		}
+	}
+
+	// Shock wave ring
+	if progress > 0.2 {
+		waveProgress := (progress - 0.2) / 0.8
+		waveRadius := int(maxRadius * waveProgress)
+		waveThickness := 2
+		waveAlpha := uint8(255 * (1.0 - waveProgress))
+		waveColor := color.RGBA{0x00, 0x00, 0x00, waveAlpha}
+
+		// Draw ring
+		for angle := 0.0; angle < 6.28; angle += 0.1 {
+			for t := 0; t < waveThickness; t++ {
+				px := int(x + float64(waveRadius+t)*math.Cos(angle))
+				py := int(y + float64(waveRadius+t)*math.Sin(angle))
+				if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+					screen.Set(px, py, waveColor)
+				}
+			}
+		}
+	}
+}
+
+// Update collision animations
+func (g *Game) updateCollisionEffects(deltaTime float64) {
+	activeEffects := make([]CollisionEffect, 0, len(g.collisionEffects))
+
+	for i := range g.collisionEffects {
+		effect := &g.collisionEffects[i]
+		effect.Timer += deltaTime
+
+		// Keep effect if not finished
+		if effect.Timer < effect.Duration {
+			activeEffects = append(activeEffects, *effect)
+		}
+	}
+
+	g.collisionEffects = activeEffects
+}

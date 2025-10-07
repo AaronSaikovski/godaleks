@@ -95,6 +95,13 @@ func (g *Game) checkCollisions() {
 		if !scrapMap[pos] {
 			g.scraps = append(g.scraps, pos)
 			scrapMap[pos] = true // Update map to prevent future duplicates
+
+			// Add collision explosion effect
+			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
+				Pos:      FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
+				Timer:    0,
+				Duration: 0.6, // 0.6 second explosion animation
+			})
 		}
 	}
 

@@ -243,9 +243,18 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		g.daleks = survivingDaleks
 	}
 
-	// Add new scraps
+	// Add new scraps and collision effects
 	if len(newScraps) > 0 {
 		g.scraps = append(g.scraps, newScraps...)
+
+		// Add collision explosion effect for each new scrap
+		for _, scrapPos := range newScraps {
+			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
+				Pos:      FloatPosition{X: float64(scrapPos.X), Y: float64(scrapPos.Y)},
+				Timer:    0,
+				Duration: 0.6, // 0.6 second explosion animation
+			})
+		}
 	}
 
 	// Check collisions every few frames for better performance
