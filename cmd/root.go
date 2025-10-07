@@ -78,6 +78,23 @@ func NewGame() *Game {
 		soundPlayer:           soundPlayer,
 	}
 
+	// Cache sprite dimensions for performance (avoid Bounds() calls in draw loop)
+	if g.playerImage != nil {
+		bounds := g.playerImage.Bounds()
+		g.playerHalfWidth = float64(bounds.Dx()) / 2
+		g.playerHalfHeight = float64(bounds.Dy()) / 2
+	}
+	if g.dalekImage != nil {
+		bounds := g.dalekImage.Bounds()
+		g.dalekHalfWidth = float64(bounds.Dx()) / 2
+		g.dalekHalfHeight = float64(bounds.Dy()) / 2
+	}
+	if g.scrapImage != nil {
+		bounds := g.scrapImage.Bounds()
+		g.scrapHalfWidth = float64(bounds.Dx()) / 2
+		g.scrapHalfHeight = float64(bounds.Dy()) / 2
+	}
+
 	return g
 }
 

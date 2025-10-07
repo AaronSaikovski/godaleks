@@ -53,32 +53,31 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		}
 	}
 
-	// Draw scraps (centered)
+	// Draw scraps (centered) - use cached dimensions and reusable draw options
 	for _, scrap := range g.scraps {
-		x, y := getCenteredSpritePosition(scrap.X, scrap.Y, offsetX, offsetY, g.scrapImage)
+		cellCenterX := float64(offsetX) + float64(scrap.X*cellSize) + float64(cellSize)/2
+		cellCenterY := float64(offsetY) + float64(scrap.Y*cellSize) + float64(cellSize)/2
 
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.scrapImage, op)
+		x := cellCenterX - g.scrapHalfWidth
+		y := cellCenterY - g.scrapHalfHeight
+
+		g.drawOp.GeoM.Reset()
+		g.drawOp.GeoM.Translate(x, y)
+		screen.DrawImage(g.scrapImage, &g.drawOp)
 	}
 
-	// Draw daleks using smooth interpolated positions (centered)
+	// Draw daleks using smooth interpolated positions - use cached dimensions
 	for _, dalek := range g.daleks {
 		// Use visual position for smooth movement, but calculate centered position
 		cellCenterX := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + float64(cellSize)/2
 		cellCenterY := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + float64(cellSize)/2
 
-		// Get sprite dimensions and center it
-		spriteBounds := g.dalekImage.Bounds()
-		spriteWidth := spriteBounds.Dx()
-		spriteHeight := spriteBounds.Dy()
+		x := cellCenterX - g.dalekHalfWidth
+		y := cellCenterY - g.dalekHalfHeight
 
-		x := cellCenterX - float64(spriteWidth)/2
-		y := cellCenterY - float64(spriteHeight)/2
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.dalekImage, op)
+		g.drawOp.GeoM.Reset()
+		g.drawOp.GeoM.Translate(x, y)
+		screen.DrawImage(g.dalekImage, &g.drawOp)
 	}
 
 	// Draw player with teleportation effects (centered)
@@ -96,28 +95,38 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, offsetX, offsetY)
 		}
 
-		// Draw player with fade effect (centered)
-		x, y := getCenteredSpritePosition(g.player.X, g.player.Y, offsetX, offsetY, g.playerImage)
+		// Draw player with fade effect (centered) - use cached dimensions
+		cellCenterX := float64(offsetX) + float64(g.player.X*cellSize) + float64(cellSize)/2
+		cellCenterY := float64(offsetY) + float64(g.player.Y*cellSize) + float64(cellSize)/2
 
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
+		x := cellCenterX - g.playerHalfWidth
+		y := cellCenterY - g.playerHalfHeight
 
+		g.drawOp.GeoM.Reset()
+		g.drawOp.GeoM.Translate(x, y)
+
+		g.drawOp.ColorM.Reset()
 		// Fade in player at new position
 		if progress > 0.3 {
 			fadeAlpha := (progress - 0.3) / 0.7
-			op.ColorM.Scale(1, 1, 1, fadeAlpha)
+			g.drawOp.ColorM.Scale(1, 1, 1, fadeAlpha)
 		} else {
-			op.ColorM.Scale(1, 1, 1, 0) // Invisible during first part
+			g.drawOp.ColorM.Scale(1, 1, 1, 0) // Invisible during first part
 		}
 
-		screen.DrawImage(g.playerImage, op)
+		screen.DrawImage(g.playerImage, &g.drawOp)
+		g.drawOp.ColorM.Reset() // Reset color for next draw
 	} else {
-		// Normal player drawing (centered)
-		x, y := getCenteredSpritePosition(g.player.X, g.player.Y, offsetX, offsetY, g.playerImage)
+		// Normal player drawing (centered) - use cached dimensions
+		cellCenterX := float64(offsetX) + float64(g.player.X*cellSize) + float64(cellSize)/2
+		cellCenterY := float64(offsetY) + float64(g.player.Y*cellSize) + float64(cellSize)/2
 
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(x, y)
-		screen.DrawImage(g.playerImage, op)
+		x := cellCenterX - g.playerHalfWidth
+		y := cellCenterY - g.playerHalfHeight
+
+		g.drawOp.GeoM.Reset()
+		g.drawOp.GeoM.Translate(x, y)
+		screen.DrawImage(g.playerImage, &g.drawOp)
 	}
 
 	// Draw screwdriver effects
@@ -148,10 +157,14 @@ func (g *Game) drawGameOver(screen *ebiten.Image) {
 }
 
 func (g *Game) drawHUD(screen *ebiten.Image) {
-	// Status information
-	status := fmt.Sprintf("Level: %d  Score: %d  Teleports: %d  Safe: %d  Screwdrivers: %d  Last Stands: %d  Daleks: %d",
-		g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
-	text.Draw(screen, status, basicfont.Face7x13, 10, 20, color.Black)
+	// Cache status text and only update every 100ms to reduce fmt.Sprintf calls
+	now := time.Now()
+	if g.hudStatusText == "" || now.Sub(g.lastHUDUpdate) > 100*time.Millisecond {
+		g.hudStatusText = fmt.Sprintf("Level: %d  Score: %d  Teleports: %d  Safe: %d  Screwdrivers: %d  Last Stands: %d  Daleks: %d",
+			g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
+		g.lastHUDUpdate = now
+	}
+	text.Draw(screen, g.hudStatusText, basicfont.Face7x13, 10, 20, color.Black)
 
 	// Grid indicator
 	gridStatus := "Grid: OFF"

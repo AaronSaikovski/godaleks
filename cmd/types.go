@@ -84,4 +84,15 @@ type Game struct {
 	// Mouse support
 	lastClickTime time.Time
 	soundPlayer   *SoundPlayer
+
+	// Performance optimizations - pre-allocated objects
+	drawOp           ebiten.DrawImageOptions // Reusable draw options
+	playerHalfWidth  float64                 // Cached sprite dimensions
+	playerHalfHeight float64
+	dalekHalfWidth   float64
+	dalekHalfHeight  float64
+	scrapHalfWidth   float64
+	scrapHalfHeight  float64
+	hudStatusText    string    // Cached HUD text
+	lastHUDUpdate    time.Time // Track when HUD needs refresh
 }
