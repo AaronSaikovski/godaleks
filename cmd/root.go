@@ -25,7 +25,6 @@ package cmd
 import (
 	"fmt"
 	"image/color"
-	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -43,12 +42,13 @@ func init() {
 }
 
 func NewGame() *Game {
-	rand.Seed(time.Now().UnixNano())
+	// Note: rand.Seed is deprecated in Go 1.20+
+	// The global random source is automatically seeded now
 
 	soundPlayer, err := NewSoundPlayer()
 	if err != nil {
-		// Handle error appropriately for your game
-		panic(err)
+		// Log error but continue with nil soundPlayer (graceful degradation)
+		fmt.Printf("Warning: Failed to initialize sound player: %v\n", err)
 	}
 
 	g := &Game{

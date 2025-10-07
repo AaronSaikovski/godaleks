@@ -161,9 +161,6 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			dx /= dist
 			dy /= dist
 
-			// Store old position for collision check
-			oldPos := dalek.VisualPos
-
 			// Move toward player at current speed
 			moveDistance := g.lastStandSpeed * deltaTime
 			dalek.VisualPos.X += dx * moveDistance
@@ -178,41 +175,72 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			dalek.GridPos.Y = int(math.Round(dalek.VisualPos.Y))
 
 			anyMoving = true
+		}
+	}
 
-			// Check for collisions with scraps
-			for _, scrap := range g.scraps {
-				scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
-				if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
-					dalek.VisualPos = oldPos // Prevent moving through scraps
-					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
-					g.score += 2
-					g.soundPlayer.Play("crash")
-					// Don't add duplicate scraps
-					if !g.positionOccupied(Position{X: int(oldPos.X), Y: int(oldPos.Y)}) {
-						g.scraps = append(g.scraps, Position{X: int(oldPos.X), Y: int(oldPos.Y)})
-					}
-					return
-				}
-			}
+	// Handle collisions after movement (separate pass to avoid slice modification during iteration)
+	daleksToRemove := make(map[int]bool)
+	newScraps := make([]Position, 0)
 
-			// Check for collisions with other daleks
-			for j := i + 1; j < len(g.daleks); j++ {
-				if g.checkCollisionWithThreshold(dalek.VisualPos, g.daleks[j].VisualPos, collisionThreshold) {
-					collisionPos := Position{
-						X: int((dalek.VisualPos.X + g.daleks[j].VisualPos.X) / 2),
-						Y: int((dalek.VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
-					}
-					g.daleks = append(g.daleks[:i], g.daleks[i+1:]...)
-					g.daleks = append(g.daleks[:j-1], g.daleks[j:]...)
-					g.score += 4 // 2 points per dalek
-					g.soundPlayer.Play("crash")
-					if !g.positionOccupied(collisionPos) {
-						g.scraps = append(g.scraps, collisionPos)
-					}
-					return
-				}
+	// Check for collisions with scraps
+	for i, dalek := range g.daleks {
+		if daleksToRemove[i] {
+			continue
+		}
+		for _, scrap := range g.scraps {
+			scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
+			if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
+				daleksToRemove[i] = true
+				g.score += 2
+				break
 			}
 		}
+	}
+
+	// Check for dalek-dalek collisions
+	for i := 0; i < len(g.daleks); i++ {
+		if daleksToRemove[i] {
+			continue
+		}
+		for j := i + 1; j < len(g.daleks); j++ {
+			if daleksToRemove[j] {
+				continue
+			}
+			if g.checkCollisionWithThreshold(g.daleks[i].VisualPos, g.daleks[j].VisualPos, collisionThreshold) {
+				daleksToRemove[i] = true
+				daleksToRemove[j] = true
+				g.score += 4 // 2 points per dalek
+				collisionPos := Position{
+					X: int((g.daleks[i].VisualPos.X + g.daleks[j].VisualPos.X) / 2),
+					Y: int((g.daleks[i].VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
+				}
+				if !g.positionOccupied(collisionPos) {
+					newScraps = append(newScraps, collisionPos)
+				}
+				break
+			}
+		}
+	}
+
+	// Play crash sound if any collisions occurred
+	if len(daleksToRemove) > 0 {
+		g.soundPlayer.Play("crash")
+	}
+
+	// Remove collided daleks
+	if len(daleksToRemove) > 0 {
+		survivingDaleks := make([]Dalek, 0, len(g.daleks)-len(daleksToRemove))
+		for i, dalek := range g.daleks {
+			if !daleksToRemove[i] {
+				survivingDaleks = append(survivingDaleks, dalek)
+			}
+		}
+		g.daleks = survivingDaleks
+	}
+
+	// Add new scraps
+	if len(newScraps) > 0 {
+		g.scraps = append(g.scraps, newScraps...)
 	}
 
 	// Check collisions every few frames for better performance

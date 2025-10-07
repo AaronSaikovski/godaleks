@@ -25,6 +25,7 @@ package cmd
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"image"
 	_ "image/png" // Import image format support
 
@@ -70,6 +71,9 @@ func (images *DalekGameImages) LoadImages() error {
 // Loads images
 func loadImages() *DalekGameImages {
 	gameImages := &DalekGameImages{}
-	gameImages.LoadImages()
+	if err := gameImages.LoadImages(); err != nil {
+		// Log error but continue - could fallback to programmatic sprites
+		fmt.Printf("Warning: Failed to load game images: %v\n", err)
+	}
 	return gameImages
 }
