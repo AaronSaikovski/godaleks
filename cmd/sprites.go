@@ -28,24 +28,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// Helper function to calculate centered sprite position
-func getCenteredSpritePosition(gridX, gridY, offsetX, offsetY int, spriteImage *ebiten.Image) (float64, float64) {
-	// Get sprite dimensions
-	spriteBounds := spriteImage.Bounds()
-	spriteWidth := spriteBounds.Dx()
-	spriteHeight := spriteBounds.Dy()
-
-	// Calculate center position within the grid cell
-	cellCenterX := float64(offsetX + gridX*cellSize + cellSize/2)
-	cellCenterY := float64(offsetY + gridY*cellSize + cellSize/2)
-
-	// Subtract half sprite size to center it
-	x := cellCenterX - float64(spriteWidth)/2
-	y := cellCenterY - float64(spriteHeight)/2
-
-	return x, y
-}
-
 // createScrapImage creates a Dalek debris pile sprite like in the classic game
 func createScrapImage() *ebiten.Image {
 	img := ebiten.NewImage(cellSize-2, cellSize-2)

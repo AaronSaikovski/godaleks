@@ -109,5 +109,5 @@ type Game struct {
 	positionMap     map[Position]bool // Reusable for position checks
 	dalekRemoveMap  map[int]bool      // Reusable for dalek removal
 	collisionPosMap map[Position]bool // Reusable for collision tracking
-	gridImage       *ebiten.Image     // Pre-rendered grid
+
 }
