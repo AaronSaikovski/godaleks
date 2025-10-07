@@ -115,4 +115,5 @@ The list of commands is as follows:
 
 ## Reporting an issue
 
-Please feel free to lodge an [issue or pull request on GitHub](https://github.com/AaronSaikovski/godaleks/issues).
+- v1.1.0 - Big Performance fixes, better animations.
+- Please feel free to lodge an [issue or pull request on GitHub](https://github.com/AaronSaikovski/godaleks/issues).
