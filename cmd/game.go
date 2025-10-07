@@ -79,10 +79,12 @@ func (g *Game) startLevel() {
 
 		// Don't place dalek on player or too close
 		if g.distance(pos, g.player) > 3 && !g.positionOccupied(pos) {
+			floatPos := FloatPosition{X: float64(pos.X), Y: float64(pos.Y)}
 			dalek := Dalek{
 				GridPos:   pos,
-				VisualPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
-				TargetPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
+				VisualPos: floatPos,
+				StartPos:  floatPos,
+				TargetPos: floatPos,
 				IsMoving:  false,
 				MoveTimer: 0,
 			}
@@ -101,17 +103,21 @@ func (g *Game) distance(a, b Position) float64 {
 }
 
 func (g *Game) positionOccupied(pos Position) bool {
+	// Use reusable map for O(1) lookups
+	// Clear map (reuse allocation)
+	for k := range g.positionMap {
+		delete(g.positionMap, k)
+	}
+
+	// Build position map
 	for _, dalek := range g.daleks {
-		if dalek.GridPos == pos {
-			return true
-		}
+		g.positionMap[dalek.GridPos] = true
 	}
 	for _, scrap := range g.scraps {
-		if scrap == pos {
-			return true
-		}
+		g.positionMap[scrap] = true
 	}
-	return false
+
+	return g.positionMap[pos]
 }
 
 // Convert screen coordinates to grid coordinates

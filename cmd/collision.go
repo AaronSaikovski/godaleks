@@ -48,65 +48,60 @@ func (g *Game) checkCollisions() {
 		}
 	}
 
+	// Pre-allocate maps with estimated capacity
+	scrapMap := make(map[Position]bool, len(g.scraps))
+	for _, scrap := range g.scraps {
+		scrapMap[scrap] = true
+	}
+
 	// Check dalek-dalek and dalek-scrap collisions
-	newDaleks := make([]Dalek, 0, len(g.daleks))
-	collidedPositions := make(map[Position]bool)
+	collidedPositions := make(map[Position]bool, len(g.daleks)/4) // Estimate ~25% collisions
+	positionCounts := make(map[Position]int, len(g.daleks))
 
-	// First pass: check for collisions with scraps
+	// Single pass: count daleks at each position and check scrap collisions
 	for _, dalek := range g.daleks {
-		collided := false
-
-		// Check collision with scraps
-		for _, scrap := range g.scraps {
-			if dalek.GridPos == scrap {
-				collided = true
-				g.soundPlayer.Play("crash")
-				g.score += 2
-				collidedPositions[dalek.GridPos] = true
-				break
-			}
-		}
-
-		if !collided {
-			newDaleks = append(newDaleks, dalek)
+		if scrapMap[dalek.GridPos] {
+			// Dalek hit scrap
+			g.score += 2
+			collidedPositions[dalek.GridPos] = true
+		} else {
+			positionCounts[dalek.GridPos]++
 		}
 	}
 
-	// Second pass: check for dalek-dalek collisions
-	finalDaleks := make([]Dalek, 0, len(newDaleks))
-
-	for i, dalek := range newDaleks {
-		collided := false
-
-		// Check if this dalek collides with any other dalek
-		for j, other := range newDaleks {
-			if i != j && dalek.GridPos.X == other.GridPos.X && dalek.GridPos.Y == other.GridPos.Y {
-				collided = true
-				g.score += 2
-				collidedPositions[dalek.GridPos] = true
+	// Identify dalek-dalek collisions (positions with count > 1)
+	playedCrashSound := false
+	for pos, count := range positionCounts {
+		if count > 1 {
+			g.score += 2 * count // 2 points per dalek
+			collidedPositions[pos] = true
+			if !playedCrashSound {
 				g.soundPlayer.Play("crash")
-				break
+				playedCrashSound = true
 			}
 		}
+	}
 
-		if !collided {
+	// Build final dalek list excluding collided ones
+	finalDaleks := make([]Dalek, 0, len(g.daleks)-len(collidedPositions))
+	for _, dalek := range g.daleks {
+		if !collidedPositions[dalek.GridPos] {
 			finalDaleks = append(finalDaleks, dalek)
 		}
-
 	}
 
-	// Add debris piles for all collided positions
+	// Add new scraps for collided positions (avoid duplicates using scrapMap)
 	for pos := range collidedPositions {
-		// Check if scrap already exists at this position
-		scrapExists := false
-		for _, scrap := range g.scraps {
-			if scrap == pos {
-				scrapExists = true
-				break
-			}
-		}
-		if !scrapExists {
+		if !scrapMap[pos] {
 			g.scraps = append(g.scraps, pos)
+			scrapMap[pos] = true // Update map to prevent future duplicates
+
+			// Add collision explosion effect
+			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
+				Pos:      FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
+				Timer:    0,
+				Duration: 0.6, // 0.6 second explosion animation
+			})
 		}
 	}
 

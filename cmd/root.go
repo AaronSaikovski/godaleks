@@ -25,7 +25,6 @@ package cmd
 import (
 	"fmt"
 	"image/color"
-	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -43,12 +42,13 @@ func init() {
 }
 
 func NewGame() *Game {
-	rand.Seed(time.Now().UnixNano())
+	// Note: rand.Seed is deprecated in Go 1.20+
+	// The global random source is automatically seeded now
 
 	soundPlayer, err := NewSoundPlayer()
 	if err != nil {
-		// Handle error appropriately for your game
-		panic(err)
+		// Log error but continue with nil soundPlayer (graceful degradation)
+		fmt.Printf("Warning: Failed to initialize sound player: %v\n", err)
 	}
 
 	g := &Game{
@@ -67,15 +67,37 @@ func NewGame() *Game {
 		dalekImage:  gameImages.Dalek,
 
 		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.8, // Changed from 0.6 to 0.8 for slower movement
+		moveAnimationDuration: 0.7, // Slower, ultra-smooth animation for more deliberate movement
 		daleksMoving:          false,
 		showGrid:              false, // Default OFF
 		// Last Stand smooth movement settings
-		lastStandSpeed:        1.5,  // Changed from 2.0 to 1.5 for slower initial speed
-		lastStandAcceleration: 1.2,  // Changed from 1.5 to 1.2 for gentler acceleration
-		lastStandMaxSpeed:     15.0, // Changed from 20.0 to 15.0 for lower max speed
+		lastStandSpeed:        2.0, // Slower, more controlled initial speed
+		lastStandAcceleration: 1.1, // Very gentle acceleration for ultra-smooth ramping
+		lastStandMaxSpeed:     8.0, // Lower max speed for slower, smoother gameplay
 		lastClickTime:         time.Now(),
 		soundPlayer:           soundPlayer,
+
+		// Pre-allocate reusable buffers
+		positionMap:     make(map[Position]bool, 100),
+		dalekRemoveMap:  make(map[int]bool, 20),
+		collisionPosMap: make(map[Position]bool, 20),
+	}
+
+	// Cache sprite dimensions for performance (avoid Bounds() calls in draw loop)
+	if g.playerImage != nil {
+		bounds := g.playerImage.Bounds()
+		g.playerHalfWidth = float64(bounds.Dx()) / 2
+		g.playerHalfHeight = float64(bounds.Dy()) / 2
+	}
+	if g.dalekImage != nil {
+		bounds := g.dalekImage.Bounds()
+		g.dalekHalfWidth = float64(bounds.Dx()) / 2
+		g.dalekHalfHeight = float64(bounds.Dy()) / 2
+	}
+	if g.scrapImage != nil {
+		bounds := g.scrapImage.Bounds()
+		g.scrapHalfWidth = float64(bounds.Dx()) / 2
+		g.scrapHalfHeight = float64(bounds.Dy()) / 2
 	}
 
 	return g
@@ -119,6 +141,9 @@ func (g *Game) Update() error {
 			g.screwdriverTargets = nil
 		}
 	}
+
+	// Update collision effects
+	g.updateCollisionEffects(deltaTime)
 
 	switch g.state {
 	case StateMenu:

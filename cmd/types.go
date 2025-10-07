@@ -35,9 +35,16 @@ type FloatPosition struct {
 	X, Y float64
 }
 
+type CollisionEffect struct {
+	Pos      FloatPosition // Position of the collision
+	Timer    float64       // Animation timer
+	Duration float64       // Total duration
+}
+
 type Dalek struct {
 	GridPos   Position      // Current grid position
-	VisualPos FloatPosition // Interpolated visual position
+	VisualPos FloatPosition // Interpolated visual position (current frame)
+	StartPos  FloatPosition // Starting position for animation
 	TargetPos FloatPosition // Target visual position
 	IsMoving  bool          // Whether currently animating
 	MoveTimer float64       // Animation timer
@@ -83,4 +90,24 @@ type Game struct {
 	// Mouse support
 	lastClickTime time.Time
 	soundPlayer   *SoundPlayer
+
+	// Performance optimizations - pre-allocated objects
+	drawOp           ebiten.DrawImageOptions // Reusable draw options
+	playerHalfWidth  float64                 // Cached sprite dimensions
+	playerHalfHeight float64
+	dalekHalfWidth   float64
+	dalekHalfHeight  float64
+	scrapHalfWidth   float64
+	scrapHalfHeight  float64
+	hudStatusText    string    // Cached HUD text
+	lastHUDUpdate    time.Time // Track when HUD needs refresh
+
+	// Collision animations
+	collisionEffects []CollisionEffect // Active collision effects
+
+	// Reusable buffers to reduce allocations
+	positionMap     map[Position]bool // Reusable for position checks
+	dalekRemoveMap  map[int]bool      // Reusable for dalek removal
+	collisionPosMap map[Position]bool // Reusable for collision tracking
+
 }

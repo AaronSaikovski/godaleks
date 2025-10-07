@@ -189,44 +189,44 @@ func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress f
 	x := float64(offsetX + pos.X*cellSize + cellSize/2)
 	y := float64(offsetY + pos.Y*cellSize + cellSize/2)
 
-	// Create sparkle/energy effect with black particles for classic Mac style
+	// Pre-calculate alpha
+	alpha := uint8(255 * (1.0 - progress))
+
+	// Optimized sparkle effect - fewer particles
 	numParticles := 8
-	radius := float64(cellSize) * (1.0 + progress*2.0) // Expanding circle
+	radius := float64(cellSize) * (1.0 + progress*2.0)
+	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
 	for i := 0; i < numParticles; i++ {
-		angle := float64(i)*2.0*3.14159/float64(numParticles) + progress*6.28 // Rotating
-		px := x + radius*0.5*math.Cos(angle)
-		py := y + radius*0.5*math.Sin(angle)
+		angle := float64(i)*angleStep + progress*6.28
+		cosA := math.Cos(angle)
+		sinA := math.Sin(angle)
 
-		// Fade out over time
-		alpha := uint8(255 * (1.0 - progress))
-		sparkleColor := color.RGBA{0x00, 0x00, 0x00, alpha} // Black sparkles
+		px := int(x + radius*0.5*cosA)
+		py := int(y + radius*0.5*sinA)
 
-		// Draw sparkle particles
-		for dx := -1; dx <= 1; dx++ {
-			for dy := -1; dy <= 1; dy++ {
-				if int(px)+dx >= 0 && int(px)+dx < screenWidth &&
-					int(py)+dy >= 0 && int(py)+dy < screenHeight {
-					screen.Set(int(px)+dx, int(py)+dy, sparkleColor)
-				}
+		// Draw compact sparkle (cross pattern)
+		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
+			if px+1 < screenWidth {
+				screen.Set(px+1, py, color.RGBA{0x00, 0x00, 0x00, alpha})
+			}
+			if py+1 < screenHeight {
+				screen.Set(px, py+1, color.RGBA{0x00, 0x00, 0x00, alpha})
 			}
 		}
 	}
 
-	// Central flash effect with black
+	// Optimized flash - draw ring only
 	flashAlpha := uint8(255 * (1.0 - progress) * 0.8)
-	flashColor := color.RGBA{0x00, 0x00, 0x00, flashAlpha} // Black flash
-
 	flashRadius := int(float64(cellSize/2) * (1.0 - progress*0.5))
-	for dx := -flashRadius; dx <= flashRadius; dx++ {
-		for dy := -flashRadius; dy <= flashRadius; dy++ {
-			if dx*dx+dy*dy <= flashRadius*flashRadius {
-				px := int(x) + dx
-				py := int(y) + dy
-				if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
-					screen.Set(px, py, flashColor)
-				}
-			}
+
+	// Draw circular outline only (much faster)
+	for angle := 0.0; angle < 6.28; angle += 0.25 {
+		px := int(x + float64(flashRadius)*math.Cos(angle))
+		py := int(y + float64(flashRadius)*math.Sin(angle))
+		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, flashAlpha})
 		}
 	}
 }
@@ -235,56 +235,43 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 	x := float64(offsetX + pos.X*cellSize + cellSize/2)
 	y := float64(offsetY + pos.Y*cellSize + cellSize/2)
 
-	// Create electric/energy effect for sonic screwdriver
-	numBolts := 6
+	// Optimized electric effect - fewer bolts and steps
+	numBolts := 4 // Reduced from 6
 	radius := float64(cellSize) * 0.8
+	angleStep := 2.0 * 3.14159 / float64(numBolts)
 
 	for i := 0; i < numBolts; i++ {
-		angle := float64(i)*2.0*3.14159/float64(numBolts) + progress*12.56 // Fast rotation
+		angle := float64(i)*angleStep + progress*12.56
+		cosA := math.Cos(angle)
+		sinA := math.Sin(angle)
 
-		// Create zigzag lightning bolt effect
-		for step := 0; step < 5; step++ {
-			stepRadius := radius * float64(step) / 5.0
-			zigzag := math.Sin(progress*20.0+float64(step)) * 3.0 // Zigzag offset
+		// Fewer steps for performance
+		for step := 0; step < 3; step++ { // Reduced from 5
+			stepRadius := radius * float64(step) / 3.0
+			zigzag := math.Sin(progress*20.0+float64(step)) * 3.0
 
-			boltX := x + stepRadius*math.Cos(angle) + zigzag*math.Cos(angle+1.57)
-			boltY := y + stepRadius*math.Sin(angle) + zigzag*math.Sin(angle+1.57)
+			boltX := int(x + stepRadius*cosA + zigzag*math.Cos(angle+1.57))
+			boltY := int(y + stepRadius*sinA + zigzag*math.Sin(angle+1.57))
 
-			// Fade based on progress and distance
-			alpha := uint8(255 * (1.0 - progress) * (1.0 - float64(step)/5.0))
-			boltColor := color.RGBA{0x00, 0x00, 0x00, alpha} // Black lightning
+			alpha := uint8(255 * (1.0 - progress) * (1.0 - float64(step)/3.0))
 
-			if int(boltX) >= 0 && int(boltX) < screenWidth &&
-				int(boltY) >= 0 && int(boltY) < screenHeight {
-				screen.Set(int(boltX), int(boltY), boltColor)
-				// Make bolts thicker
-				for dx := -1; dx <= 1; dx++ {
-					for dy := -1; dy <= 1; dy++ {
-						px := int(boltX) + dx
-						py := int(boltY) + dy
-						if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
-							screen.Set(px, py, boltColor)
-						}
-					}
-				}
+			// Single pixel per bolt point
+			if boltX >= 0 && boltX < screenWidth && boltY >= 0 && boltY < screenHeight {
+				screen.Set(boltX, boltY, color.RGBA{0x00, 0x00, 0x00, alpha})
 			}
 		}
 	}
 
-	// Central pulse effect
+	// Optimized pulse - ring only
 	pulseRadius := int(float64(cellSize/3) * (1.0 + progress*2.0))
 	pulseAlpha := uint8(255 * (1.0 - progress) * 0.6)
-	pulseColor := color.RGBA{0x00, 0x00, 0x00, pulseAlpha}
 
-	for dx := -pulseRadius; dx <= pulseRadius; dx++ {
-		for dy := -pulseRadius; dy <= pulseRadius; dy++ {
-			if dx*dx+dy*dy <= pulseRadius*pulseRadius {
-				px := int(x) + dx
-				py := int(y) + dy
-				if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
-					screen.Set(px, py, pulseColor)
-				}
-			}
+	// Draw ring outline only
+	for angle := 0.0; angle < 6.28; angle += 0.3 {
+		px := int(x + float64(pulseRadius)*math.Cos(angle))
+		py := int(y + float64(pulseRadius)*math.Sin(angle))
+		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, pulseAlpha})
 		}
 	}
 }
@@ -304,4 +291,95 @@ func (g *Game) updateDalekAnimations(deltaTime float64) {
 		// Normal step-by-step movement
 		g.updateNormalMovement(deltaTime)
 	}
+}
+
+// Draw collision explosion effect (optimized)
+func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, progress float64, offsetX, offsetY int) {
+	x := float64(offsetX) + pos.X*float64(cellSize) + float64(cellSize)/2
+	y := float64(offsetY) + pos.Y*float64(cellSize) + float64(cellSize)/2
+
+	// Early exit if effect is off-screen
+	maxRadius := float64(cellSize) * 1.5
+	if x+maxRadius < 0 || x-maxRadius > float64(screenWidth) ||
+		y+maxRadius < 0 || y-maxRadius > float64(screenHeight) {
+		return
+	}
+
+	// Pre-calculate alpha values (avoid repeated calculations)
+	alpha := uint8(255 * (1.0 - progress))
+
+	// Optimized particle rendering - pre-calculate sin/cos
+	numParticles := 12 // Reduced from 16 for performance
+	radius := maxRadius * progress
+	angleStep := 2.0 * 3.14159 / float64(numParticles)
+
+	// Draw particles with fewer pixel operations
+	for i := 0; i < numParticles; i++ {
+		angle := float64(i) * angleStep
+		cosA := math.Cos(angle)
+		sinA := math.Sin(angle)
+
+		px := int(x + radius*cosA)
+		py := int(y + radius*sinA)
+
+		// Single pixel per particle for performance
+		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
+			// Add cross pattern for visibility
+			if px+1 < screenWidth {
+				screen.Set(px+1, py, color.RGBA{0x00, 0x00, 0x00, alpha})
+			}
+			if py+1 < screenHeight {
+				screen.Set(px, py+1, color.RGBA{0x00, 0x00, 0x00, alpha})
+			}
+		}
+	}
+
+	// Optimized flash (smaller radius for performance)
+	if progress < 0.5 {
+		flashAlpha := uint8(255 * (1.0 - progress*2))
+		flashRadius := int(float64(cellSize/3) * (1.0 + progress)) // Reduced size
+
+		// Draw only edge pixels of flash for performance
+		for angle := 0.0; angle < 6.28; angle += 0.3 {
+			px := int(x + float64(flashRadius)*math.Cos(angle))
+			py := int(y + float64(flashRadius)*math.Sin(angle))
+			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, flashAlpha})
+			}
+		}
+	}
+
+	// Optimized shock wave (fewer points)
+	if progress > 0.2 {
+		waveProgress := (progress - 0.2) / 0.8
+		waveRadius := int(maxRadius * waveProgress)
+		waveAlpha := uint8(255 * (1.0 - waveProgress))
+
+		// Draw ring with larger angle steps for performance
+		for angle := 0.0; angle < 6.28; angle += 0.2 {
+			px := int(x + float64(waveRadius)*math.Cos(angle))
+			py := int(y + float64(waveRadius)*math.Sin(angle))
+			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, waveAlpha})
+			}
+		}
+	}
+}
+
+// Update collision animations
+func (g *Game) updateCollisionEffects(deltaTime float64) {
+	activeEffects := make([]CollisionEffect, 0, len(g.collisionEffects))
+
+	for i := range g.collisionEffects {
+		effect := &g.collisionEffects[i]
+		effect.Timer += deltaTime
+
+		// Keep effect if not finished
+		if effect.Timer < effect.Duration {
+			activeEffects = append(activeEffects, *effect)
+		}
+	}
+
+	g.collisionEffects = activeEffects
 }

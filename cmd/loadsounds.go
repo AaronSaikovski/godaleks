@@ -89,6 +89,9 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 }
 
 func (s *SoundPlayer) Play(name string) {
+	if s == nil || s.sounds == nil {
+		return // Gracefully handle nil soundPlayer
+	}
 	if player, exists := s.sounds[name]; exists {
 		player.Rewind()
 		player.Play()
