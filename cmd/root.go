@@ -76,6 +76,11 @@ func NewGame() *Game {
 		lastStandMaxSpeed:     8.0, // Lower max speed for slower, smoother gameplay
 		lastClickTime:         time.Now(),
 		soundPlayer:           soundPlayer,
+
+		// Pre-allocate reusable buffers
+		positionMap:     make(map[Position]bool, 100),
+		dalekRemoveMap:  make(map[int]bool, 20),
+		collisionPosMap: make(map[Position]bool, 20),
 	}
 
 	// Cache sprite dimensions for performance (avoid Bounds() calls in draw loop)

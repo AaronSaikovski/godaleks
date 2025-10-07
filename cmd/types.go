@@ -104,4 +104,10 @@ type Game struct {
 
 	// Collision animations
 	collisionEffects []CollisionEffect // Active collision effects
+
+	// Reusable buffers to reduce allocations
+	positionMap     map[Position]bool // Reusable for position checks
+	dalekRemoveMap  map[int]bool      // Reusable for dalek removal
+	collisionPosMap map[Position]bool // Reusable for collision tracking
+	gridImage       *ebiten.Image     // Pre-rendered grid
 }

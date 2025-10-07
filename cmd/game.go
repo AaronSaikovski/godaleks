@@ -103,17 +103,21 @@ func (g *Game) distance(a, b Position) float64 {
 }
 
 func (g *Game) positionOccupied(pos Position) bool {
+	// Use reusable map for O(1) lookups
+	// Clear map (reuse allocation)
+	for k := range g.positionMap {
+		delete(g.positionMap, k)
+	}
+
+	// Build position map
 	for _, dalek := range g.daleks {
-		if dalek.GridPos == pos {
-			return true
-		}
+		g.positionMap[dalek.GridPos] = true
 	}
 	for _, scrap := range g.scraps {
-		if scrap == pos {
-			return true
-		}
+		g.positionMap[scrap] = true
 	}
-	return false
+
+	return g.positionMap[pos]
 }
 
 // Convert screen coordinates to grid coordinates

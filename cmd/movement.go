@@ -184,18 +184,21 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	}
 
 	// Handle collisions after movement (separate pass to avoid slice modification during iteration)
-	daleksToRemove := make(map[int]bool)
-	newScraps := make([]Position, 0)
+	// Reuse pre-allocated map
+	for k := range g.dalekRemoveMap {
+		delete(g.dalekRemoveMap, k)
+	}
+	newScraps := make([]Position, 0, 5) // Small capacity hint
 
 	// Check for collisions with scraps
 	for i, dalek := range g.daleks {
-		if daleksToRemove[i] {
+		if g.dalekRemoveMap[i] {
 			continue
 		}
 		for _, scrap := range g.scraps {
 			scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
 			if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
-				daleksToRemove[i] = true
+				g.dalekRemoveMap[i] = true
 				g.score += 2
 				break
 			}
@@ -204,16 +207,16 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 
 	// Check for dalek-dalek collisions
 	for i := 0; i < len(g.daleks); i++ {
-		if daleksToRemove[i] {
+		if g.dalekRemoveMap[i] {
 			continue
 		}
 		for j := i + 1; j < len(g.daleks); j++ {
-			if daleksToRemove[j] {
+			if g.dalekRemoveMap[j] {
 				continue
 			}
 			if g.checkCollisionWithThreshold(g.daleks[i].VisualPos, g.daleks[j].VisualPos, collisionThreshold) {
-				daleksToRemove[i] = true
-				daleksToRemove[j] = true
+				g.dalekRemoveMap[i] = true
+				g.dalekRemoveMap[j] = true
 				g.score += 4 // 2 points per dalek
 				collisionPos := Position{
 					X: int((g.daleks[i].VisualPos.X + g.daleks[j].VisualPos.X) / 2),
@@ -228,15 +231,15 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	}
 
 	// Play crash sound if any collisions occurred
-	if len(daleksToRemove) > 0 {
+	if len(g.dalekRemoveMap) > 0 {
 		g.soundPlayer.Play("crash")
 	}
 
 	// Remove collided daleks
-	if len(daleksToRemove) > 0 {
-		survivingDaleks := make([]Dalek, 0, len(g.daleks)-len(daleksToRemove))
+	if len(g.dalekRemoveMap) > 0 {
+		survivingDaleks := make([]Dalek, 0, len(g.daleks)-len(g.dalekRemoveMap))
 		for i, dalek := range g.daleks {
-			if !daleksToRemove[i] {
+			if !g.dalekRemoveMap[i] {
 				survivingDaleks = append(survivingDaleks, dalek)
 			}
 		}
