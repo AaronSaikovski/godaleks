@@ -1,6 +1,6 @@
 <div align="center">
 
-# GoDaleks v1.0.1
+# GoDaleks v1.1.0 
 
 A modern Go/Ebiten (and faithful) recreation of the classic Apple Macintosh game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks including sounds.
