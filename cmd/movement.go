@@ -33,6 +33,12 @@ func (g *Game) moveDaleks() {
 	for i := range g.daleks {
 		dalek := &g.daleks[i]
 
+		// Store current visual position as the starting point for animation
+		startPos := FloatPosition{
+			X: float64(dalek.GridPos.X),
+			Y: float64(dalek.GridPos.Y),
+		}
+
 		// Calculate new grid position
 		dx := 0
 		dy := 0
@@ -56,6 +62,8 @@ func (g *Game) moveDaleks() {
 
 		// Update dalek's positions for smooth animation
 		dalek.GridPos = newGridPos
+		dalek.StartPos = startPos  // Store the starting position
+		dalek.VisualPos = startPos // Start animation from current position
 		dalek.TargetPos = FloatPosition{
 			X: float64(newGridPos.X),
 			Y: float64(newGridPos.Y),
@@ -89,13 +97,13 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 			var easedProgress float64
 			easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
 
-			// Calculate current visual position
-			startX := dalek.VisualPos.X
-			startY := dalek.VisualPos.Y
+			// Interpolate position using stored start position for consistency
+			startX := dalek.StartPos.X
+			startY := dalek.StartPos.Y
 			targetX := dalek.TargetPos.X
 			targetY := dalek.TargetPos.Y
 
-			// Interpolate position
+			// Calculate smooth interpolated position
 			dalek.VisualPos.X = startX + (targetX-startX)*easedProgress
 			dalek.VisualPos.Y = startY + (targetY-startY)*easedProgress
 

@@ -41,7 +41,7 @@ func (g *Game) resetGame() {
 	g.screwdriverTargets = nil
 	g.daleksMoving = false
 	g.isLastStandActive = false
-	g.lastStandSpeed = 3.0
+	g.lastStandSpeed = 2.0
 	g.daleks = nil
 	g.scraps = nil
 	g.gameOverMessage = ""
@@ -53,7 +53,7 @@ func (g *Game) startLevel() {
 	g.scraps = nil
 	g.daleksMoving = false
 	g.isLastStandActive = false
-	g.lastStandSpeed = 3.0
+	g.lastStandSpeed = 2.0
 	g.teleportAnimation = false
 	g.teleportTimer = 0
 	g.screwdriverAnimation = false
@@ -79,10 +79,12 @@ func (g *Game) startLevel() {
 
 		// Don't place dalek on player or too close
 		if g.distance(pos, g.player) > 3 && !g.positionOccupied(pos) {
+			floatPos := FloatPosition{X: float64(pos.X), Y: float64(pos.Y)}
 			dalek := Dalek{
 				GridPos:   pos,
-				VisualPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
-				TargetPos: FloatPosition{X: float64(pos.X), Y: float64(pos.Y)},
+				VisualPos: floatPos,
+				StartPos:  floatPos,
+				TargetPos: floatPos,
 				IsMoving:  false,
 				MoveTimer: 0,
 			}
@@ -146,7 +148,7 @@ func (g *Game) lastStand() {
 
 	g.lastStands--
 	g.isLastStandActive = true
-	g.lastStandSpeed = 3.0 // Reset speed to starting value
+	g.lastStandSpeed = 2.0 // Reset speed to starting value
 	g.daleksMoving = true  // Enable daleks movement for Last Stand
 }
 

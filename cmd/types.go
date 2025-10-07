@@ -37,7 +37,8 @@ type FloatPosition struct {
 
 type Dalek struct {
 	GridPos   Position      // Current grid position
-	VisualPos FloatPosition // Interpolated visual position
+	VisualPos FloatPosition // Interpolated visual position (current frame)
+	StartPos  FloatPosition // Starting position for animation
 	TargetPos FloatPosition // Target visual position
 	IsMoving  bool          // Whether currently animating
 	MoveTimer float64       // Animation timer
