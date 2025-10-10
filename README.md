@@ -24,7 +24,7 @@ See [here](https://www.macintoshrepository.org/3913-daleks)
 
 ## 🎮 Gameplay
 
-[GoDaleks- Online Playable version](https://AaronSaikovski.github.io/godaleks)
+[GoDaleks- Online Playable version](https://www.godaleks.com)
 
 In this game, you attempt to survive by avoiding steadily converging robots If you are overrun by the robots, or move into their immediate zone of control, you are disintegrated.
 By guiding the robots with your actions, you can get them to destroy themselves as they collide with each other.
