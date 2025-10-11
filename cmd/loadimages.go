@@ -37,8 +37,9 @@ var assets embed.FS
 
 // Daleks Images
 type DalekGameImages struct {
-	Human *ebiten.Image
-	Dalek *ebiten.Image
+	Human        *ebiten.Image
+	Dalek        *ebiten.Image
+	DalekEmperor *ebiten.Image
 }
 
 // loadImage loads an image from the assets directory
@@ -62,6 +63,9 @@ func (images *DalekGameImages) LoadImages() error {
 		return err
 	}
 	if images.Dalek, err = loadImage("dalek.png"); err != nil {
+		return err
+	}
+	if images.DalekEmperor, err = loadImage("dalek_emperor.png"); err != nil {
 		return err
 	}
 
