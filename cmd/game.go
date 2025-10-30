@@ -45,6 +45,8 @@ func (g *Game) resetGame() {
 	g.daleks = nil
 	g.scraps = nil
 	g.gameOverMessage = ""
+	g.emperorWarningMessage = ""
+	g.emperorWarningTimer = 0
 	g.startLevel()
 }
 
@@ -60,6 +62,8 @@ func (g *Game) startLevel() {
 	g.screwdriverTimer = 0
 	g.screwdriverTargets = nil
 	g.lastStands = 1
+	g.emperorWarningMessage = ""
+	g.emperorWarningTimer = 0
 
 	// Place player randomly
 	g.player = Position{
@@ -69,9 +73,51 @@ func (g *Game) startLevel() {
 
 	// Place daleks (5 + level number)
 	dalekCount := 5 + g.level
-	g.daleks = make([]Dalek, 0, dalekCount)
+	maxDaleks := dalekCount
 
-	for len(g.daleks) < dalekCount {
+	// Determine if emperor should spawn (only from level 2 onwards, with 60% chance)
+	spawnEmperor := g.level >= 2 && rand.Float64() < 0.6
+	if spawnEmperor {
+		maxDaleks++ // Add one more slot for the emperor
+	}
+
+	g.daleks = make([]Dalek, 0, maxDaleks)
+
+	// Spawn the emperor first if it should appear this level
+	if spawnEmperor {
+		for {
+			pos := Position{
+				X: rand.Intn(gridWidth),
+				Y: rand.Intn(gridHeight),
+			}
+
+			// Don't place emperor on player or too close
+			if g.distance(pos, g.player) > 3 && !g.positionOccupied(pos) {
+				floatPos := FloatPosition{X: float64(pos.X), Y: float64(pos.Y)}
+				emperor := Dalek{
+					GridPos:   pos,
+					VisualPos: floatPos,
+					StartPos:  floatPos,
+					TargetPos: floatPos,
+					IsMoving:  false,
+					MoveTimer: 0,
+					IsEmperor: true,
+				}
+				g.daleks = append(g.daleks, emperor)
+
+				// Show emperor warning message
+				g.emperorWarningMessage = "WARNING: DALEK EMPEROR DETECTED!"
+				g.emperorWarningTimer = 0
+
+				// Play emperor alert sound
+				g.soundPlayer.Play("dalek_emperor")
+				break
+			}
+		}
+	}
+
+	// Spawn normal daleks
+	for len(g.daleks) < maxDaleks {
 		pos := Position{
 			X: rand.Intn(gridWidth),
 			Y: rand.Intn(gridHeight),
@@ -87,6 +133,7 @@ func (g *Game) startLevel() {
 				TargetPos: floatPos,
 				IsMoving:  false,
 				MoveTimer: 0,
+				IsEmperor: false,
 			}
 			g.daleks = append(g.daleks, dalek)
 		}

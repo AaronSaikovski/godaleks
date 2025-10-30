@@ -63,13 +63,17 @@ func NewGame() *Game {
 		//playerImage:           createPlayerImage(),
 		//dalekImage:            createDalekImage(),
 
-		playerImage: gameImages.Human,
-		dalekImage:  gameImages.Dalek,
+		playerImage:  gameImages.Human,
+		dalekImage:   gameImages.Dalek,
+		emperorImage: gameImages.DalekEmperor,
 
-		scrapImage:            createScrapImage(),
-		moveAnimationDuration: 0.7, // Slower, ultra-smooth animation for more deliberate movement
-		daleksMoving:          false,
-		showGrid:              false, // Default OFF
+		scrapImage:             createScrapImage(),
+		moveAnimationDuration:  0.85, // Smooth animation with responsive movement speed
+		daleksMoving:           false,
+		showGrid:               false, // Default OFF
+		emperorWarningMessage:  "",
+		emperorWarningTimer:    0,
+		emperorWarningDuration: 3.0, // Show warning for 3 seconds
 		// Last Stand smooth movement settings
 		lastStandSpeed:        2.0, // Slower, more controlled initial speed
 		lastStandAcceleration: 1.1, // Very gentle acceleration for ultra-smooth ramping
@@ -144,6 +148,15 @@ func (g *Game) Update() error {
 
 	// Update collision effects
 	g.updateCollisionEffects(deltaTime)
+
+	// Update emperor warning message timer
+	if g.emperorWarningMessage != "" {
+		g.emperorWarningTimer += deltaTime
+		if g.emperorWarningTimer >= g.emperorWarningDuration {
+			g.emperorWarningMessage = ""
+			g.emperorWarningTimer = 0
+		}
+	}
 
 	switch g.state {
 	case StateMenu:

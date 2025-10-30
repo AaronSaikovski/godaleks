@@ -26,7 +26,7 @@ const (
 	screenWidth  = 800
 	screenHeight = 600
 	gridWidth    = 50
-	gridHeight   = 35 // Reduced from 37 to 35 to ensure sprites stay in bounds
+	gridHeight   = 33 // Reduced to ensure grid fits within screen (50 + 33*16 = 578 pixels)
 	cellSize     = 16
 )
 
