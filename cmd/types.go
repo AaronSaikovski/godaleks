@@ -48,6 +48,7 @@ type Dalek struct {
 	TargetPos FloatPosition // Target visual position
 	IsMoving  bool          // Whether currently animating
 	MoveTimer float64       // Animation timer
+	IsEmperor bool          // Whether this is the Dalek Emperor (can only be killed when all normal daleks are dead)
 }
 
 type Game struct {
@@ -64,9 +65,10 @@ type Game struct {
 	gameOverMessage string
 	lastMoveTime    time.Time
 
-	playerImage *ebiten.Image
-	dalekImage  *ebiten.Image
-	scrapImage  *ebiten.Image
+	playerImage  *ebiten.Image
+	dalekImage   *ebiten.Image
+	emperorImage *ebiten.Image
+	scrapImage   *ebiten.Image
 	// Movement animation settings
 	moveAnimationDuration float64 // Duration for Dalek movement animation
 	daleksMoving          bool    // Whether daleks are currently moving
@@ -83,6 +85,10 @@ type Game struct {
 	showGrid              bool
 	gridToggleMessage     string
 	gridToggleMessageTime time.Time
+	// Emperor warning
+	emperorWarningMessage  string
+	emperorWarningTimer    float64
+	emperorWarningDuration float64
 	// Last Stand smooth movement
 	lastStandSpeed        float64 // Speed in cells per second during Last Stand
 	lastStandAcceleration float64 // Acceleration multiplier per second

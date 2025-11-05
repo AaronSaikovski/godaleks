@@ -32,7 +32,7 @@ import (
 )
 
 func (g *Game) movePlayer(dx, dy int) {
-	if g.state != StatePlaying || (g.daleksMoving && !g.isLastStandActive) {
+	if g.state != StatePlaying || g.daleksMoving || g.isLastStandActive {
 		return
 	}
 
@@ -72,7 +72,7 @@ func (g *Game) teleport(safe bool) {
 	// ...existing code...
 	g.soundPlayer.Play("teleport")
 
-	if g.state != StatePlaying || (g.daleksMoving && !g.isLastStandActive) {
+	if g.state != StatePlaying || g.daleksMoving || g.isLastStandActive {
 		return
 	}
 
@@ -131,17 +131,26 @@ func (g *Game) teleport(safe bool) {
 // Updated version to not use debris field when using screwdriver
 func (g *Game) useScrewdriver() {
 
-	if g.state != StatePlaying || g.screwdrivers <= 0 || (g.daleksMoving && !g.isLastStandActive) {
+	if g.state != StatePlaying || g.screwdrivers <= 0 || g.daleksMoving || g.isLastStandActive {
 		return
 	}
 
 	g.screwdrivers--
+
+	// Count normal daleks to determine if emperor is vulnerable
+	normalDalekCount := g.countNormalDaleks()
+	emperorIsVulnerable := normalDalekCount == 0
 
 	// Find all daleks adjacent to player (including diagonally)
 	daleksToDestroy := make([]int, 0)
 	g.screwdriverTargets = make([]Position, 0)
 
 	for i, dalek := range g.daleks {
+		// Skip emperor if it's still invulnerable
+		if dalek.IsEmperor && !emperorIsVulnerable {
+			continue
+		}
+
 		dx := abs(dalek.GridPos.X - g.player.X)
 		dy := abs(dalek.GridPos.Y - g.player.Y)
 

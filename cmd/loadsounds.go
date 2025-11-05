@@ -44,6 +44,9 @@ var gameoverData []byte
 //go:embed assets/gamestart.wav
 var gamestartData []byte
 
+//go:embed assets/dalek_emperor.wav
+var dalekEmperorData []byte
+
 const (
 	sampleRate = 44100
 )
@@ -61,11 +64,12 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 
 	// Load sound effects
 	soundData := map[string][]byte{
-		"teleport":    teleportData,
-		"screwdriver": screwdriverData,
-		"crash":       crashData,
-		"gamestart":   gamestartData,
-		"gameover":    gameoverData,
+		"teleport":      teleportData,
+		"screwdriver":   screwdriverData,
+		"crash":         crashData,
+		"gamestart":     gamestartData,
+		"gameover":      gameoverData,
+		"dalek_emperor": dalekEmperorData,
 	}
 
 	for name, data := range soundData {

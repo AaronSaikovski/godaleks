@@ -30,12 +30,20 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
+// drawBoldText draws text with a bold effect by rendering it twice with offset
+func drawBoldText(screen *ebiten.Image, str string, x, y int, clr color.Color) {
+	// Draw offset text for bold effect
+	text.Draw(screen, str, basicfont.Face7x13, x+1, y, clr)
+	// Draw main text on top
+	text.Draw(screen, str, basicfont.Face7x13, x, y, clr)
+}
+
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GoDaleks - v1.1.0"
-	text.Draw(screen, title, basicfont.Face7x13, screenWidth/2-len(title)*3, 100, color.Black)
+	title := "GoDaleks - v1.2.0"
+	drawBoldText(screen, title, screenWidth/2-len(title)*3, 100, color.Black)
 
 	gameDesc := "Based on the original 1984 'Daleks' Macintosh Classic game by Johan Strandberg."
-	text.Draw(screen, gameDesc, basicfont.Face7x13, screenWidth/2-len(gameDesc)*7/2, 120, color.Black)
+	drawBoldText(screen, gameDesc, screenWidth/2-len(gameDesc)*7/2, 120, color.Black)
 
 	instructions := []string{
 		"Use arrow keys or mouse to move",
@@ -53,6 +61,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 		"",
 		"Avoid the Daleks!",
 		"Make them crash into each other!",
+		"Watch out for the Emperor Dalek",
 		"Sonic Screwdriver destroys adjacent Daleks!",
 		"Last Stand forces all daleks to move!",
 		"",
@@ -60,9 +69,9 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	}
 
 	for i, line := range instructions {
-		text.Draw(screen, line, basicfont.Face7x13, 50, 200+i*15, color.Black)
+		drawBoldText(screen, line, 50, 200+i*15, color.Black)
 	}
 
-	authorInfo := "Go 2025 version by: Aaron Saikovski - https://github.com/AaronSaikovski/godaleks"
-	text.Draw(screen, authorInfo, basicfont.Face7x13, screenWidth/2-len(authorInfo)*7/2, screenHeight-30, color.Black)
+	authorInfo := "Ported to Go by: Aaron Saikovski - https://github.com/AaronSaikovski/godaleks"
+	drawBoldText(screen, authorInfo, screenWidth/2-len(authorInfo)*7/2, screenHeight-30, color.Black)
 }

@@ -55,8 +55,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 
 	// Draw scraps (centered) - use cached dimensions and reusable draw options
 	for _, scrap := range g.scraps {
-		cellCenterX := float64(offsetX) + float64(scrap.X*cellSize) + float64(cellSize)/2
-		cellCenterY := float64(offsetY) + float64(scrap.Y*cellSize) + float64(cellSize)/2
+		cellCenterX := float64(offsetX) + (float64(scrap.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(offsetY) + (float64(scrap.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.scrapHalfWidth
 		y := cellCenterY - g.scrapHalfHeight
@@ -69,15 +69,21 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 	// Draw daleks using smooth interpolated positions - use cached dimensions
 	for _, dalek := range g.daleks {
 		// Use visual position for smooth movement, but calculate centered position
-		cellCenterX := float64(offsetX) + dalek.VisualPos.X*float64(cellSize) + float64(cellSize)/2
-		cellCenterY := float64(offsetY) + dalek.VisualPos.Y*float64(cellSize) + float64(cellSize)/2
+		cellCenterX := float64(offsetX) + (dalek.VisualPos.X+0.5)*float64(cellSize)
+		cellCenterY := float64(offsetY) + (dalek.VisualPos.Y+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.dalekHalfWidth
 		y := cellCenterY - g.dalekHalfHeight
 
 		g.drawOp.GeoM.Reset()
 		g.drawOp.GeoM.Translate(x, y)
-		screen.DrawImage(g.dalekImage, &g.drawOp)
+
+		// Use emperor sprite for emperor daleks, regular dalek sprite for others
+		if dalek.IsEmperor {
+			screen.DrawImage(g.emperorImage, &g.drawOp)
+		} else {
+			screen.DrawImage(g.dalekImage, &g.drawOp)
+		}
 	}
 
 	// Draw player with teleportation effects (centered)
@@ -96,8 +102,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		}
 
 		// Draw player with fade effect (centered) - use cached dimensions
-		cellCenterX := float64(offsetX) + float64(g.player.X*cellSize) + float64(cellSize)/2
-		cellCenterY := float64(offsetY) + float64(g.player.Y*cellSize) + float64(cellSize)/2
+		cellCenterX := float64(offsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(offsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.playerHalfWidth
 		y := cellCenterY - g.playerHalfHeight
@@ -118,8 +124,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		g.drawOp.ColorM.Reset() // Reset color for next draw
 	} else {
 		// Normal player drawing (centered) - use cached dimensions
-		cellCenterX := float64(offsetX) + float64(g.player.X*cellSize) + float64(cellSize)/2
-		cellCenterY := float64(offsetY) + float64(g.player.Y*cellSize) + float64(cellSize)/2
+		cellCenterX := float64(offsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(offsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.playerHalfWidth
 		y := cellCenterY - g.playerHalfHeight
@@ -191,5 +197,13 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 		x := screenWidth/2 - len(msg)*3
 		y := 60
 		text.Draw(screen, msg, basicfont.Face7x13, x, y, color.Black)
+	}
+
+	// Emperor warning message in red
+	if g.emperorWarningMessage != "" {
+		msg := g.emperorWarningMessage
+		x := screenWidth/2 - len(msg)*3
+		y := 80
+		text.Draw(screen, msg, basicfont.Face7x13, x, y, color.RGBA{255, 0, 0, 255}) // Red color
 	}
 }
