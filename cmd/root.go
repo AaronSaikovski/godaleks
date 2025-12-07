@@ -51,14 +51,16 @@ func NewGame() *Game {
 		fmt.Printf("Warning: Failed to initialize sound player: %v\n", err)
 	}
 
+	now := time.Now()
 	g := &Game{
-		state:         StateMenu,
-		level:         1,
-		teleports:     10,
-		safeTeleports: 3,
-		screwdrivers:  2,
-		lastStands:    1,
-		lastMoveTime:  time.Now(),
+		state:          StateMenu,
+		level:          1,
+		teleports:      10,
+		safeTeleports:  3,
+		screwdrivers:   2,
+		lastStands:     1,
+		lastMoveTime:   now,
+		lastUpdateTime: now,
 
 		//playerImage:           createPlayerImage(),
 		//dalekImage:            createDalekImage(),
@@ -68,7 +70,7 @@ func NewGame() *Game {
 		emperorImage: gameImages.DalekEmperor,
 
 		scrapImage:             createScrapImage(),
-		moveAnimationDuration:  0.85, // Smooth animation with responsive movement speed
+		moveAnimationDuration:  0.7, // Smooth, slightly slower movement
 		daleksMoving:           false,
 		showGrid:               false, // Default OFF
 		emperorWarningMessage:  "",
@@ -78,7 +80,7 @@ func NewGame() *Game {
 		lastStandSpeed:        2.0, // Slower, more controlled initial speed
 		lastStandAcceleration: 1.1, // Very gentle acceleration for ultra-smooth ramping
 		lastStandMaxSpeed:     8.0, // Lower max speed for slower, smoother gameplay
-		lastClickTime:         time.Now(),
+		lastClickTime:         now,
 		soundPlayer:           soundPlayer,
 
 		// Pre-allocate reusable buffers
@@ -108,7 +110,18 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	deltaTime := 1.0 / 60.0 // Assuming 60 FPS
+	// Calculate actual deltaTime based on real elapsed time for smooth animation
+	now := time.Now()
+	deltaTime := now.Sub(g.lastUpdateTime).Seconds()
+	g.lastUpdateTime = now
+
+	// Clamp deltaTime to reasonable bounds to prevent jitter and jumps
+	// Min: ~240 FPS max, Max: ~30 FPS min
+	if deltaTime < 0.004 {
+		deltaTime = 0.004 // Prevent too-fast updates causing jitter
+	} else if deltaTime > 0.033 {
+		deltaTime = 0.033 // Prevent huge jumps when window is dragged
+	}
 
 	// Handle mouse input for player movement
 	if g.state == StatePlaying && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {

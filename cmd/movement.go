@@ -189,6 +189,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		delete(g.dalekRemoveMap, k)
 	}
 	newScraps := make([]Position, 0, 5) // Small capacity hint
+	hasAnyCollision := false            // Track if any collision occurred
 
 	// Check for collisions with scraps
 	for i, dalek := range g.daleks {
@@ -200,6 +201,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
 				g.dalekRemoveMap[i] = true
 				g.score += 2
+				hasAnyCollision = true
 				break
 			}
 		}
@@ -218,6 +220,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 				g.dalekRemoveMap[i] = true
 				g.dalekRemoveMap[j] = true
 				g.score += 4 // 2 points per dalek
+				hasAnyCollision = true
 				collisionPos := Position{
 					X: int((g.daleks[i].VisualPos.X + g.daleks[j].VisualPos.X) / 2),
 					Y: int((g.daleks[i].VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
@@ -230,8 +233,8 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		}
 	}
 
-	// Play crash sound if any collisions occurred
-	if len(g.dalekRemoveMap) > 0 {
+	// Play crash sound for any collision (dalek-dalek OR dalek-scrap)
+	if hasAnyCollision && g.soundPlayer != nil {
 		g.soundPlayer.Play("crash")
 	}
 

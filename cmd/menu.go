@@ -30,11 +30,9 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
-// drawBoldText draws text with a bold effect by rendering it twice with offset
+// drawBoldText draws smooth, non-bold text
 func drawBoldText(screen *ebiten.Image, str string, x, y int, clr color.Color) {
-	// Draw offset text for bold effect
-	text.Draw(screen, str, basicfont.Face7x13, x+1, y, clr)
-	// Draw main text on top
+	// Draw single clean text for smooth appearance
 	text.Draw(screen, str, basicfont.Face7x13, x, y, clr)
 }
 

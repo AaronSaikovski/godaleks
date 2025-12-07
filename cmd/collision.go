@@ -115,7 +115,7 @@ func (g *Game) checkCollisions() {
 				}
 			}
 
-			if !playedCrashSound {
+			if !playedCrashSound && g.soundPlayer != nil {
 				g.soundPlayer.Play("crash")
 				playedCrashSound = true
 			}
@@ -193,7 +193,9 @@ func (g *Game) checkCollisions() {
 				Timer:    0,
 				Duration: 0.6,
 			})
-			g.soundPlayer.Play("crash") // Play crash sound for emperor defeat
+			if g.soundPlayer != nil {
+				g.soundPlayer.Play("crash") // Play crash sound for emperor defeat
+			}
 		}
 	}
 

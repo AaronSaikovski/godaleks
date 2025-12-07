@@ -64,6 +64,7 @@ type Game struct {
 	lastStands      int
 	gameOverMessage string
 	lastMoveTime    time.Time
+	lastUpdateTime  time.Time // Track last update for accurate deltaTime
 
 	playerImage  *ebiten.Image
 	dalekImage   *ebiten.Image
