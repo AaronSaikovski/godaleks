@@ -201,8 +201,8 @@ func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress f
 	// Pre-calculate alpha
 	alpha := uint8(255 * (1.0 - progress))
 
-	// Optimized sparkle effect - fewer particles
-	numParticles := 8
+	// Ultra-optimized sparkle effect - minimal particles
+	numParticles := 6 // Reduced from 8
 	radius := float64(cellSize) * (1.0 + progress*2.0)
 	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
@@ -214,24 +214,18 @@ func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress f
 		px := int(x + radius*0.5*cosA)
 		py := int(y + radius*0.5*sinA)
 
-		// Draw compact sparkle (cross pattern)
+		// Draw single pixel sparkle for maximum performance
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
-			if px+1 < screenWidth {
-				screen.Set(px+1, py, color.RGBA{0x00, 0x00, 0x00, alpha})
-			}
-			if py+1 < screenHeight {
-				screen.Set(px, py+1, color.RGBA{0x00, 0x00, 0x00, alpha})
-			}
 		}
 	}
 
-	// Optimized flash - draw ring only
+	// Optimized flash - draw ring only with fewer points
 	flashAlpha := uint8(255 * (1.0 - progress) * 0.8)
 	flashRadius := int(float64(cellSize/2) * (1.0 - progress*0.5))
 
-	// Draw circular outline only (much faster)
-	for angle := 0.0; angle < 6.28; angle += 0.25 {
+	// Draw circular outline with larger angle steps (fewer points)
+	for angle := 0.0; angle < 6.28; angle += 0.4 {
 		px := int(x + float64(flashRadius)*math.Cos(angle))
 		py := int(y + float64(flashRadius)*math.Sin(angle))
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
@@ -244,8 +238,8 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 	x := float64(offsetX + pos.X*cellSize + cellSize/2)
 	y := float64(offsetY + pos.Y*cellSize + cellSize/2)
 
-	// Optimized electric effect - fewer bolts and steps
-	numBolts := 4 // Reduced from 6
+	// Ultra-optimized electric effect - minimal bolts and steps
+	numBolts := 3 // Reduced from 4
 	radius := float64(cellSize) * 0.8
 	angleStep := 2.0 * 3.14159 / float64(numBolts)
 
@@ -254,15 +248,15 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 		cosA := math.Cos(angle)
 		sinA := math.Sin(angle)
 
-		// Fewer steps for performance
-		for step := 0; step < 3; step++ { // Reduced from 5
-			stepRadius := radius * float64(step) / 3.0
+		// Minimal steps for maximum performance
+		for step := 0; step < 2; step++ { // Reduced from 3
+			stepRadius := radius * float64(step) / 2.0
 			zigzag := math.Sin(progress*20.0+float64(step)) * 3.0
 
 			boltX := int(x + stepRadius*cosA + zigzag*math.Cos(angle+1.57))
 			boltY := int(y + stepRadius*sinA + zigzag*math.Sin(angle+1.57))
 
-			alpha := uint8(255 * (1.0 - progress) * (1.0 - float64(step)/3.0))
+			alpha := uint8(255 * (1.0 - progress) * (1.0 - float64(step)/2.0))
 
 			// Single pixel per bolt point
 			if boltX >= 0 && boltX < screenWidth && boltY >= 0 && boltY < screenHeight {
@@ -271,12 +265,12 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 		}
 	}
 
-	// Optimized pulse - ring only
+	// Optimized pulse - ring only with fewer points
 	pulseRadius := int(float64(cellSize/3) * (1.0 + progress*2.0))
 	pulseAlpha := uint8(255 * (1.0 - progress) * 0.6)
 
-	// Draw ring outline only
-	for angle := 0.0; angle < 6.28; angle += 0.3 {
+	// Draw ring outline with larger angle steps
+	for angle := 0.0; angle < 6.28; angle += 0.5 {
 		px := int(x + float64(pulseRadius)*math.Cos(angle))
 		py := int(y + float64(pulseRadius)*math.Sin(angle))
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
@@ -317,12 +311,12 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 	// Pre-calculate alpha values (avoid repeated calculations)
 	alpha := uint8(255 * (1.0 - progress))
 
-	// Optimized particle rendering - pre-calculate sin/cos
-	numParticles := 12 // Reduced from 16 for performance
+	// Ultra-optimized particle rendering - minimal particles
+	numParticles := 8 // Reduced from 12 for better performance
 	radius := maxRadius * progress
 	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
-	// Draw particles with fewer pixel operations
+	// Draw particles with single pixel operations
 	for i := 0; i < numParticles; i++ {
 		angle := float64(i) * angleStep
 		cosA := math.Cos(angle)
@@ -331,26 +325,19 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 		px := int(x + radius*cosA)
 		py := int(y + radius*sinA)
 
-		// Single pixel per particle for performance
+		// Single pixel per particle for maximum performance
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
-			// Add cross pattern for visibility
-			if px+1 < screenWidth {
-				screen.Set(px+1, py, color.RGBA{0x00, 0x00, 0x00, alpha})
-			}
-			if py+1 < screenHeight {
-				screen.Set(px, py+1, color.RGBA{0x00, 0x00, 0x00, alpha})
-			}
 		}
 	}
 
-	// Optimized flash (smaller radius for performance)
+	// Optimized flash with fewer points
 	if progress < 0.5 {
 		flashAlpha := uint8(255 * (1.0 - progress*2))
-		flashRadius := int(float64(cellSize/3) * (1.0 + progress)) // Reduced size
+		flashRadius := int(float64(cellSize/3) * (1.0 + progress))
 
-		// Draw only edge pixels of flash for performance
-		for angle := 0.0; angle < 6.28; angle += 0.3 {
+		// Draw only edge pixels with larger angle steps
+		for angle := 0.0; angle < 6.28; angle += 0.5 {
 			px := int(x + float64(flashRadius)*math.Cos(angle))
 			py := int(y + float64(flashRadius)*math.Sin(angle))
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
@@ -359,14 +346,14 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 		}
 	}
 
-	// Optimized shock wave (fewer points)
+	// Optimized shock wave with minimal points
 	if progress > 0.2 {
 		waveProgress := (progress - 0.2) / 0.8
 		waveRadius := int(maxRadius * waveProgress)
 		waveAlpha := uint8(255 * (1.0 - waveProgress))
 
-		// Draw ring with larger angle steps for performance
-		for angle := 0.0; angle < 6.28; angle += 0.2 {
+		// Draw ring with large angle steps for maximum performance
+		for angle := 0.0; angle < 6.28; angle += 0.4 {
 			px := int(x + float64(waveRadius)*math.Cos(angle))
 			py := int(y + float64(waveRadius)*math.Sin(angle))
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
