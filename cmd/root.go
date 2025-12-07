@@ -70,7 +70,7 @@ func NewGame() *Game {
 		emperorImage: gameImages.DalekEmperor,
 
 		scrapImage:             createScrapImage(),
-		moveAnimationDuration:  0.5, // Smooth and responsive movement
+		moveAnimationDuration:  0.7, // Smooth, slightly slower movement
 		daleksMoving:           false,
 		showGrid:               false, // Default OFF
 		emperorWarningMessage:  "",

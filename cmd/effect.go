@@ -238,43 +238,48 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 	x := float64(offsetX + pos.X*cellSize + cellSize/2)
 	y := float64(offsetY + pos.Y*cellSize + cellSize/2)
 
-	// Ultra-optimized electric effect - minimal bolts and steps
-	numBolts := 3 // Reduced from 4
-	radius := float64(cellSize) * 0.8
-	angleStep := 2.0 * 3.14159 / float64(numBolts)
+	// Sonar-like expanding ring effect
+	maxRadius := float64(cellSize) * 1.5
 
-	for i := 0; i < numBolts; i++ {
-		angle := float64(i)*angleStep + progress*12.56
-		cosA := math.Cos(angle)
-		sinA := math.Sin(angle)
+	// Draw multiple concentric rings for sonar effect
+	numRings := 3
+	for ring := 0; ring < numRings; ring++ {
+		// Stagger the rings so they appear at different times
+		ringProgress := progress - float64(ring)*0.15
+		if ringProgress < 0 {
+			continue
+		}
+		if ringProgress > 1.0 {
+			ringProgress = 1.0
+		}
 
-		// Minimal steps for maximum performance
-		for step := 0; step < 2; step++ { // Reduced from 3
-			stepRadius := radius * float64(step) / 2.0
-			zigzag := math.Sin(progress*20.0+float64(step)) * 3.0
+		// Expanding ring radius
+		ringRadius := int(maxRadius * ringProgress)
 
-			boltX := int(x + stepRadius*cosA + zigzag*math.Cos(angle+1.57))
-			boltY := int(y + stepRadius*sinA + zigzag*math.Sin(angle+1.57))
+		// Fade out as ring expands
+		ringAlpha := uint8(255 * (1.0 - ringProgress) * 0.8)
 
-			alpha := uint8(255 * (1.0 - progress) * (1.0 - float64(step)/2.0))
-
-			// Single pixel per bolt point
-			if boltX >= 0 && boltX < screenWidth && boltY >= 0 && boltY < screenHeight {
-				screen.Set(boltX, boltY, color.RGBA{0x00, 0x00, 0x00, alpha})
+		// Draw the ring with moderate density for smooth sonar appearance
+		for angle := 0.0; angle < 6.28; angle += 0.3 {
+			px := int(x + float64(ringRadius)*math.Cos(angle))
+			py := int(y + float64(ringRadius)*math.Sin(angle))
+			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, ringAlpha})
 			}
 		}
 	}
 
-	// Optimized pulse - ring only with fewer points
-	pulseRadius := int(float64(cellSize/3) * (1.0 + progress*2.0))
-	pulseAlpha := uint8(255 * (1.0 - progress) * 0.6)
+	// Central pulse that fades quickly
+	if progress < 0.3 {
+		centralAlpha := uint8(255 * (1.0 - progress/0.3))
+		centralRadius := int(float64(cellSize/4) * (1.0 + progress*2.0))
 
-	// Draw ring outline with larger angle steps
-	for angle := 0.0; angle < 6.28; angle += 0.5 {
-		px := int(x + float64(pulseRadius)*math.Cos(angle))
-		py := int(y + float64(pulseRadius)*math.Sin(angle))
-		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
-			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, pulseAlpha})
+		for angle := 0.0; angle < 6.28; angle += 0.2 {
+			px := int(x + float64(centralRadius)*math.Cos(angle))
+			py := int(y + float64(centralRadius)*math.Sin(angle))
+			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
+				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, centralAlpha})
+			}
 		}
 	}
 }
