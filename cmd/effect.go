@@ -26,6 +26,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -53,10 +54,8 @@ func (g *Game) movePlayer(dx, dy int) {
 	}
 
 	// Check if position is occupied by scrap
-	for _, scrap := range g.scraps {
-		if scrap == newPos {
-			return
-		}
+	if slices.Contains(g.scraps, newPos) {
+		return
 	}
 
 	g.player = newPos
@@ -91,7 +90,7 @@ func (g *Game) teleport(safe bool) {
 
 	if safe {
 		// Safe teleport - find position with no daleks nearby
-		for i := 0; i < maxAttempts; i++ {
+		for range maxAttempts {
 			newPos = Position{
 				X: rand.Intn(gridWidth),
 				Y: rand.Intn(gridHeight),
@@ -104,7 +103,7 @@ func (g *Game) teleport(safe bool) {
 		g.safeTeleports--
 	} else {
 		// Regular teleport - just find an empty spot
-		for i := 0; i < maxAttempts; i++ {
+		for range maxAttempts {
 			newPos = Position{
 				X: rand.Intn(gridWidth),
 				Y: rand.Intn(gridHeight),
@@ -172,14 +171,9 @@ func (g *Game) useScrewdriver() {
 	newDaleks := make([]Dalek, 0, len(g.daleks))
 	for i, dalek := range g.daleks {
 		destroyed := false
-		for _, destroyIndex := range daleksToDestroy {
-			if i == destroyIndex {
-				destroyed = true
-				g.score += 5 // Bonus points for screwdriver kill
-				// REMOVED: Don't add debris pile at dalek's position
-				// g.scraps = append(g.scraps, dalek.GridPos)
-				break
-			}
+		if slices.Contains(daleksToDestroy, i) {
+			destroyed = true
+			g.score += 5
 		}
 		if !destroyed {
 			newDaleks = append(newDaleks, dalek)
@@ -206,7 +200,7 @@ func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress f
 	radius := float64(cellSize) * (1.0 + progress*2.0)
 	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
-	for i := 0; i < numParticles; i++ {
+	for i := range numParticles {
 		angle := float64(i)*angleStep + progress*6.28
 		cosA := math.Cos(angle)
 		sinA := math.Sin(angle)
@@ -243,7 +237,7 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 
 	// Draw multiple concentric rings for sonar effect
 	numRings := 3
-	for ring := 0; ring < numRings; ring++ {
+	for ring := range numRings {
 		// Stagger the rings so they appear at different times
 		ringProgress := progress - float64(ring)*0.15
 		if ringProgress < 0 {
@@ -322,7 +316,7 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
 	// Draw particles with single pixel operations
-	for i := 0; i < numParticles; i++ {
+	for i := range numParticles {
 		angle := float64(i) * angleStep
 		cosA := math.Cos(angle)
 		sinA := math.Sin(angle)

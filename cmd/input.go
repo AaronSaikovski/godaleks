@@ -24,6 +24,7 @@ package cmd
 
 import (
 	"image/color"
+	"slices"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -110,13 +111,7 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 			indicatorColor = color.RGBA{0, 255, 0, 100} // Green for wait/current position
 		} else {
 			// Check if position is occupied by scrap
-			occupied := false
-			for _, scrap := range g.scraps {
-				if scrap == targetPos {
-					occupied = true
-					break
-				}
-			}
+			occupied := slices.Contains(g.scraps, targetPos)
 
 			if occupied {
 				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
