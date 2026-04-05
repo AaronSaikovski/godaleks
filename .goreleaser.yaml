@@ -9,25 +9,20 @@ before:
     - go generate ./...
 
 builds:
-  # Linux build - requires CGO for Ebitengine (GLFW/X11/ALSA)
-  - id: linux
-    env:
+  - env:
       - CGO_ENABLED=1
     goos:
       - linux
-    goarch:
-      - amd64
-
-  # Windows/macOS build - Ebitengine uses purego, no CGO needed
-  - id: windows-darwin
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - windows
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
+    ignore:
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
 
 archives:
   - formats: [tar.gz]

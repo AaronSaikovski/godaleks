@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  build-linux-windows:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,13 +25,103 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev mingw-w64
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+      - name: Build Linux binary
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/godaleks_linux_amd64 ./main.go
+
+      - name: Build Windows binary
+        run: |
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/godaleks_windows_amd64.exe ./main.go
+
+      - name: Package archives
+        run: |
+          cd dist
+          tar czf godaleks_Linux_x86_64.tar.gz godaleks_linux_amd64
+          zip godaleks_Windows_x86_64.zip godaleks_windows_amd64.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
+          name: binaries-linux-windows
+          path: dist/*.tar.gz
+          retention-days: 1
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-windows
+          path: dist/*.zip
+          retention-days: 1
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            arch_name: x86_64
+          - goarch: arm64
+            arch_name: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.26.0"
+
+      - name: Build macOS binary
+        run: |
+          CGO_ENABLED=1 GOOS=darwin GOARCH=${{ matrix.goarch }} go build -ldflags="-s -w" -trimpath -o dist/godaleks_darwin_${{ matrix.goarch }} ./main.go
+
+      - name: Package archive
+        run: |
+          cd dist
+          tar czf godaleks_Darwin_${{ matrix.arch_name }}.tar.gz godaleks_darwin_${{ matrix.goarch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-macos-${{ matrix.goarch }}
+          path: dist/*.tar.gz
+          retention-days: 1
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-linux-windows, build-macos]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "## Changes since $PREVIOUS_TAG" > changelog.md
+            git log --pretty=format:"- %s" "$PREVIOUS_TAG"..HEAD >> changelog.md
+          else
+            echo "## Initial Release" > changelog.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: changelog.md
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
