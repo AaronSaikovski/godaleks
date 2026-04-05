@@ -111,24 +111,50 @@ Daleks move one step per turn toward you. Survive by making them crash into each
 
 ## 🚀 Building & Running
 
-The toolchain is driven by using [Taskfile](https://taskfile.dev/) and all commands are managed via the file `Taskfile.yml`
+### Prerequisites
 
-The list of commands is as follows:
+- **Go 1.26+**
+- [Taskfile](https://taskfile.dev/) (task runner)
+- **Linux only**: X11/ALSA dev libraries — `sudo apt install libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev`
+- **Windows/macOS**: No additional system dependencies (Ebitengine uses [purego](https://github.com/ebitengine/purego))
+
+### Task Commands
+
+All commands are managed via `Taskfile.yml`:
 
 ```bash
-* build:            Compiles the code.
-* clean:            Cleans the project.
-* deps:             Updates/installs and dependencies.
-* goreleaser:       Builds using Goreleaser.
-* lint:             Lints and tidies up the project.
-* release:          Builds a release version (smaller binary) of the project.
-* run:              Executes the project.
-* seccheck:         Checks for security vulnerabilities in the project.
-* staticcheck:      Runs a static check of the project.
-* test:             Executes and tests for the project.
-* generate:         Updates the project build version.
-* vet:              Vet examines Go source code and reports suspicious constructs.
+task build            # Debug build → bin/godaleks.exe
+task run              # Build and run (go run ./main.go)
+task release          # Optimized build (-ldflags="-s -w")
+task lint             # go fmt ./... && go mod tidy
+task vet              # go vet ./...
+task test             # go test -v ./test/...
+task deps             # go mod tidy + download + update
+task clean            # Remove bin/ and dist/
+task staticcheck      # staticcheck ./...
+task seccheck         # govulncheck ./...
+task goreleaser       # goreleaser release --snapshot --clean
+task generate         # go generate ./main.go
 ```
+
+### WebAssembly Build
+
+```bash
+GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o godaleks.wasm ./main.go
+```
+
+All game assets (images, sounds) are embedded via `//go:embed` — the `.wasm` binary is fully self-contained. Serve `index.html`, `wasm_exec.js`, and `godaleks.wasm` together.
+
+### Releasing
+
+Releases are triggered by pushing a version tag:
+
+```bash
+git tag v1.2.1
+git push origin v1.2.1
+```
+
+This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (amd64/arm64) via GitHub Actions. The WASM version is automatically deployed to GitHub Pages on every push to `main`.
 
 ## 📋 Game Mechanics
 
@@ -175,18 +201,16 @@ The list of commands is as follows:
 ## 📝 Changelog
 
 ### v1.2.1 - Performance & Quality Update
-- **Added**: 1.5 second level transition delay with "Level Complete" overlay to prevent audio overlap
-- **Added**: GitHub Actions workflow for optimised WASM deployment to GitHub Pages
-- **Added**: Linting (go vet, go fmt) in CI build and deploy workflows
+- **Added**: Multi-platform release builds (Linux, Windows, macOS amd64/arm64) via GitHub Actions
+- **Added**: WASM deployment to GitHub Pages on every push to main
+- **Added**: 1.5 second level transition delay with "Level Complete" overlay
+- **Added**: CI linting (go vet, go fmt) in all workflows
 - **Fixed**: Collision sound sometimes not playing due to single-instance audio player conflicts
-- **Improved**: Sound system now creates fresh audio players per playback, allowing overlapping sounds
+- **Improved**: Sound system creates fresh audio players per playback, allowing overlapping sounds
 - **Improved**: Zero-allocation collision detection using reusable pre-allocated buffers
 - **Improved**: Grid-based O(1) occupancy and scrap lookups replacing O(n) linear scans
-- **Improved**: Pre-computed trigonometric lookup tables for particle effects
-- **Improved**: Cached HUD, game-over, and Last Stand strings to eliminate per-frame `fmt.Sprintf`
-- **Improved**: In-place slice filtering for collision effects and dalek removal
-- **Improved**: Compile-time grid offset constants replacing per-frame recalculations
-- **Improved**: Optimised WASM binary with stripped symbols and trimmed paths
+- **Improved**: Pre-computed trig lookup tables, cached HUD strings, in-place slice filtering
+- **Improved**: Optimised WASM binary with `-ldflags="-s -w" -trimpath`
 
 ### v1.2.0 - Emperor Update
 - **Added**: Dalek Emperor boss character (invulnerable until normal Daleks defeated)
@@ -211,40 +235,33 @@ The list of commands is as follows:
 
 ## 🔧 Architecture
 
+All game logic lives in the `cmd` package. `main.go` is the Ebiten bootstrap.
+
 ### Core Files
 
 | File | Purpose |
 |------|---------|
-| `cmd/types.go` | Entity definitions (Dalek, Game, CollisionEffect) |
-| `cmd/collision.go` | Collision detection and resolution system |
-| `cmd/game.go` | Game state management and level progression |
-| `cmd/movement.go` | Dalek movement and animation logic |
-| `cmd/draw.go` | Rendering and visual display |
-| `cmd/effect.go` | Player actions (teleport, screwdriver, etc.) |
-| `cmd/menu.go` | Menu and UI rendering |
-| `cmd/loadsounds.go` | Audio loading and playback |
-| `cmd/root.go` | Game loop and update cycle |
+| `cmd/root.go` | Game loop (`Update`/`Draw`/`Layout`), state machine |
+| `cmd/types.go` | Entity definitions (`Dalek`, `Game`, `CollisionEffect`) |
+| `cmd/constants.go` | Grid dimensions, game states, pre-computed layout offsets |
+| `cmd/collision.go` | Collision detection with emperor invulnerability rules |
+| `cmd/movement.go` | Dalek AI movement + smootherstep easing + Last Stand mode |
+| `cmd/effect.go` | Player actions (teleport, screwdriver) + particle effects |
+| `cmd/draw.go` | Rendering: grid, sprites, HUD, level-complete/game-over overlays |
+| `cmd/game.go` | Level management, entity spawning, O(1) grid-based lookups |
+| `cmd/input.go` | Mouse click handling and move validation |
+| `cmd/menu.go` | Title screen rendering |
+| `cmd/loadimages.go` | Embedded PNG sprite loading (`//go:embed assets/*`) |
+| `cmd/loadsounds.go` | Embedded WAV audio loading + per-playback player creation |
+| `cmd/sprites.go` | Programmatic scrap heap image generation |
 
-### Key Systems
+### Key Design Decisions
 
-**Collision Detection** (`collision.go`):
-- Position-based grid collision detection
-- Emperor invulnerability tracking
-- Scrap hazard collision
-- Player safety checks
-- Multi-dalek collision handling
-
-**Movement System** (`movement.go`):
-- Grid-based normal movement (0.85s per move)
-- Smooth easing interpolation for animation
-- Last Stand continuous acceleration mode
-- Distance-based collision for continuous movement
-
-**Game State** (`game.go`):
-- Level management and progression
-- Entity spawning and lifecycle
-- Position occupation validation
-- Resource tracking (teleports, screwdrivers, Last Stands)
+- **Entity model**: `Dalek` has both `GridPos` (logical) and `VisualPos` (interpolated for smooth animation). `IsEmperor` flag controls boss behavior.
+- **State machine**: `StateMenu → StatePlaying → StateLevelComplete (1.5s) → StatePlaying` or `→ StateGameOver/StateWin`.
+- **Zero-allocation game loop**: Pre-allocated reusable buffers (`dalekRemoveMap`, `survivingDaleksBuf`, `scrapMap`, etc.) on the `Game` struct eliminate per-frame GC pressure.
+- **O(1) spatial lookups**: `occupancyGrid [50][33]bool` and `scrapGrid [50][33]bool` replace map-based position checks.
+- **Overlapping audio**: Fresh `audio.Player` created per `Play()` call to support concurrent sounds.
 
 ---
 
