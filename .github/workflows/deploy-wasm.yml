@@ -27,7 +27,7 @@ jobs:
 
       - name: Lint
         run: |
-          go vet ./...
+          GOOS=js GOARCH=wasm go vet ./...
           go fmt ./... && git diff --exit-code
 
       - name: Build optimised WASM binary
