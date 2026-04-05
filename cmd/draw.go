@@ -34,29 +34,26 @@ import (
 )
 
 func (g *Game) drawGame(screen *ebiten.Image) {
-	offsetX := (screenWidth - gridWidth*cellSize) / 2
-	offsetY := 50
-
 	// Draw grid only if enabled
 	if g.showGrid {
 		for x := 0; x <= gridWidth; x++ {
 			ebitenutil.DrawLine(screen,
-				float64(offsetX+x*cellSize), float64(offsetY),
-				float64(offsetX+x*cellSize), float64(offsetY+gridHeight*cellSize),
+				float64(gridOffsetX+x*cellSize), float64(gridOffsetY),
+				float64(gridOffsetX+x*cellSize), float64(gridOffsetY+gridHeight*cellSize),
 				color.Black)
 		}
 		for y := 0; y <= gridHeight; y++ {
 			ebitenutil.DrawLine(screen,
-				float64(offsetX), float64(offsetY+y*cellSize),
-				float64(offsetX+gridWidth*cellSize), float64(offsetY+y*cellSize),
+				float64(gridOffsetX), float64(gridOffsetY+y*cellSize),
+				float64(gridOffsetX+gridWidth*cellSize), float64(gridOffsetY+y*cellSize),
 				color.Black)
 		}
 	}
 
 	// Draw scraps (centered) - use cached dimensions and reusable draw options
 	for _, scrap := range g.scraps {
-		cellCenterX := float64(offsetX) + (float64(scrap.X)+0.5)*float64(cellSize)
-		cellCenterY := float64(offsetY) + (float64(scrap.Y)+0.5)*float64(cellSize)
+		cellCenterX := float64(gridOffsetX) + (float64(scrap.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(gridOffsetY) + (float64(scrap.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.scrapHalfWidth
 		y := cellCenterY - g.scrapHalfHeight
@@ -69,8 +66,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 	// Draw daleks using smooth interpolated positions - use cached dimensions
 	for _, dalek := range g.daleks {
 		// Use visual position for smooth movement, but calculate centered position
-		cellCenterX := float64(offsetX) + (dalek.VisualPos.X+0.5)*float64(cellSize)
-		cellCenterY := float64(offsetY) + (dalek.VisualPos.Y+0.5)*float64(cellSize)
+		cellCenterX := float64(gridOffsetX) + (dalek.VisualPos.X+0.5)*float64(cellSize)
+		cellCenterY := float64(gridOffsetY) + (dalek.VisualPos.Y+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.dalekHalfWidth
 		y := cellCenterY - g.dalekHalfHeight
@@ -92,18 +89,18 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 
 		// Draw disappearing effect at old position
 		if progress < 0.5 {
-			g.drawTeleportEffect(screen, g.teleportOldPos, progress*2, offsetX, offsetY)
+			g.drawTeleportEffect(screen, g.teleportOldPos, progress*2, gridOffsetX, gridOffsetY)
 		}
 
 		// Draw appearing effect at new position
 		if progress > 0.3 {
 			appearProgress := (progress - 0.3) / 0.7
-			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, offsetX, offsetY)
+			g.drawTeleportEffect(screen, g.teleportNewPos, 1.0-appearProgress, gridOffsetX, gridOffsetY)
 		}
 
 		// Draw player with fade effect (centered) - use cached dimensions
-		cellCenterX := float64(offsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
-		cellCenterY := float64(offsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
+		cellCenterX := float64(gridOffsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(gridOffsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.playerHalfWidth
 		y := cellCenterY - g.playerHalfHeight
@@ -124,8 +121,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		g.drawOp.ColorM.Reset() // Reset color for next draw
 	} else {
 		// Normal player drawing (centered) - use cached dimensions
-		cellCenterX := float64(offsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
-		cellCenterY := float64(offsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
+		cellCenterX := float64(gridOffsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
+		cellCenterY := float64(gridOffsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
 
 		x := cellCenterX - g.playerHalfWidth
 		y := cellCenterY - g.playerHalfHeight
@@ -140,28 +137,42 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		progress := g.screwdriverTimer / 0.8 // 0.8 second animation
 
 		for _, target := range g.screwdriverTargets {
-			g.drawScrewdriverEffect(screen, target, progress, offsetX, offsetY)
+			g.drawScrewdriverEffect(screen, target, progress, gridOffsetX, gridOffsetY)
 		}
 	}
 
 	// Draw collision explosion effects
 	for _, effect := range g.collisionEffects {
 		progress := effect.Timer / effect.Duration
-		g.drawCollisionEffect(screen, effect.Pos, progress, offsetX, offsetY)
+		g.drawCollisionEffect(screen, effect.Pos, progress, gridOffsetX, gridOffsetY)
 	}
+}
+
+func (g *Game) drawLevelComplete(screen *ebiten.Image) {
+	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay)
+
+	msg := fmt.Sprintf("Level %d Complete!", g.level-1)
+	text.Draw(screen, msg, basicfont.Face7x13,
+		screenWidth/2-len(msg)*3, screenHeight/2-10, color.White)
+
+	nextMsg := fmt.Sprintf("Starting Level %d...", g.level)
+	text.Draw(screen, nextMsg, basicfont.Face7x13,
+		screenWidth/2-len(nextMsg)*3, screenHeight/2+20, color.White)
 }
 
 func (g *Game) drawGameOver(screen *ebiten.Image) {
 	// Semi-transparent overlay
-	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, color.RGBA{0, 0, 0, 128})
+	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay)
 
 	// Game over message
 	text.Draw(screen, g.gameOverMessage, basicfont.Face7x13,
 		screenWidth/2-len(g.gameOverMessage)*3, screenHeight/2-20, color.White)
 
-	finalScore := fmt.Sprintf("Final Score: %d", g.score)
-	text.Draw(screen, finalScore, basicfont.Face7x13,
-		screenWidth/2-len(finalScore)*3, screenHeight/2+10, color.White)
+	if g.cachedFinalScore == "" {
+		g.cachedFinalScore = fmt.Sprintf("Final Score: %d", g.score)
+	}
+	text.Draw(screen, g.cachedFinalScore, basicfont.Face7x13,
+		screenWidth/2-len(g.cachedFinalScore)*3, screenHeight/2+10, color.White)
 
 	restart := "Press SPACE or click to restart"
 	text.Draw(screen, restart, basicfont.Face7x13,
@@ -187,8 +198,11 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 
 	// Last Stand indicator
 	if g.isLastStandActive {
-		lastStandMsg := fmt.Sprintf("LAST STAND ACTIVE! Speed: %.1f", g.lastStandSpeed)
-		text.Draw(screen, lastStandMsg, basicfont.Face7x13, 10, screenHeight-30, color.Black)
+		if g.cachedLastStandSpeed != g.lastStandSpeed {
+			g.cachedLastStandMsg = fmt.Sprintf("LAST STAND ACTIVE! Speed: %.1f", g.lastStandSpeed)
+			g.cachedLastStandSpeed = g.lastStandSpeed
+		}
+		text.Draw(screen, g.cachedLastStandMsg, basicfont.Face7x13, 10, screenHeight-30, color.Black)
 	}
 
 	// Temporary center-screen notification for grid toggle
@@ -204,6 +218,6 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 		msg := g.emperorWarningMessage
 		x := screenWidth/2 - len(msg)*3
 		y := 80
-		text.Draw(screen, msg, basicfont.Face7x13, x, y, color.RGBA{255, 0, 0, 255}) // Red color
+		text.Draw(screen, msg, basicfont.Face7x13, x, y, colorRed)
 	}
 }

@@ -19,18 +19,12 @@ jobs:
           go-version: ">=1.25.0"
 
       - name: Install dependencies
-        run: go get .
+        run: go mod download
 
-      # - name: Run go vet
-      #   run: go vet ./...
-
-      # - name: Install staticcheck
-      #   run: |
-      #     go install honnef.co/go/tools/cmd/staticcheck@latest
-      #     staticcheck ./...
+      - name: Lint
+        run: |
+          go vet ./...
+          go fmt ./... && git diff --exit-code
 
       - name: Build
-        run: go get -u ./...
-
-      # - name: Run tests
-      #   run: go test -v ./...
+        run: go build -o bin/godaleks ./main.go

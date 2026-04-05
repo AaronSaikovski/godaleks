@@ -25,6 +25,7 @@ package cmd
 import (
 	"fmt"
 	"image/color"
+	"math"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -84,9 +85,11 @@ func NewGame() *Game {
 		soundPlayer:           soundPlayer,
 
 		// Pre-allocate reusable buffers
-		positionMap:     make(map[Position]bool, 100),
-		dalekRemoveMap:  make(map[int]bool, 20),
-		collisionPosMap: make(map[Position]bool, 20),
+		dalekRemoveMap:     make(map[int]bool, 20),
+		scrapMap:           make(map[Position]bool, 50),
+		daleksByPosition:   make(map[Position][]int, 20),
+		newScrapsBuf:       make([]Position, 0, 5),
+		survivingDaleksBuf: make([]Dalek, 0, 30),
 	}
 
 	// Cache sprite dimensions for performance (avoid Bounds() calls in draw loop)
@@ -104,6 +107,13 @@ func NewGame() *Game {
 		bounds := g.scrapImage.Bounds()
 		g.scrapHalfWidth = float64(bounds.Dx()) / 2
 		g.scrapHalfHeight = float64(bounds.Dy()) / 2
+	}
+
+	// Pre-compute trig lookup table for particle effects
+	for i := range trigTableSize {
+		angle := float64(i) * 2.0 * 3.14159265 / float64(trigTableSize)
+		g.sinTable[i] = math.Sin(angle)
+		g.cosTable[i] = math.Cos(angle)
 	}
 
 	return g
@@ -281,6 +291,12 @@ func (g *Game) Update() error {
 				g.isLastStandActive, g.daleksMoving, g.lastStandSpeed, len(g.daleks), g.lastStands)
 		}
 
+	case StateLevelComplete:
+		g.levelCompleteTimer += deltaTime
+		if g.levelCompleteTimer >= levelTransitionDelay {
+			g.startLevel()
+		}
+
 	case StateGameOver, StateWin:
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			g.level = 1
@@ -298,6 +314,10 @@ func (g *Game) Update() error {
 			g.isLastStandActive = false
 			// Reset Last Stand speed settings
 			g.lastStandSpeed = 2.0
+			// Clear cached strings
+			g.cachedFinalScore = ""
+			g.cachedLastStandMsg = ""
+			g.cachedLastStandSpeed = 0
 			// Clear any remaining game state
 			g.daleks = nil
 			g.scraps = nil
@@ -320,6 +340,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawGame(screen)
 		g.drawHUD(screen)
 		g.drawMouseIndicator(screen)
+	case StateLevelComplete:
+		g.drawGame(screen)
+		g.drawHUD(screen)
+		g.drawLevelComplete(screen)
 	case StateGameOver, StateWin:
 		g.drawGame(screen)
 		g.drawHUD(screen)

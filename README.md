@@ -143,7 +143,7 @@ The list of commands is as follows:
 
 ### Dalek Behavior
 - **Normal Movement**: Move one grid cell per turn toward the player
-- **Animation**: 0.85 second smooth easing animation per move
+- **Animation**: 0.7 second smooth easing animation per move
 - **Collision Detection**: Grid-based (50×33 grid, 16 pixels per cell)
 - **Collision Rules**:
   - Dalek hits scrap: Dies (+2 points)
@@ -173,6 +173,20 @@ The list of commands is as follows:
 ---
 
 ## 📝 Changelog
+
+### v1.2.1 - Performance & Quality Update
+- **Added**: 1.5 second level transition delay with "Level Complete" overlay to prevent audio overlap
+- **Added**: GitHub Actions workflow for optimised WASM deployment to GitHub Pages
+- **Added**: Linting (go vet, go fmt) in CI build and deploy workflows
+- **Fixed**: Collision sound sometimes not playing due to single-instance audio player conflicts
+- **Improved**: Sound system now creates fresh audio players per playback, allowing overlapping sounds
+- **Improved**: Zero-allocation collision detection using reusable pre-allocated buffers
+- **Improved**: Grid-based O(1) occupancy and scrap lookups replacing O(n) linear scans
+- **Improved**: Pre-computed trigonometric lookup tables for particle effects
+- **Improved**: Cached HUD, game-over, and Last Stand strings to eliminate per-frame `fmt.Sprintf`
+- **Improved**: In-place slice filtering for collision effects and dalek removal
+- **Improved**: Compile-time grid offset constants replacing per-frame recalculations
+- **Improved**: Optimised WASM binary with stripped symbols and trimmed paths
 
 ### v1.2.0 - Emperor Update
 - **Added**: Dalek Emperor boss character (invulnerable until normal Daleks defeated)

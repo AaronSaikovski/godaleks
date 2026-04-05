@@ -26,7 +26,6 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
-	"slices"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -54,7 +53,7 @@ func (g *Game) movePlayer(dx, dy int) {
 	}
 
 	// Check if position is occupied by scrap
-	if slices.Contains(g.scraps, newPos) {
+	if g.isScrapAt(newPos) {
 		return
 	}
 
@@ -141,8 +140,14 @@ func (g *Game) useScrewdriver() {
 	emperorIsVulnerable := normalDalekCount == 0
 
 	// Find all daleks adjacent to player (including diagonally)
-	daleksToDestroy := make([]int, 0)
-	g.screwdriverTargets = make([]Position, 0)
+	for k := range g.dalekRemoveMap {
+		delete(g.dalekRemoveMap, k)
+	}
+	if g.screwdriverTargets == nil {
+		g.screwdriverTargets = make([]Position, 0, 8)
+	} else {
+		g.screwdriverTargets = g.screwdriverTargets[:0]
+	}
 
 	for i, dalek := range g.daleks {
 		// Skip emperor if it's still invulnerable
@@ -155,7 +160,7 @@ func (g *Game) useScrewdriver() {
 
 		// Adjacent includes all 8 surrounding cells
 		if dx <= 1 && dy <= 1 && (dx != 0 || dy != 0) {
-			daleksToDestroy = append(daleksToDestroy, i)
+			g.dalekRemoveMap[i] = true
 			g.screwdriverTargets = append(g.screwdriverTargets, dalek.GridPos)
 		}
 	}
@@ -168,19 +173,16 @@ func (g *Game) useScrewdriver() {
 	}
 
 	// Remove destroyed daleks but DON'T add scraps
-	newDaleks := make([]Dalek, 0, len(g.daleks))
+	g.survivingDaleksBuf = g.survivingDaleksBuf[:0]
 	for i, dalek := range g.daleks {
-		destroyed := false
-		if slices.Contains(daleksToDestroy, i) {
-			destroyed = true
+		if g.dalekRemoveMap[i] {
 			g.score += 5
-		}
-		if !destroyed {
-			newDaleks = append(newDaleks, dalek)
+		} else {
+			g.survivingDaleksBuf = append(g.survivingDaleksBuf, dalek)
 		}
 	}
 
-	g.daleks = newDaleks
+	g.daleks = append(g.daleks[:0], g.survivingDaleksBuf...)
 
 	// Move remaining daleks after screwdriver use (if not in Last Stand)
 	if !g.isLastStandActive {
@@ -310,16 +312,13 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 	// Pre-calculate alpha values (avoid repeated calculations)
 	alpha := uint8(255 * (1.0 - progress))
 
-	// Ultra-optimized particle rendering - minimal particles
-	numParticles := 8 // Reduced from 12 for better performance
+	// Ultra-optimized particle rendering using pre-computed trig table
 	radius := maxRadius * progress
-	angleStep := 2.0 * 3.14159 / float64(numParticles)
 
 	// Draw particles with single pixel operations
-	for i := range numParticles {
-		angle := float64(i) * angleStep
-		cosA := math.Cos(angle)
-		sinA := math.Sin(angle)
+	for i := range trigTableSize {
+		cosA := g.cosTable[i]
+		sinA := g.sinTable[i]
 
 		px := int(x + radius*cosA)
 		py := int(y + radius*sinA)
@@ -364,17 +363,14 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 
 // Update collision animations
 func (g *Game) updateCollisionEffects(deltaTime float64) {
-	activeEffects := make([]CollisionEffect, 0, len(g.collisionEffects))
-
+	// Filter in-place to avoid allocations
+	n := 0
 	for i := range g.collisionEffects {
-		effect := &g.collisionEffects[i]
-		effect.Timer += deltaTime
-
-		// Keep effect if not finished
-		if effect.Timer < effect.Duration {
-			activeEffects = append(activeEffects, *effect)
+		g.collisionEffects[i].Timer += deltaTime
+		if g.collisionEffects[i].Timer < g.collisionEffects[i].Duration {
+			g.collisionEffects[n] = g.collisionEffects[i]
+			n++
 		}
 	}
-
-	g.collisionEffects = activeEffects
+	g.collisionEffects = g.collisionEffects[:n]
 }

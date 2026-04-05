@@ -188,7 +188,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	for k := range g.dalekRemoveMap {
 		delete(g.dalekRemoveMap, k)
 	}
-	newScraps := make([]Position, 0, 5) // Small capacity hint
+	g.newScrapsBuf = g.newScrapsBuf[:0] // Reuse pre-allocated buffer
 	hasAnyCollision := false            // Track if any collision occurred
 
 	// Check for collisions with scraps
@@ -226,7 +226,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 					Y: int((g.daleks[i].VisualPos.Y + g.daleks[j].VisualPos.Y) / 2),
 				}
 				if !g.positionOccupied(collisionPos) {
-					newScraps = append(newScraps, collisionPos)
+					g.newScrapsBuf = append(g.newScrapsBuf, collisionPos)
 				}
 				break
 			}
@@ -238,23 +238,23 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		g.soundPlayer.Play("crash")
 	}
 
-	// Remove collided daleks
+	// Remove collided daleks using reusable buffer
 	if len(g.dalekRemoveMap) > 0 {
-		survivingDaleks := make([]Dalek, 0, len(g.daleks)-len(g.dalekRemoveMap))
+		g.survivingDaleksBuf = g.survivingDaleksBuf[:0]
 		for i, dalek := range g.daleks {
 			if !g.dalekRemoveMap[i] {
-				survivingDaleks = append(survivingDaleks, dalek)
+				g.survivingDaleksBuf = append(g.survivingDaleksBuf, dalek)
 			}
 		}
-		g.daleks = survivingDaleks
+		g.daleks = append(g.daleks[:0], g.survivingDaleksBuf...)
 	}
 
 	// Add new scraps and collision effects
-	if len(newScraps) > 0 {
-		g.scraps = append(g.scraps, newScraps...)
+	if len(g.newScrapsBuf) > 0 {
+		g.scraps = append(g.scraps, g.newScrapsBuf...)
 
 		// Add collision explosion effect for each new scrap
-		for _, scrapPos := range newScraps {
+		for _, scrapPos := range g.newScrapsBuf {
 			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
 				Pos:      FloatPosition{X: float64(scrapPos.X), Y: float64(scrapPos.Y)},
 				Timer:    0,

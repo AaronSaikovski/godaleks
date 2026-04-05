@@ -24,6 +24,7 @@ package cmd
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
@@ -53,17 +54,14 @@ const (
 
 type SoundPlayer struct {
 	audioContext *audio.Context
-	sounds       map[string]*audio.Player
+	soundData    map[string][]byte // Raw WAV data for creating new players on demand
 }
 
 func NewSoundPlayer() (*SoundPlayer, error) {
 	audioContext := audio.NewContext(sampleRate)
 
-	// Initialize sound map
-	sounds := make(map[string]*audio.Player)
-
-	// Load sound effects
-	soundData := map[string][]byte{
+	// Store raw sound data for on-demand player creation
+	sounds := map[string][]byte{
 		"teleport":      teleportData,
 		"screwdriver":   screwdriverData,
 		"crash":         crashData,
@@ -72,38 +70,36 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 		"dalek_emperor": dalekEmperorData,
 	}
 
-	for name, data := range soundData {
-		d, err := wav.Decode(audioContext, bytes.NewReader(data))
+	// Validate all WAV data can be decoded
+	for name, data := range sounds {
+		_, err := wav.Decode(audioContext, bytes.NewReader(data))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to decode sound %s: %w", name, err)
 		}
-
-		player, err := audio.NewPlayer(audioContext, d)
-		if err != nil {
-			return nil, err
-		}
-
-		sounds[name] = player
 	}
 
 	return &SoundPlayer{
 		audioContext: audioContext,
-		sounds:       sounds,
+		soundData:    sounds,
 	}, nil
 }
 
 func (s *SoundPlayer) Play(name string) {
-	if s == nil || s.sounds == nil {
+	if s == nil || s.soundData == nil {
 		return // Gracefully handle nil soundPlayer
 	}
-	if player, exists := s.sounds[name]; exists {
-		player.Rewind()
-		player.Play()
+	data, exists := s.soundData[name]
+	if !exists {
+		return
 	}
-}
-
-func (s *SoundPlayer) Close() {
-	for _, player := range s.sounds {
-		player.Close()
+	// Create a fresh player each time to allow overlapping playback
+	d, err := wav.Decode(s.audioContext, bytes.NewReader(data))
+	if err != nil {
+		return
 	}
+	player, err := audio.NewPlayer(s.audioContext, d)
+	if err != nil {
+		return
+	}
+	player.Play()
 }

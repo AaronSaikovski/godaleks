@@ -61,34 +61,39 @@ func (g *Game) checkCollisions() {
 	// Count normal daleks to check if emperor should be defeated
 	normalDalekCount := g.countNormalDaleks()
 
-	// Pre-allocate maps with estimated capacity
-	scrapMap := make(map[Position]bool, len(g.scraps))
+	// Reuse pre-allocated scrap map
+	for k := range g.scrapMap {
+		delete(g.scrapMap, k)
+	}
 	for _, scrap := range g.scraps {
-		scrapMap[scrap] = true
+		g.scrapMap[scrap] = true
 	}
 
-	// Check dalek-dalek and dalek-scrap collisions
-	// Build a map of positions to dalek indices to handle emperor collisions properly
-	daleksByPosition := make(map[Position][]int, len(g.daleks))
-	dalekToRemove := make(map[int]bool, len(g.daleks))
+	// Reuse pre-allocated maps for collision detection
+	for k := range g.daleksByPosition {
+		delete(g.daleksByPosition, k)
+	}
+	for k := range g.dalekRemoveMap {
+		delete(g.dalekRemoveMap, k)
+	}
 
 	// Map daleks by their position
 	for i, dalek := range g.daleks {
-		if scrapMap[dalek.GridPos] {
+		if g.scrapMap[dalek.GridPos] {
 			// Dalek hit scrap - mark for removal (emperor immune to scraps)
 			if !dalek.IsEmperor {
 				g.score += 2
-				dalekToRemove[i] = true
+				g.dalekRemoveMap[i] = true
 			}
 		} else {
 			// Add to position map for collision detection
-			daleksByPosition[dalek.GridPos] = append(daleksByPosition[dalek.GridPos], i)
+			g.daleksByPosition[dalek.GridPos] = append(g.daleksByPosition[dalek.GridPos], i)
 		}
 	}
 
 	// Identify dalek-dalek collisions
 	playedCrashSound := false
-	for _, indices := range daleksByPosition {
+	for _, indices := range g.daleksByPosition {
 		if len(indices) > 1 {
 			// Multiple daleks at this position - check for emperor
 			hasEmperor := false
@@ -103,14 +108,14 @@ func (g *Game) checkCollisions() {
 				// Emperor at this position - only normal daleks die
 				for _, idx := range indices {
 					if !g.daleks[idx].IsEmperor {
-						dalekToRemove[idx] = true
+						g.dalekRemoveMap[idx] = true
 						g.score += 2 // 2 points per normal dalek destroyed by emperor
 					}
 				}
 			} else {
 				// Only normal daleks at this position - all die
 				for _, idx := range indices {
-					dalekToRemove[idx] = true
+					g.dalekRemoveMap[idx] = true
 					g.score += 2 // 2 points per dalek
 				}
 			}
@@ -122,19 +127,19 @@ func (g *Game) checkCollisions() {
 		}
 	}
 
-	// Build final dalek list excluding removed ones
-	finalDaleks := make([]Dalek, 0, len(g.daleks)-len(dalekToRemove))
+	// Filter daleks in-place using reusable buffer
+	g.survivingDaleksBuf = g.survivingDaleksBuf[:0]
 	for i, dalek := range g.daleks {
-		if !dalekToRemove[i] {
-			finalDaleks = append(finalDaleks, dalek)
+		if !g.dalekRemoveMap[i] {
+			g.survivingDaleksBuf = append(g.survivingDaleksBuf, dalek)
 		}
 	}
 
 	// Add new scraps for dalek collisions (avoid duplicates using scrapMap)
-	for pos, indices := range daleksByPosition {
-		if len(indices) > 1 && !scrapMap[pos] {
+	for pos, indices := range g.daleksByPosition {
+		if len(indices) > 1 && !g.scrapMap[pos] {
 			g.scraps = append(g.scraps, pos)
-			scrapMap[pos] = true // Update map to prevent future duplicates
+			g.scrapMap[pos] = true // Update map to prevent future duplicates
 
 			// Add collision explosion effect
 			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
@@ -145,7 +150,8 @@ func (g *Game) checkCollisions() {
 		}
 	}
 
-	g.daleks = finalDaleks
+	// Swap daleks with surviving buffer
+	g.daleks = append(g.daleks[:0], g.survivingDaleksBuf...)
 
 	// Check player-dalek collision again after updating dalek positions
 	// (in case daleks moved onto player during collision resolution)
@@ -179,13 +185,13 @@ func (g *Game) checkCollisions() {
 			g.score += 50                                // Bonus points for defeating the emperor
 			emperorPos := g.daleks[emperorIndex].GridPos // Store position before removal
 
-			finalDaleks := make([]Dalek, 0, len(g.daleks)-1)
+			g.survivingDaleksBuf = g.survivingDaleksBuf[:0]
 			for i, dalek := range g.daleks {
 				if i != emperorIndex {
-					finalDaleks = append(finalDaleks, dalek)
+					g.survivingDaleksBuf = append(g.survivingDaleksBuf, dalek)
 				}
 			}
-			g.daleks = finalDaleks
+			g.daleks = append(g.daleks[:0], g.survivingDaleksBuf...)
 
 			// Add explosion effect at emperor's position
 			g.collisionEffects = append(g.collisionEffects, CollisionEffect{
@@ -214,7 +220,8 @@ func (g *Game) checkCollisions() {
 			g.gameOverMessage = "Congratulations! You survived all levels!"
 			g.soundPlayer.Play("gameover")
 		} else {
-			g.startLevel()
+			g.state = StateLevelComplete
+			g.levelCompleteTimer = 0
 		}
 	}
 }

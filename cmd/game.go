@@ -47,6 +47,9 @@ func (g *Game) resetGame() {
 	g.gameOverMessage = ""
 	g.emperorWarningMessage = ""
 	g.emperorWarningTimer = 0
+	g.cachedFinalScore = ""
+	g.cachedLastStandMsg = ""
+	g.cachedLastStandSpeed = 0
 	g.startLevel()
 }
 
@@ -150,30 +153,53 @@ func (g *Game) distance(a, b Position) float64 {
 }
 
 func (g *Game) positionOccupied(pos Position) bool {
-	// Use reusable map for O(1) lookups
-	// Clear map (reuse allocation)
-	for k := range g.positionMap {
-		delete(g.positionMap, k)
-	}
+	// Use grid array for O(1) lookups with zero GC pressure
+	g.rebuildOccupancyGrid()
+	return g.occupancyGrid[pos.X][pos.Y]
+}
 
-	// Build position map
+func (g *Game) rebuildOccupancyGrid() {
+	// Clear grid
+	g.occupancyGrid = [gridWidth][gridHeight]bool{}
+
+	// Mark dalek positions
 	for _, dalek := range g.daleks {
-		g.positionMap[dalek.GridPos] = true
+		if dalek.GridPos.X >= 0 && dalek.GridPos.X < gridWidth &&
+			dalek.GridPos.Y >= 0 && dalek.GridPos.Y < gridHeight {
+			g.occupancyGrid[dalek.GridPos.X][dalek.GridPos.Y] = true
+		}
 	}
+	// Mark scrap positions
 	for _, scrap := range g.scraps {
-		g.positionMap[scrap] = true
+		if scrap.X >= 0 && scrap.X < gridWidth &&
+			scrap.Y >= 0 && scrap.Y < gridHeight {
+			g.occupancyGrid[scrap.X][scrap.Y] = true
+		}
 	}
+}
 
-	return g.positionMap[pos]
+func (g *Game) rebuildScrapGrid() {
+	g.scrapGrid = [gridWidth][gridHeight]bool{}
+	for _, scrap := range g.scraps {
+		if scrap.X >= 0 && scrap.X < gridWidth &&
+			scrap.Y >= 0 && scrap.Y < gridHeight {
+			g.scrapGrid[scrap.X][scrap.Y] = true
+		}
+	}
+}
+
+func (g *Game) isScrapAt(pos Position) bool {
+	if pos.X < 0 || pos.X >= gridWidth || pos.Y < 0 || pos.Y >= gridHeight {
+		return false
+	}
+	g.rebuildScrapGrid()
+	return g.scrapGrid[pos.X][pos.Y]
 }
 
 // Convert screen coordinates to grid coordinates
 func (g *Game) screenToGrid(screenX, screenY int) (int, int, bool) {
-	offsetX := (screenWidth - gridWidth*cellSize) / 2
-	offsetY := 50
-
-	gridX := (screenX - offsetX) / cellSize
-	gridY := (screenY - offsetY) / cellSize
+	gridX := (screenX - gridOffsetX) / cellSize
+	gridY := (screenY - gridOffsetY) / cellSize
 
 	// Check if within grid bounds
 	if gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY < gridHeight {

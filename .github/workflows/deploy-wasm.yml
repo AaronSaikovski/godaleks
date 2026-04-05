@@ -25,8 +25,13 @@ jobs:
         with:
           go-version: ">=1.26.0"
 
-      - name: Build WASM binary
-        run: GOOS=js GOARCH=wasm go build -o godaleks.wasm ./main.go
+      - name: Lint
+        run: |
+          go vet ./...
+          go fmt ./... && git diff --exit-code
+
+      - name: Build optimised WASM binary
+        run: GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o godaleks.wasm ./main.go
 
       - name: Copy wasm_exec.js from Go installation
         run: cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" wasm_exec.js

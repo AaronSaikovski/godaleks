@@ -24,7 +24,6 @@ package cmd
 
 import (
 	"image/color"
-	"slices"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -99,11 +98,8 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 
 	// Only show indicator for valid moves or current position
 	if dx <= 1 && dy <= 1 {
-		offsetX := (screenWidth - gridWidth*cellSize) / 2
-		offsetY := 50
-
-		x := float64(offsetX + gridX*cellSize)
-		y := float64(offsetY + gridY*cellSize)
+		x := float64(gridOffsetX + gridX*cellSize)
+		y := float64(gridOffsetY + gridY*cellSize)
 
 		// Choose color based on move type
 		var indicatorColor color.Color
@@ -111,7 +107,7 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 			indicatorColor = color.RGBA{0, 255, 0, 100} // Green for wait/current position
 		} else {
 			// Check if position is occupied by scrap
-			occupied := slices.Contains(g.scraps, targetPos)
+			occupied := g.isScrapAt(targetPos)
 
 			if occupied {
 				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked

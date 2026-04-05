@@ -86,6 +86,8 @@ type Game struct {
 	showGrid              bool
 	gridToggleMessage     string
 	gridToggleMessageTime time.Time
+	// Level transition
+	levelCompleteTimer float64
 	// Emperor warning
 	emperorWarningMessage  string
 	emperorWarningTimer    float64
@@ -109,12 +111,27 @@ type Game struct {
 	hudStatusText    string    // Cached HUD text
 	lastHUDUpdate    time.Time // Track when HUD needs refresh
 
+	// Cached draw strings to avoid per-frame fmt.Sprintf
+	cachedFinalScore     string
+	cachedLastStandMsg   string
+	cachedLastStandSpeed float64
+
 	// Collision animations
 	collisionEffects []CollisionEffect // Active collision effects
 
-	// Reusable buffers to reduce allocations
-	positionMap     map[Position]bool // Reusable for position checks
-	dalekRemoveMap  map[int]bool      // Reusable for dalek removal
-	collisionPosMap map[Position]bool // Reusable for collision tracking
+	// Grid-based occupancy array for O(1) lookups with zero GC pressure
+	occupancyGrid [gridWidth][gridHeight]bool
+	// Grid-based scrap lookup for O(1) checks
+	scrapGrid [gridWidth][gridHeight]bool
 
+	// Reusable buffers to reduce allocations
+	dalekRemoveMap     map[int]bool       // Reusable for dalek removal
+	scrapMap           map[Position]bool  // Reusable for scrap lookups in collision
+	daleksByPosition   map[Position][]int // Reusable for collision grouping
+	newScrapsBuf       []Position         // Reusable scrap buffer for Last Stand
+	survivingDaleksBuf []Dalek            // Reusable dalek buffer for filtering
+
+	// Pre-computed trig lookup table for particle effects
+	sinTable [trigTableSize]float64
+	cosTable [trigTableSize]float64
 }

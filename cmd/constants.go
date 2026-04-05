@@ -22,17 +22,34 @@
 
 package cmd
 
+import "image/color"
+
+// Pre-allocated color values to avoid per-frame allocations
+var (
+	colorOverlay = color.RGBA{0, 0, 0, 128}
+	colorRed     = color.RGBA{255, 0, 0, 255}
+)
+
 const (
 	screenWidth  = 800
 	screenHeight = 600
 	gridWidth    = 50
 	gridHeight   = 33 // Reduced to ensure grid fits within screen (50 + 33*16 = 578 pixels)
 	cellSize     = 16
+
+	// Pre-computed layout offsets (derived from screen/grid constants)
+	gridOffsetX = (screenWidth - gridWidth*cellSize) / 2
+	gridOffsetY = 50
 )
 
 const (
 	StateMenu GameState = iota
 	StatePlaying
+	StateLevelComplete
 	StateGameOver
 	StateWin
 )
+
+const levelTransitionDelay = 1.5 // seconds to wait between levels
+
+const trigTableSize = 16 // Number of pre-computed sin/cos entries
