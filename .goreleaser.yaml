@@ -18,12 +18,13 @@ builds:
     goarch:
       - amd64
 
-  # Windows build - Ebitengine uses purego, no CGO needed
-  - id: windows
+  # Windows/macOS build - Ebitengine uses purego, no CGO needed
+  - id: windows-darwin
     env:
       - CGO_ENABLED=0
     goos:
       - windows
+      - darwin
     goarch:
       - amd64
       - arm64
