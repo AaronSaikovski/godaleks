@@ -34,12 +34,14 @@ jobs:
         # cmd/ tests import the cmd package which transitively pulls in
         # Ebiten's CGO (GLFW/X11/ALSA). The WASM build itself doesn't need
         # these, but go test ./... must compile the package natively.
+        # xvfb provides a virtual X display for Ebiten's GLFW init() which
+        # runs at package-load time even when RunGame isn't invoked.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev xvfb
 
       - name: Run tests
-        run: go test ./...
+        run: xvfb-run -a go test ./...
 
       - name: Build release WASM binary
         # Release flags:
