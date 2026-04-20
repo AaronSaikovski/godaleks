@@ -54,12 +54,22 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y binaryen
 
       - name: Optimise WASM binary size
-        # wasm-opt -O4 typically reduces Go WASM binary size by 15-25%
+        # wasm-opt -O4 typically reduces Go WASM binary size by 15-25%.
         # --strip-debug / --strip-producers remove any remaining metadata.
+        # Feature flags: Go's WASM backend emits bulk memory operations
+        # (memory.copy, memory.fill) and sign-extension / non-trapping
+        # float-to-int instructions. Ubuntu's binaryen 108 rejects these
+        # unless the matching features are explicitly enabled.
         run: |
           wasm-opt --version
           ls -l godaleks.wasm
-          wasm-opt -O4 --strip-debug --strip-producers godaleks.wasm -o godaleks.wasm
+          wasm-opt \
+            --enable-bulk-memory \
+            --enable-sign-ext \
+            --enable-nontrapping-float-to-int \
+            --enable-mutable-globals \
+            -O4 --strip-debug --strip-producers \
+            godaleks.wasm -o godaleks.wasm
           ls -l godaleks.wasm
 
       - name: Copy wasm_exec.js from Go installation
