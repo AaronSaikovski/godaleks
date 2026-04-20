@@ -111,10 +111,12 @@ func NewGame() *Game {
 
 	// Pre-compute trig lookup table for particle effects
 	for i := range trigTableSize {
-		angle := float64(i) * 2.0 * 3.14159265 / float64(trigTableSize)
+		angle := float64(i) * 2.0 * math.Pi / float64(trigTableSize)
 		g.sinTable[i] = math.Sin(angle)
 		g.cosTable[i] = math.Cos(angle)
 	}
+
+	g.cachedGridStatus = "Grid: OFF"
 
 	return g
 }
@@ -201,8 +203,10 @@ func (g *Game) Update() error {
 
 			if g.showGrid {
 				g.gridToggleMessage = "Grid ON"
+				g.cachedGridStatus = "Grid: ON"
 			} else {
 				g.gridToggleMessage = "Grid OFF"
+				g.cachedGridStatus = "Grid: OFF"
 			}
 			g.gridToggleMessageTime = time.Now()
 		}
@@ -285,12 +289,6 @@ func (g *Game) Update() error {
 			}
 		}
 
-		// Debug info - add this temporarily to see Last Stand status
-		if inpututil.IsKeyJustPressed(ebiten.KeyD) {
-			fmt.Printf("Last Stand Debug - Active: %v, Moving: %v, Speed: %.2f, Daleks: %d, Last Stands Available: %d\n",
-				g.isLastStandActive, g.daleksMoving, g.lastStandSpeed, len(g.daleks), g.lastStands)
-		}
-
 	case StateLevelComplete:
 		g.levelCompleteTimer += deltaTime
 		if g.levelCompleteTimer >= levelTransitionDelay {
@@ -318,6 +316,9 @@ func (g *Game) Update() error {
 			g.cachedFinalScore = ""
 			g.cachedLastStandMsg = ""
 			g.cachedLastStandSpeed = 0
+			g.cachedLevelMsg = ""
+			g.cachedLevelNextMsg = ""
+			g.cachedGridStatus = "Grid: OFF"
 			// Clear any remaining game state
 			g.daleks = nil
 			g.scraps = nil

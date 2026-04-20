@@ -52,4 +52,4 @@ const (
 
 const levelTransitionDelay = 1.5 // seconds to wait between levels
 
-const trigTableSize = 16 // Number of pre-computed sin/cos entries
+const trigTableSize = 32 // Number of pre-computed sin/cos entries

@@ -21,5 +21,6 @@
 go.work
 dist/
 bin/
+web/
 
 .claude/

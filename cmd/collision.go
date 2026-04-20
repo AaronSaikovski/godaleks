@@ -22,6 +22,8 @@
 
 package cmd
 
+import "fmt"
+
 // Add this function to check for collision with a threshold
 func (g *Game) checkCollisionWithThreshold(pos1, pos2 FloatPosition, threshold float64) bool {
 	dx := pos1.X - pos2.X
@@ -222,6 +224,8 @@ func (g *Game) checkCollisions() {
 		} else {
 			g.state = StateLevelComplete
 			g.levelCompleteTimer = 0
+			g.cachedLevelMsg = fmt.Sprintf("Level %d Complete!", g.level-1)
+			g.cachedLevelNextMsg = fmt.Sprintf("Starting Level %d...", g.level)
 		}
 	}
 }

@@ -197,33 +197,33 @@ func (g *Game) drawTeleportEffect(screen *ebiten.Image, pos Position, progress f
 	// Pre-calculate alpha
 	alpha := uint8(255 * (1.0 - progress))
 
-	// Ultra-optimized sparkle effect - minimal particles
-	numParticles := 6 // Reduced from 8
+	// Ultra-optimized sparkle effect - minimal particles.
+	// Particle angles rotate with progress, so they don't land on table
+	// entries — index into the table via angle → index mapping.
+	numParticles := 6
 	radius := float64(cellSize) * (1.0 + progress*2.0)
-	angleStep := 2.0 * 3.14159 / float64(numParticles)
+	angleStep := 2.0 * math.Pi / float64(numParticles)
+	rotation := progress * 2.0 * math.Pi
+	idxScale := float64(trigTableSize) / (2.0 * math.Pi)
 
 	for i := range numParticles {
-		angle := float64(i)*angleStep + progress*6.28
-		cosA := math.Cos(angle)
-		sinA := math.Sin(angle)
+		angle := float64(i)*angleStep + rotation
+		idx := int(angle*idxScale) & (trigTableSize - 1)
+		px := int(x + radius*0.5*g.cosTable[idx])
+		py := int(y + radius*0.5*g.sinTable[idx])
 
-		px := int(x + radius*0.5*cosA)
-		py := int(y + radius*0.5*sinA)
-
-		// Draw single pixel sparkle for maximum performance
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
 		}
 	}
 
-	// Optimized flash - draw ring only with fewer points
+	// Optimized flash - draw ring at fixed table angles (16 samples).
 	flashAlpha := uint8(255 * (1.0 - progress) * 0.8)
 	flashRadius := int(float64(cellSize/2) * (1.0 - progress*0.5))
 
-	// Draw circular outline with larger angle steps (fewer points)
-	for angle := 0.0; angle < 6.28; angle += 0.4 {
-		px := int(x + float64(flashRadius)*math.Cos(angle))
-		py := int(y + float64(flashRadius)*math.Sin(angle))
+	for i := 0; i < trigTableSize; i += 2 {
+		px := int(x + float64(flashRadius)*g.cosTable[i])
+		py := int(y + float64(flashRadius)*g.sinTable[i])
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, flashAlpha})
 		}
@@ -255,10 +255,10 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 		// Fade out as ring expands
 		ringAlpha := uint8(255 * (1.0 - ringProgress) * 0.8)
 
-		// Draw the ring with moderate density for smooth sonar appearance
-		for angle := 0.0; angle < 6.28; angle += 0.3 {
-			px := int(x + float64(ringRadius)*math.Cos(angle))
-			py := int(y + float64(ringRadius)*math.Sin(angle))
+		// Draw the ring using all 32 pre-computed table entries.
+		for i := range trigTableSize {
+			px := int(x + float64(ringRadius)*g.cosTable[i])
+			py := int(y + float64(ringRadius)*g.sinTable[i])
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, ringAlpha})
 			}
@@ -270,9 +270,9 @@ func (g *Game) drawScrewdriverEffect(screen *ebiten.Image, pos Position, progres
 		centralAlpha := uint8(255 * (1.0 - progress/0.3))
 		centralRadius := int(float64(cellSize/4) * (1.0 + progress*2.0))
 
-		for angle := 0.0; angle < 6.28; angle += 0.2 {
-			px := int(x + float64(centralRadius)*math.Cos(angle))
-			py := int(y + float64(centralRadius)*math.Sin(angle))
+		for i := range trigTableSize {
+			px := int(x + float64(centralRadius)*g.cosTable[i])
+			py := int(y + float64(centralRadius)*g.sinTable[i])
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, centralAlpha})
 			}
@@ -312,48 +312,41 @@ func (g *Game) drawCollisionEffect(screen *ebiten.Image, pos FloatPosition, prog
 	// Pre-calculate alpha values (avoid repeated calculations)
 	alpha := uint8(255 * (1.0 - progress))
 
-	// Ultra-optimized particle rendering using pre-computed trig table
+	// Particle rendering — 16 evenly-spaced samples from the 32-entry table.
 	radius := maxRadius * progress
 
-	// Draw particles with single pixel operations
-	for i := range trigTableSize {
-		cosA := g.cosTable[i]
-		sinA := g.sinTable[i]
+	for i := 0; i < trigTableSize; i += 2 {
+		px := int(x + radius*g.cosTable[i])
+		py := int(y + radius*g.sinTable[i])
 
-		px := int(x + radius*cosA)
-		py := int(y + radius*sinA)
-
-		// Single pixel per particle for maximum performance
 		if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 			screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, alpha})
 		}
 	}
 
-	// Optimized flash with fewer points
+	// Flash ring — 16 samples from the table.
 	if progress < 0.5 {
 		flashAlpha := uint8(255 * (1.0 - progress*2))
 		flashRadius := int(float64(cellSize/3) * (1.0 + progress))
 
-		// Draw only edge pixels with larger angle steps
-		for angle := 0.0; angle < 6.28; angle += 0.5 {
-			px := int(x + float64(flashRadius)*math.Cos(angle))
-			py := int(y + float64(flashRadius)*math.Sin(angle))
+		for i := 0; i < trigTableSize; i += 2 {
+			px := int(x + float64(flashRadius)*g.cosTable[i])
+			py := int(y + float64(flashRadius)*g.sinTable[i])
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, flashAlpha})
 			}
 		}
 	}
 
-	// Optimized shock wave with minimal points
+	// Shock-wave ring — 16 samples from the table.
 	if progress > 0.2 {
 		waveProgress := (progress - 0.2) / 0.8
 		waveRadius := int(maxRadius * waveProgress)
 		waveAlpha := uint8(255 * (1.0 - waveProgress))
 
-		// Draw ring with large angle steps for maximum performance
-		for angle := 0.0; angle < 6.28; angle += 0.4 {
-			px := int(x + float64(waveRadius)*math.Cos(angle))
-			py := int(y + float64(waveRadius)*math.Sin(angle))
+		for i := 0; i < trigTableSize; i += 2 {
+			px := int(x + float64(waveRadius)*g.cosTable[i])
+			py := int(y + float64(waveRadius)*g.sinTable[i])
 			if px >= 0 && px < screenWidth && py >= 0 && py < screenHeight {
 				screen.Set(px, py, color.RGBA{0x00, 0x00, 0x00, waveAlpha})
 			}
