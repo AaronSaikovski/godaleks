@@ -25,10 +25,10 @@ func TestAbs(t *testing.T) {
 func TestCheckCollisionWithThreshold(t *testing.T) {
 	g := &Game{}
 	cases := []struct {
-		name           string
-		a, b           FloatPosition
-		threshold      float64
-		wantCollision  bool
+		name          string
+		a, b          FloatPosition
+		threshold     float64
+		wantCollision bool
 	}{
 		{"identical", FloatPosition{1, 1}, FloatPosition{1, 1}, 0.5, true},
 		{"inside threshold", FloatPosition{0, 0}, FloatPosition{0.3, 0.3}, 0.5, true},
