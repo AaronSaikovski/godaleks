@@ -129,8 +129,10 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 		return
 	}
 
-	// Accelerate the movement speed
-	g.lastStandSpeed *= math.Pow(g.lastStandAcceleration, deltaTime)
+	// Accelerate the movement speed. math.Pow(1.1, dt) ≈ 1 + 0.1*dt at 60 FPS
+	// (accel is very close to 1.0 and dt is ~0.016), so a linear approximation
+	// is rounding-accurate and avoids a pow() call per frame.
+	g.lastStandSpeed *= 1.0 + (g.lastStandAcceleration-1.0)*deltaTime
 	if g.lastStandSpeed > g.lastStandMaxSpeed {
 		g.lastStandSpeed = g.lastStandMaxSpeed
 	}
@@ -191,19 +193,25 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	g.newScrapsBuf = g.newScrapsBuf[:0] // Reuse pre-allocated buffer
 	hasAnyCollision := false            // Track if any collision occurred
 
-	// Check for collisions with scraps
+	// Rebuild the scrap grid once per frame so the O(1) lookup is fresh.
+	g.rebuildScrapGrid()
+
+	// Check for collisions with scraps using the O(1) scrapGrid lookup.
+	// Dalek's visual position is rounded to the nearest grid cell; if that
+	// cell contains a scrap, it's a collision.
 	for i, dalek := range g.daleks {
 		if g.dalekRemoveMap[i] {
 			continue
 		}
-		for _, scrap := range g.scraps {
-			scrapPos := FloatPosition{X: float64(scrap.X), Y: float64(scrap.Y)}
-			if g.checkCollisionWithThreshold(dalek.VisualPos, scrapPos, collisionThreshold) {
-				g.dalekRemoveMap[i] = true
-				g.score += 2
-				hasAnyCollision = true
-				break
-			}
+		gx := int(math.Round(dalek.VisualPos.X))
+		gy := int(math.Round(dalek.VisualPos.Y))
+		if gx < 0 || gx >= gridWidth || gy < 0 || gy >= gridHeight {
+			continue
+		}
+		if g.scrapGrid[gx][gy] {
+			g.dalekRemoveMap[i] = true
+			g.score += 2
+			hasAnyCollision = true
 		}
 	}
 

@@ -6,7 +6,7 @@ version: "3"
 env:
   TARGET: godaleks.exe #Change this to suit
   APPPATH: ./main.go #Change this to suit
-  VERSION: 1.2.1 #Change this to suit
+  VERSION: 1.3.0 #Change this to suit
   PROJECT_NAME: godaleks #Change this to suit
 
 ###########################################################################
@@ -54,7 +54,7 @@ tasks:
   ## test - executes unit tests
   test:
     cmds:
-      - go test -v ./test/...
+      - go test -v ./...
 
   ###############################################################################
 
@@ -104,3 +104,31 @@ tasks:
 
   ###############################################################################
 
+  ## wasm:build - build the WebAssembly bundle into ./web for local testing.
+  ## Matches the release flags used by .github/workflows/deploy-wasm.yml:
+  ##   -ldflags "-s -w" strip symbol table / DWARF debug info
+  ##   -trimpath        remove local filesystem paths (reproducible)
+  ##   -buildvcs=false  omit embedded VCS stamps (deterministic)
+  ## The CI pipeline additionally runs wasm-opt -O4 post-build for extra
+  ## size reduction; that step requires binaryen and is skipped locally.
+  ## See https://ebitengine.org/en/documents/webassembly.html
+  wasm:build:
+    env:
+      GOOS: js
+      GOARCH: wasm
+    cmds:
+      - mkdir -p web
+      - go build -trimpath -ldflags="-s -w" -buildvcs=false -o web/godaleks.wasm ./main.go
+      - cp "{{.TASKFILE_DIR}}/wasm_exec.js" web/wasm_exec.js
+      - cp "{{.TASKFILE_DIR}}/index.html" web/index.html
+
+  ## wasm:serve - serve the ./web directory on http://127.0.0.1:8080
+  wasm:serve:
+    cmds:
+      - go run ./scripts/serve -dir web -addr 127.0.0.1:8080
+
+  ## wasm - build the WASM bundle and serve it locally on http://127.0.0.1:8080
+  wasm:
+    deps: [wasm:build]
+    cmds:
+      - task: wasm:serve

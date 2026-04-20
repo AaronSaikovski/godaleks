@@ -151,13 +151,11 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 func (g *Game) drawLevelComplete(screen *ebiten.Image) {
 	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay)
 
-	msg := fmt.Sprintf("Level %d Complete!", g.level-1)
-	text.Draw(screen, msg, basicfont.Face7x13,
-		screenWidth/2-len(msg)*3, screenHeight/2-10, color.White)
+	text.Draw(screen, g.cachedLevelMsg, basicfont.Face7x13,
+		screenWidth/2-len(g.cachedLevelMsg)*3, screenHeight/2-10, color.White)
 
-	nextMsg := fmt.Sprintf("Starting Level %d...", g.level)
-	text.Draw(screen, nextMsg, basicfont.Face7x13,
-		screenWidth/2-len(nextMsg)*3, screenHeight/2+20, color.White)
+	text.Draw(screen, g.cachedLevelNextMsg, basicfont.Face7x13,
+		screenWidth/2-len(g.cachedLevelNextMsg)*3, screenHeight/2+20, color.White)
 }
 
 func (g *Game) drawGameOver(screen *ebiten.Image) {
@@ -189,12 +187,8 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 	}
 	text.Draw(screen, g.hudStatusText, basicfont.Face7x13, 10, 20, color.Black)
 
-	// Grid indicator
-	gridStatus := "Grid: OFF"
-	if g.showGrid {
-		gridStatus = "Grid: ON"
-	}
-	text.Draw(screen, gridStatus, basicfont.Face7x13, 10, 40, color.Black)
+	// Grid indicator (cached — updated only on toggle)
+	text.Draw(screen, g.cachedGridStatus, basicfont.Face7x13, 10, 40, color.Black)
 
 	// Last Stand indicator
 	if g.isLastStandActive {

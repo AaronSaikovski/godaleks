@@ -115,6 +115,9 @@ type Game struct {
 	cachedFinalScore     string
 	cachedLastStandMsg   string
 	cachedLastStandSpeed float64
+	cachedGridStatus     string
+	cachedLevelMsg       string
+	cachedLevelNextMsg   string
 
 	// Collision animations
 	collisionEffects []CollisionEffect // Active collision effects

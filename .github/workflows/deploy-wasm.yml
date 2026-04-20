@@ -30,8 +30,27 @@ jobs:
           GOOS=js GOARCH=wasm go vet ./...
           go fmt ./... && git diff --exit-code
 
-      - name: Build optimised WASM binary
-        run: GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o godaleks.wasm ./main.go
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build release WASM binary
+        # Release flags:
+        #   -ldflags="-s -w" strips the symbol table and DWARF debug info
+        #   -trimpath        removes local filesystem paths (reproducible)
+        #   -buildvcs=false  omits embedded VCS stamps (deterministic)
+        run: GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -buildvcs=false -o godaleks.wasm ./main.go
+
+      - name: Install binaryen (wasm-opt)
+        run: sudo apt-get update && sudo apt-get install -y binaryen
+
+      - name: Optimise WASM binary size
+        # wasm-opt -O4 typically reduces Go WASM binary size by 15-25%
+        # --strip-debug / --strip-producers remove any remaining metadata.
+        run: |
+          wasm-opt --version
+          ls -l godaleks.wasm
+          wasm-opt -O4 --strip-debug --strip-producers godaleks.wasm -o godaleks.wasm
+          ls -l godaleks.wasm
 
       - name: Copy wasm_exec.js from Go installation
         run: cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" wasm_exec.js

@@ -1,12 +1,12 @@
 <div align="center">
 
-# GoDaleks v1.2.1 
+# GoDaleks v1.3.0 
 
 A modern Go/Ebiten (and faithful) recreation of the classic Apple Macintosh game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks including sounds.
 
 [![Build Status](https://github.com/AaronSaikovski/godaleks/workflows/build/badge.svg)](https://github.com/AaronSaikovski/godaleks/actions)
-![version](https://img.shields.io/badge/version-1.2.1-blue)
+![version](https://img.shields.io/badge/version-1.3.0-blue)
 [![Licence](https://img.shields.io/github/license/AaronSaikovski/godaleks)](LICENSE)
 
 </div>
@@ -128,30 +128,69 @@ task run              # Build and run (go run ./main.go)
 task release          # Optimized build (-ldflags="-s -w")
 task lint             # go fmt ./... && go mod tidy
 task vet              # go vet ./...
-task test             # go test -v ./test/...
+task test             # go test -v ./...
 task deps             # go mod tidy + download + update
 task clean            # Remove bin/ and dist/
 task staticcheck      # staticcheck ./...
 task seccheck         # govulncheck ./...
 task goreleaser       # goreleaser release --snapshot --clean
 task generate         # go generate ./main.go
+task wasm:build       # Build WASM bundle into ./web
+task wasm:serve       # Serve ./web on http://127.0.0.1:8080
+task wasm             # wasm:build + wasm:serve
 ```
 
 ### WebAssembly Build
 
+Build and serve the WASM bundle locally in one step:
+
 ```bash
-GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o godaleks.wasm ./main.go
+task wasm
+```
+
+Under the hood this runs:
+
+- `task wasm:build` — compiles `./main.go` with `GOOS=js GOARCH=wasm` using the release flag set below and copies `index.html` + `wasm_exec.js` into `./web/`.
+- `task wasm:serve` — starts the dev server in `scripts/serve/` on `http://127.0.0.1:8080`, serving `./web/` with the correct `application/wasm` MIME type and `Cache-Control: no-store` so rebuilds reload cleanly.
+
+#### Release flags
+
+The WASM bundle deployed to GitHub Pages (and produced by `task wasm:build` locally) is built with:
+
+| Flag | Purpose |
+|------|---------|
+| `-ldflags="-s -w"` | Strip symbol table (`-s`) and DWARF debug info (`-w`) |
+| `-trimpath` | Remove local filesystem paths from the binary (reproducible) |
+| `-buildvcs=false` | Omit embedded VCS stamps (deterministic output) |
+
+The CI pipeline (`.github/workflows/deploy-wasm.yml`) additionally runs `wasm-opt -O4 --strip-debug --strip-producers` from [binaryen](https://github.com/WebAssembly/binaryen) after the Go build, which typically reduces the WASM binary by a further 15-25%. `wasm-opt` is not required for local builds.
+
+Equivalent manual command:
+
+```bash
+GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -buildvcs=false -o godaleks.wasm ./main.go
 ```
 
 All game assets (images, sounds) are embedded via `//go:embed` — the `.wasm` binary is fully self-contained. Serve `index.html`, `wasm_exec.js`, and `godaleks.wasm` together.
+
+### Testing
+
+```bash
+task test
+```
+
+Runs `go test -v ./...`. Current coverage:
+
+- `cmd/` — unit tests for core game logic: `abs`, `checkCollisionWithThreshold`, `distance` (squared-distance contract), `rebuildScrapGrid` / `rebuildOccupancyGrid` (including bounds guards and stale-entry clearing), `isScrapAt` boundary checks, the trig-lookup-table invariants (`trigTableSize` must be a power of two, table contents anchored to known points), and the Last Stand acceleration linear-approximation tolerance.
+- `scripts/serve/` — unit tests for the local WASM dev server (directory resolution, MIME-type handling, cache headers, path-traversal protection).
 
 ### Releasing
 
 Releases are triggered by pushing a version tag:
 
 ```bash
-git tag v1.2.1
-git push origin v1.2.1
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (amd64/arm64) via GitHub Actions. The WASM version is automatically deployed to GitHub Pages on every push to `main`.
@@ -199,6 +238,19 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 ---
 
 ## 📝 Changelog
+
+### v1.3.0 - Rendering & Hot-Path Optimisation
+- **Added**: WASM deploy pipeline now runs `go test ./...` before building and `wasm-opt -O4 --strip-debug --strip-producers` (binaryen) after building — typical 15-25% binary size reduction on top of Go's release flags
+- **Added**: `-buildvcs=false` to both local (`task wasm:build`) and CI WASM builds for deterministic, reproducible output
+- **Improved**: Particle effects (teleport, sonic screwdriver, collision explosion, shockwave) now index into the pre-computed 32-entry sin/cos lookup table instead of calling `math.Cos`/`math.Sin` per frame
+- **Improved**: `Grid: ON/OFF` HUD string is cached and refreshed only on toggle (was allocated every frame)
+- **Improved**: "Level N Complete!" / "Starting Level N..." strings are cached at state entry instead of `fmt.Sprintf`'d every frame during the 1.5s transition
+- **Improved**: Last Stand acceleration uses a linear approximation in place of `math.Pow(accel, deltaTime)` — rounding-accurate at 60 FPS, one less transcendental per frame
+- **Improved**: Last Stand dalek-vs-scrap collision uses the existing `scrapGrid [50][33]bool` for O(1) lookup instead of O(n×m) dalek×scrap iteration
+- **Added**: Unit tests for `cmd/` core game logic (`abs`, collision threshold, distance contract, grid rebuilds, trig table invariants, Last Stand acceleration approximation)
+- **Added**: `task wasm:build`, `task wasm:serve`, `task wasm` — local WASM build-and-serve workflow with `scripts/serve/` static file server (correct `application/wasm` MIME, `Cache-Control: no-store`, path-traversal guard)
+- **Fixed**: `task test` now runs `./...` instead of non-existent `./test/...`
+- **Removed**: Debug `fmt.Printf` from `KeyD` handler (leftover from Last Stand development)
 
 ### v1.2.1 - Performance & Quality Update
 - **Added**: Multi-platform release builds (Linux, Windows, macOS amd64/arm64) via GitHub Actions
@@ -254,6 +306,7 @@ All game logic lives in the `cmd` package. `main.go` is the Ebiten bootstrap.
 | `cmd/loadimages.go` | Embedded PNG sprite loading (`//go:embed assets/*`) |
 | `cmd/loadsounds.go` | Embedded WAV audio loading + per-playback player creation |
 | `cmd/sprites.go` | Programmatic scrap heap image generation |
+| `scripts/serve/main.go` | Local static file server for WASM development (`task wasm:serve`) |
 
 ### Key Design Decisions
 
