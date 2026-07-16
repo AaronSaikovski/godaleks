@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go:*)"
+      "Bash(go:*)",
+      "Bash(ls \"$\\(go env GOPATH\\)/bin/govulncheck\")",
+      "Bash(echo \"GOTOOLCHAIN=$\\(go env GOTOOLCHAIN\\)\")"
     ],
     "deny": [],
     "ask": []

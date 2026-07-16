@@ -94,8 +94,7 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 
 			// Ultra-smooth easing function - smootherstep (quintic) interpolation
 			// This gives the smoothest possible interpolation with no visible jerk
-			var easedProgress float64
-			easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
+			easedProgress := progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
 
 			// Interpolate position using stored start position for consistency
 			startX := dalek.StartPos.X

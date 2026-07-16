@@ -1,12 +1,12 @@
 <div align="center">
 
-# GoDaleks v1.3.0 
+# GoDaleks v1.3.1 
 
 A modern Go/Ebiten (and faithful) recreation of the classic Apple Macintosh game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks including sounds.
 
 [![Build Status](https://github.com/AaronSaikovski/godaleks/workflows/build/badge.svg)](https://github.com/AaronSaikovski/godaleks/actions)
-![version](https://img.shields.io/badge/version-1.3.0-blue)
+![version](https://img.shields.io/badge/version-1.3.1-blue)
 [![Licence](https://img.shields.io/github/license/AaronSaikovski/godaleks)](LICENSE)
 
 </div>
@@ -113,10 +113,19 @@ Daleks move one step per turn toward you. Survive by making them crash into each
 
 ### Prerequisites
 
-- **Go 1.26+**
+- **Go 1.26.5+** (the `go` directive pins `1.26.5`, which carries the patched `crypto/tls` — see [GO-2026-5856](https://pkg.go.dev/vuln/GO-2026-5856))
 - [Taskfile](https://taskfile.dev/) (task runner)
 - **Linux only**: X11/ALSA dev libraries — `sudo apt install libasound2-dev libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev libgl-dev libxxf86vm-dev`
 - **Windows/macOS**: No additional system dependencies (Ebitengine uses [purego](https://github.com/ebitengine/purego))
+
+#### Optional developer tooling
+
+`task staticcheck` and `task seccheck` rely on tools that ship separately from Go. Install them and make sure `$(go env GOPATH)/bin` is on your `PATH`:
+
+```bash
+go install honnef.co/go/tools/cmd/staticcheck@latest   # task staticcheck
+go install golang.org/x/vuln/cmd/govulncheck@latest     # task seccheck
+```
 
 ### Task Commands
 
@@ -189,8 +198,8 @@ Runs `go test -v ./...`. Current coverage:
 Releases are triggered by pushing a version tag:
 
 ```bash
-git tag v1.3.0
-git push origin v1.3.0
+git tag v1.3.1
+git push origin v1.3.1
 ```
 
 This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (amd64/arm64) via GitHub Actions. The WASM version is automatically deployed to GitHub Pages on every push to `main`.
@@ -238,6 +247,11 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 ---
 
 ## 📝 Changelog
+
+### v1.3.1 - Smoother Movement & Security Patch
+- **Fixed**: Jerky Dalek movement — `Update` derived `deltaTime` from the wall clock, but Ebiten runs `Update` at a fixed tick rate and fires catch-up ticks back-to-back, producing uneven time steps that made the interpolated motion stutter. Now uses a fixed timestep (`1/TPS`) for perfectly even animation progress
+- **Security**: Bumped `go` directive to `1.26.5` to pull the patched `crypto/tls` standard library (resolves `GO-2026-5856`)
+- **Cleaned**: Removed the unused `lastUpdateTime` field, merged a redundant `var`/assignment in `movement.go` (S1021), and dropped a dead `countNormalDaleks()` call in `collision.go` (SA4006)
 
 ### v1.3.0 - Rendering & Hot-Path Optimisation
 - **Added**: WASM deploy pipeline now runs `go test ./...` before building and `wasm-opt -O4 --strip-debug --strip-producers` (binaryen) after building — typical 15-25% binary size reduction on top of Go's release flags

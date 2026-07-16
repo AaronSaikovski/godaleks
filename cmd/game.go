@@ -48,8 +48,6 @@ func (g *Game) resetGame() {
 	g.emperorWarningMessage = ""
 	g.emperorWarningTimer = 0
 	g.cachedFinalScore = ""
-	g.cachedLastStandMsg = ""
-	g.cachedLastStandSpeed = 0
 	g.startLevel()
 }
 
