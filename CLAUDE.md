@@ -43,11 +43,13 @@ git push origin v1.3.0
 ```
 
 This triggers `.github/workflows/goreleaser.yml` which builds:
+
 - **Linux amd64** on ubuntu-latest (CGO_ENABLED=1, requires X11/ALSA dev libs)
 - **Windows amd64** on ubuntu-latest (CGO_ENABLED=0)
 - **macOS amd64/arm64** on macos-latest (CGO_ENABLED=1)
 
 To re-tag after fixing a release issue:
+
 ```bash
 git tag -d v1.3.0 && git push origin :refs/tags/v1.3.0
 git tag v1.3.0 && git push origin v1.3.0
@@ -68,6 +70,7 @@ All game logic is in the `cmd` package. `main.go` is the Ebiten bootstrap (`NewG
 **State machine** (`constants.go`): `StateMenu → StatePlaying → StateLevelComplete (1.5s delay) → StatePlaying` or `→ StateGameOver/StateWin`.
 
 **Key subsystems** (each in own file under `cmd/`):
+
 - `collision.go` — Grid-based collision with emperor invulnerability rules. Reuses pre-allocated maps (`scrapMap`, `daleksByPosition`, `dalekRemoveMap`) to avoid per-frame allocations.
 - `movement.go` — Dalek AI toward player + smootherstep easing + Last Stand acceleration. Reuses `survivingDaleksBuf` and `newScrapsBuf`.
 - `effect.go` — Player actions: teleport, sonic screwdriver, last stand. Also visual particle effects using pre-computed trig tables.
@@ -80,6 +83,7 @@ All game logic is in the `cmd` package. `main.go` is the Ebiten bootstrap (`NewG
 **Entity model**: `Dalek` struct has `GridPos` (logical) and `VisualPos` (interpolated for animation). `IsEmperor` flag controls boss behavior (invulnerable until all normal daleks defeated).
 
 **Performance patterns used throughout**:
+
 - Pre-allocated reusable buffers on `Game` struct (maps, slices) to eliminate per-frame GC pressure
 - Grid arrays instead of maps for O(1) spatial lookups
 - In-place slice filtering instead of allocating new slices
@@ -144,3 +148,5 @@ All game logic is in the `cmd` package. `main.go` is the Ebiten bootstrap (`NewG
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+
+please update the changelog.md when making any code or structural code changes.
