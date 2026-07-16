@@ -24,3 +24,6 @@ bin/
 web/
 
 .claude/
+
+# macOS
+.DS_Store

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(go:*)",
       "Bash(ls \"$\\(go env GOPATH\\)/bin/govulncheck\")",
-      "Bash(echo \"GOTOOLCHAIN=$\\(go env GOTOOLCHAIN\\)\")"
+      "Bash(echo \"GOTOOLCHAIN=$\\(go env GOTOOLCHAIN\\)\")",
+      "Bash(git check-ignore *)",
+      "Bash(git rm *)"
     ],
     "deny": [],
     "ask": []
