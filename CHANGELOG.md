@@ -7,6 +7,10 @@
 - SEO/accessibility: added a self-contained inline SVG favicon, a visually-hidden semantic `<h1>`/description header, a `<noscript>` fallback, and switched the game container to a `<main>` element.
 - SEO: added `robots.txt` and `sitemap.xml`, and wired both into the GitHub Pages deploy workflow (`deploy-wasm.yml`).
 - Hosting: set the custom domain to `https://godaleks.com/` — pointed all canonical/OG/sitemap/robots URLs at it and added a `CNAME` file (also copied during deploy).
+- SEO: expanded the `index.html` keyword targeting for "daleks", "dalek game", "play daleks online" and related search terms (meta `keywords` + JSON-LD `keywords`).
+- SEO: replaced the visually-hidden header with a real, visible `<article>` landing section (H1/H2s, "How to play", "About") — search engines discount hidden text, so genuine on-page content ranks far better for terms like "daleks game".
+- SEO: enriched the JSON-LD `VideoGame` structured data with `alternateName` ("Daleks", "Daleks Game", "Robots Game"), `keywords`, `inLanguage`, `playMode`, and `applicationCategory: GameApplication` (removed the duplicate `applicationCategory`).
+- SEO: added a `lastmod` (2026-07-22) to `sitemap.xml` so crawlers get a page-freshness signal.
 
 ## v1.2.2. (2026-07-16)
 - Added the classic direction arrows: a bold black arrow in each of the 8 cells around the human player, shown only for valid moves (in-bounds and not blocked by scrap). Arrows hide while the Daleks move and reappear around the player's new position, matching the original.

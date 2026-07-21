@@ -18,7 +18,7 @@
   <!-- Primary SEO meta tags -->
   <title>GoDaleks — Classic Daleks / Robots Game in Your Browser</title>
   <meta name="description" content="Play GoDaleks, a free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Outmaneuver the Daleks, use teleports and the sonic screwdriver, and survive the Last Stand. Built in Go with Ebitengine and WebAssembly.">
-  <meta name="keywords" content="GoDaleks, Daleks, Robots game, BSD Robots, classic game, browser game, WebAssembly game, Go game, Ebitengine, Doctor Who, retro game, puzzle game">
+  <meta name="keywords" content="daleks, daleks game, dalek game, play daleks online, free daleks game, daleks robots game, robots game, BSD Robots, killbots, chase game, GoDaleks, classic Macintosh game, browser game, WebAssembly game, Go game, Ebitengine, Doctor Who game, retro game, puzzle game, strategy game">
   <meta name="author" content="Aaron Saikovski">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#f0f0f0">
@@ -47,14 +47,18 @@
     "@context": "https://schema.org",
     "@type": "VideoGame",
     "name": "GoDaleks",
+    "alternateName": ["Daleks", "Daleks Game", "Robots Game"],
     "description": "A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots), built in Go with Ebitengine and compiled to WebAssembly.",
+    "keywords": "daleks, daleks game, play daleks online, free daleks game, robots game, BSD Robots, killbots, retro chase game",
     "url": "https://godaleks.com/",
+    "inLanguage": "en",
     "image": "https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png",
+    "playMode": "SinglePlayer",
+    "applicationCategory": "GameApplication",
     "author": {
       "@type": "Person",
       "name": "Aaron Saikovski"
     },
-    "applicationCategory": "Game",
     "genre": ["Puzzle", "Strategy", "Retro"],
     "operatingSystem": "Web Browser, Windows, Linux, macOS",
     "gamePlatform": ["Web Browser (WebAssembly)", "Desktop"],
@@ -85,38 +89,66 @@
       margin: 20px 0;
       font-family: system-ui, -apple-system, sans-serif;
     }
-    /* Visually hidden but available to search engines & screen readers */
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    /* Readable content section (real, visible text helps SEO far more
+       than hidden text, which search engines discount or ignore). */
+    .content {
+      max-width: 800px;
+      margin: 24px auto 40px;
+      padding: 0 16px;
+      line-height: 1.6;
+      color: #222;
     }
+    .content h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
+    .content h2 { font-size: 1.2rem; margin: 1.5rem 0 .5rem; }
+    .content p, .content li { font-size: 1rem; }
+    .content a { color: #0645ad; }
   </style>
 </head>
 <body>
-  <header class="visually-hidden">
-    <h1>GoDaleks — Classic Daleks / Robots Game</h1>
-    <p>
-      GoDaleks is a free browser recreation of the classic Macintosh game
-      Daleks (inspired by the BSD UNIX game Robots). Move to lure the Daleks
-      into colliding, use teleports and the sonic screwdriver to survive, and
-      make your Last Stand. Written in Go with the Ebitengine game engine and
-      compiled to WebAssembly.
-    </p>
-  </header>
-
   <main id="wasm-container"></main>
 
   <noscript>
     <p>GoDaleks requires JavaScript and WebAssembly to run. Please enable
     JavaScript in your browser to play the game.</p>
   </noscript>
+
+  <article class="content">
+    <h1>Play Daleks Online — the Classic Robots Game, Free in Your Browser</h1>
+    <p>
+      <strong>GoDaleks</strong> is a free online recreation of the classic
+      <strong>Daleks</strong> game from the Apple Macintosh — itself a descendant
+      of the legendary BSD UNIX <strong>Robots</strong> game. Outwit the Daleks
+      on a 50&times;33 grid: every step you take, the killer robots march one step
+      closer, so lure them into crashing into each other and into the piles of
+      scrap they leave behind. No download required — just click and play.
+    </p>
+
+    <h2>How to play Daleks</h2>
+    <ul>
+      <li><strong>Move</strong> in any of the eight directions; the Daleks always
+          advance toward you.</li>
+      <li><strong>Make them collide</strong> — two Daleks that meet are destroyed
+          and leave a pile of scrap that wrecks any Dalek that touches it.</li>
+      <li><strong>Teleport</strong> to a random square to escape a tight corner
+          (but you might land somewhere worse!).</li>
+      <li><strong>Sonic screwdriver</strong> — zap the Daleks around you for a
+          limited number of uses per level.</li>
+      <li><strong>Last Stand</strong> — when you have nowhere left to run, hold
+          your ground and let the Daleks charge in.</li>
+      <li>Clear every Dalek to advance; survive the Dalek Emperor to win.</li>
+    </ul>
+
+    <h2>About GoDaleks</h2>
+    <p>
+      This <strong>Daleks game</strong> is built in Go with the
+      <a href="https://ebitengine.org/" rel="noopener">Ebitengine</a> game engine
+      and compiled to WebAssembly, so it runs natively in the browser as well as
+      on Windows, Linux, and macOS. It is a faithful, fast, retro
+      strategy/puzzle take on the classic robot-chase genre. The source code is
+      open on
+      <a href="https://github.com/AaronSaikovski/godaleks" rel="noopener">GitHub</a>.
+    </p>
+  </article>
 
   <script src="wasm_exec.js"></script>
   <script>
