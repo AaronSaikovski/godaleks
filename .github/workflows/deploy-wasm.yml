@@ -81,6 +81,9 @@ jobs:
           cp index.html _site/
           cp wasm_exec.js _site/
           cp godaleks.wasm _site/
+          cp robots.txt _site/
+          cp sitemap.xml _site/
+          cp CNAME _site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q92MBTYT9"></script>
@@ -10,6 +10,62 @@
 
     gtag('config', 'G-1Q92MBTYT9');
   </script>
+
+  <!-- Character encoding & responsive viewport -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary SEO meta tags -->
+  <title>GoDaleks — Classic Daleks / Robots Game in Your Browser</title>
+  <meta name="description" content="Play GoDaleks, a free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Outmaneuver the Daleks, use teleports and the sonic screwdriver, and survive the Last Stand. Built in Go with Ebitengine and WebAssembly.">
+  <meta name="keywords" content="GoDaleks, Daleks, Robots game, BSD Robots, classic game, browser game, WebAssembly game, Go game, Ebitengine, Doctor Who, retro game, puzzle game">
+  <meta name="author" content="Aaron Saikovski">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f0f0f0">
+  <link rel="canonical" href="https://godaleks.com/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GoDaleks">
+  <meta property="og:title" content="GoDaleks — Classic Daleks / Robots Game in Your Browser">
+  <meta property="og:description" content="A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Built in Go with Ebitengine and WebAssembly.">
+  <meta property="og:url" content="https://godaleks.com/">
+  <meta property="og:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="GoDaleks — Classic Daleks / Robots Game in Your Browser">
+  <meta name="twitter:description" content="A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Built in Go with Ebitengine and WebAssembly.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png">
+
+  <!-- Inline SVG favicon (self-contained, no extra file to deploy) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='4'%20fill='%23222'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20text-anchor='middle'%20fill='%234ce04c'%20font-family='monospace'%3ED%3C/text%3E%3C/svg%3E">
+
+  <!-- Structured data for rich search results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "GoDaleks",
+    "description": "A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots), built in Go with Ebitengine and compiled to WebAssembly.",
+    "url": "https://godaleks.com/",
+    "image": "https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png",
+    "author": {
+      "@type": "Person",
+      "name": "Aaron Saikovski"
+    },
+    "applicationCategory": "Game",
+    "genre": ["Puzzle", "Strategy", "Retro"],
+    "operatingSystem": "Web Browser, Windows, Linux, macOS",
+    "gamePlatform": ["Web Browser (WebAssembly)", "Desktop"],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
   <style>
     /* Container for your WASM app fixed at 800x600 */
     #wasm-container {
@@ -22,15 +78,45 @@
     }
     body {
       display: flex;
-      justify-content: center; /* center container horizontally */
-      align-items: start;
+      flex-direction: column;
+      align-items: center; /* center container horizontally */
+      justify-content: start;
       min-height: 100vh;
       margin: 20px 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    /* Visually hidden but available to search engines & screen readers */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   </style>
 </head>
 <body>
-  <div id="wasm-container"></div>
+  <header class="visually-hidden">
+    <h1>GoDaleks — Classic Daleks / Robots Game</h1>
+    <p>
+      GoDaleks is a free browser recreation of the classic Macintosh game
+      Daleks (inspired by the BSD UNIX game Robots). Move to lure the Daleks
+      into colliding, use teleports and the sonic screwdriver to survive, and
+      make your Last Stand. Written in Go with the Ebitengine game engine and
+      compiled to WebAssembly.
+    </p>
+  </header>
+
+  <main id="wasm-container"></main>
+
+  <noscript>
+    <p>GoDaleks requires JavaScript and WebAssembly to run. Please enable
+    JavaScript in your browser to play the game.</p>
+  </noscript>
 
   <script src="wasm_exec.js"></script>
   <script>

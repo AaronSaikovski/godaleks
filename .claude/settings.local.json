@@ -30,7 +30,21 @@
       "Bash(gofmt -l cmd/)",
       "Bash(cd *)",
       "Bash(git add *)",
-      "Bash(git --no-pager diff main.go)"
+      "Bash(git --no-pager diff main.go)",
+      "Bash(git ls-remote *)",
+      "Bash(git tag *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(gofmt -l .)",
+      "Bash(git commit -m 'fix\\(main.go\\): Remove leading blank line to satisfy gofmt *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git -c rebase.autoStash=true rebase origin/main)",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(git -c core.editor=true rebase --continue)",
+      "Bash(GIT_EDITOR=true git rebase --continue)",
+      "Bash(echo \"REAL EXIT: $?\")",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []
