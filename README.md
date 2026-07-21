@@ -250,6 +250,8 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 
 ### v1.2.2 - Direction Arrows, Rendering, Hot-Path Optimisation & Security Patch
 - **Added**: Classic 8-direction arrows around the human player — bold black arrows drawn only for valid moves (in-bounds and not blocked by scrap). They hide while the Daleks move and reappear around the player's new position each turn, matching the original
+- **Removed**: The green highlight square over the player's own cell on mouse hover; the mouse indicator now only highlights adjacent move cells (blue = valid, red = blocked)
+- **Improved**: The scrap grid now rebuilds only when scraps actually change (dirty flag + `ensureScrapGrid`) instead of on every `isScrapAt` call, so the new per-frame arrow overlay reads it with O(1) lookups and no per-frame rebuild or allocation — keeping to the project's zero-per-frame-GC design. Backed by dirty-flag unit tests
 - **Fixed**: Jerky Dalek movement — `Update` derived `deltaTime` from the wall clock, but Ebiten runs `Update` at a fixed tick rate and fires catch-up ticks back-to-back, producing uneven time steps that made the interpolated motion stutter. Now uses a fixed timestep (`1/TPS`) for perfectly even, smootherstep-eased animation progress
 - **Security**: Bumped `go` directive to `1.26.5` to pull the patched `crypto/tls` standard library (resolves `GO-2026-5856`)
 - **Cleaned**: Removed the unused `lastUpdateTime` field, merged a redundant `var`/assignment in `movement.go` (S1021), and dropped a dead `countNormalDaleks()` call in `collision.go` (SA4006)

@@ -138,6 +138,7 @@ func (g *Game) checkCollisions() {
 	for pos, indices := range g.daleksByPosition {
 		if len(indices) > 1 && !g.scrapMap[pos] {
 			g.scraps = append(g.scraps, pos)
+			g.scrapGridDirty = true
 			g.scrapMap[pos] = true // Update map to prevent future duplicates
 
 			// Add collision explosion effect

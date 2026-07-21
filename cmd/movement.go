@@ -195,8 +195,9 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	g.newScrapsBuf = g.newScrapsBuf[:0] // Reuse pre-allocated buffer
 	hasAnyCollision := false            // Track if any collision occurred
 
-	// Rebuild the scrap grid once per frame so the O(1) lookup is fresh.
-	g.rebuildScrapGrid()
+	// Ensure the scrap grid is current so the O(1) lookup is fresh (rebuilds only
+	// when scraps changed).
+	g.ensureScrapGrid()
 
 	// Check for collisions with scraps using the O(1) scrapGrid lookup.
 	// Dalek's visual position is rounded to the nearest grid cell; if that
@@ -262,6 +263,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	// Add new scraps and collision effects
 	if len(g.newScrapsBuf) > 0 {
 		g.scraps = append(g.scraps, g.newScrapsBuf...)
+		g.scrapGridDirty = true
 
 		// Add collision explosion effect for each new scrap
 		for _, scrapPos := range g.newScrapsBuf {

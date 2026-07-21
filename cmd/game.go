@@ -44,6 +44,7 @@ func (g *Game) resetGame() {
 	g.lastStandSpeed = 2.0
 	g.daleks = nil
 	g.scraps = nil
+	g.scrapGridDirty = true
 	g.gameOverMessage = ""
 	g.emperorWarningMessage = ""
 	g.emperorWarningTimer = 0
@@ -54,6 +55,7 @@ func (g *Game) resetGame() {
 func (g *Game) startLevel() {
 	// Clear the board and reset all states
 	g.scraps = nil
+	g.scrapGridDirty = true
 	g.daleksMoving = false
 	g.isLastStandActive = false
 	g.lastStandSpeed = 2.0
@@ -183,6 +185,16 @@ func (g *Game) rebuildScrapGrid() {
 			scrap.Y >= 0 && scrap.Y < gridHeight {
 			g.scrapGrid[scrap.X][scrap.Y] = true
 		}
+	}
+	g.scrapGridDirty = false
+}
+
+// ensureScrapGrid rebuilds scrapGrid only if the scraps changed since the last
+// build. Cheap enough to call from the per-frame render path — most frames it is
+// just a bool check.
+func (g *Game) ensureScrapGrid() {
+	if g.scrapGridDirty {
+		g.rebuildScrapGrid()
 	}
 }
 

@@ -321,6 +321,7 @@ func (g *Game) Update() error {
 			// Clear any remaining game state
 			g.daleks = nil
 			g.scraps = nil
+			g.scrapGridDirty = true
 			g.gameOverMessage = ""
 			g.state = StateMenu
 		}

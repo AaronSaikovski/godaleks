@@ -123,6 +123,10 @@ type Game struct {
 	occupancyGrid [gridWidth][gridHeight]bool
 	// Grid-based scrap lookup for O(1) checks
 	scrapGrid [gridWidth][gridHeight]bool
+	// scrapGridDirty marks scrapGrid stale so ensureScrapGrid() only rebuilds it
+	// when the scraps actually changed, keeping the per-frame read path allocation-
+	// and work-free. Set true wherever g.scraps is mutated.
+	scrapGridDirty bool
 
 	// Reusable buffers to reduce allocations
 	dalekRemoveMap     map[int]bool       // Reusable for dalek removal

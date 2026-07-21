@@ -24,12 +24,18 @@ package cmd
 
 import (
 	"image/color"
+	"math"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+// arrowColor is the colour of the player's direction markers. Declared once as a
+// color.Color so passing it to drawArrow doesn't box a fresh interface value per
+// frame. Black, matching the original Daleks arrow markers.
+var arrowColor color.Color = color.RGBA{0, 0, 0, 255}
 
 // Handle mouse click for player movement
 func (g *Game) handleMouseClick(x, y int) {
@@ -88,7 +94,10 @@ func (g *Game) drawPlayerArrows(screen *ebiten.Image) {
 		return
 	}
 
-	arrowColor := color.RGBA{0, 0, 0, 255} // black, matching the original arrow markers
+	// Ensure the scrap grid is current, then read it directly below — avoids the
+	// full grid rebuild that isScrapAt() would trigger on each of the (up to) 8
+	// lookups, and ensureScrapGrid only does work when the scraps actually changed.
+	g.ensureScrapGrid()
 
 	pcx := float64(gridOffsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
 	pcy := float64(gridOffsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
@@ -105,13 +114,13 @@ func (g *Game) drawPlayerArrows(screen *ebiten.Image) {
 			if target.X < 0 || target.X >= gridWidth || target.Y < 0 || target.Y >= gridHeight {
 				continue
 			}
-			if g.isScrapAt(target) {
+			if g.scrapGrid[target.X][target.Y] {
 				continue
 			}
 
 			ncx := pcx + float64(dx)*float64(cellSize)
 			ncy := pcy + float64(dy)*float64(cellSize)
-			g.drawArrow(screen, ncx, ncy, dx, dy, arrowColor)
+			drawArrow(screen, ncx, ncy, dx, dy, arrowColor)
 		}
 	}
 }
@@ -119,13 +128,13 @@ func (g *Game) drawPlayerArrows(screen *ebiten.Image) {
 // drawArrow renders a bold arrow centred at (cx,cy) pointing along (dx,dy),
 // matching the original Daleks direction markers: a straight shaft with a clear
 // arrowhead. Drawn with anti-aliased strokes so diagonals stay clean.
-func (g *Game) drawArrow(screen *ebiten.Image, cx, cy float64, dx, dy int, clr color.Color) {
+func drawArrow(screen *ebiten.Image, cx, cy float64, dx, dy int, clr color.Color) {
 	const strokeWidth = 2.0
 
 	// Unit direction (diagonals normalised so all arrows share one length).
 	length := 1.0
 	if dx != 0 && dy != 0 {
-		length = 1.4142135623730951
+		length = math.Sqrt2
 	}
 	ux := float64(dx) / length
 	uy := float64(dy) / length
@@ -168,37 +177,36 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 
 	targetPos := Position{X: gridX, Y: gridY}
 
-	// Check if it's a valid move (adjacent to player)
+	// Don't highlight the player's own cell — no overlay for the wait-in-place move.
+	if targetPos == g.player {
+		return
+	}
+
+	// Only show the indicator for adjacent cells (valid one-step moves).
 	dx := abs(targetPos.X - g.player.X)
 	dy := abs(targetPos.Y - g.player.Y)
-
-	// Only show indicator for valid moves or current position
-	if dx <= 1 && dy <= 1 {
-		x := float64(gridOffsetX + gridX*cellSize)
-		y := float64(gridOffsetY + gridY*cellSize)
-
-		// Choose color based on move type
-		var indicatorColor color.Color
-		if targetPos == g.player {
-			indicatorColor = color.RGBA{0, 255, 0, 100} // Green for wait/current position
-		} else {
-			// Check if position is occupied by scrap
-			occupied := g.isScrapAt(targetPos)
-
-			if occupied {
-				indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
-			} else {
-				indicatorColor = color.RGBA{0, 0, 255, 100} // Blue for valid move
-			}
-		}
-
-		// Draw semi-transparent overlay on the cell
-		ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
-
-		// Draw border
-		ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
-		ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
-		ebitenutil.DrawRect(screen, x+cellSize-1, y, 1, cellSize, color.Black)
-		ebitenutil.DrawRect(screen, x, y+cellSize-1, cellSize, 1, color.Black)
+	if dx > 1 || dy > 1 {
+		return
 	}
+
+	x := float64(gridOffsetX + gridX*cellSize)
+	y := float64(gridOffsetY + gridY*cellSize)
+
+	// Red if blocked by scrap, blue for a valid move.
+	g.ensureScrapGrid()
+	var indicatorColor color.Color
+	if g.scrapGrid[targetPos.X][targetPos.Y] {
+		indicatorColor = color.RGBA{255, 0, 0, 100} // Red for blocked
+	} else {
+		indicatorColor = color.RGBA{0, 0, 255, 100} // Blue for valid move
+	}
+
+	// Draw semi-transparent overlay on the cell
+	ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
+
+	// Draw border
+	ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
+	ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
+	ebitenutil.DrawRect(screen, x+cellSize-1, y, 1, cellSize, color.Black)
+	ebitenutil.DrawRect(screen, x, y+cellSize-1, cellSize, 1, color.Black)
 }
