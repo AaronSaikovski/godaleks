@@ -30,7 +30,10 @@
       "Bash(gofmt -l cmd/)",
       "Bash(cd *)",
       "Bash(git add *)",
-      "Bash(git --no-pager diff main.go)"
+      "Bash(git --no-pager diff main.go)",
+      "Bash(git --no-pager log --oneline -5)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(git --no-pager log --oneline -3 main)"
     ],
     "deny": [],
     "ask": []
