@@ -28,6 +28,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // Handle mouse click for player movement
@@ -74,6 +75,81 @@ func (g *Game) handleMouseClick(x, y int) {
 	if abs(dx) <= 1 && abs(dy) <= 1 {
 		g.movePlayer(dx, dy)
 	}
+}
+
+// drawPlayerArrows draws the classic Daleks direction indicators: a bold black
+// arrow in each of the 8 cells around the human player, but only for moves that
+// are actually valid (in-bounds and not blocked by scrap). The arrows are hidden
+// while the Daleks are mid-move and redrawn once settled, so — like the original
+// — they disappear on a click and reappear around the player's new position.
+func (g *Game) drawPlayerArrows(screen *ebiten.Image) {
+	// No movement choices to show while Daleks are moving or during Last Stand.
+	if g.state != StatePlaying || g.isLastStandActive || g.daleksMoving {
+		return
+	}
+
+	arrowColor := color.RGBA{0, 0, 0, 255} // black, matching the original arrow markers
+
+	pcx := float64(gridOffsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
+	pcy := float64(gridOffsetY) + (float64(g.player.Y)+0.5)*float64(cellSize)
+
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if dx == 0 && dy == 0 {
+				continue
+			}
+
+			target := Position{X: g.player.X + dx, Y: g.player.Y + dy}
+
+			// Valid move = inside the grid and not a scrap heap (wall).
+			if target.X < 0 || target.X >= gridWidth || target.Y < 0 || target.Y >= gridHeight {
+				continue
+			}
+			if g.isScrapAt(target) {
+				continue
+			}
+
+			ncx := pcx + float64(dx)*float64(cellSize)
+			ncy := pcy + float64(dy)*float64(cellSize)
+			g.drawArrow(screen, ncx, ncy, dx, dy, arrowColor)
+		}
+	}
+}
+
+// drawArrow renders a bold arrow centred at (cx,cy) pointing along (dx,dy),
+// matching the original Daleks direction markers: a straight shaft with a clear
+// arrowhead. Drawn with anti-aliased strokes so diagonals stay clean.
+func (g *Game) drawArrow(screen *ebiten.Image, cx, cy float64, dx, dy int, clr color.Color) {
+	const strokeWidth = 2.0
+
+	// Unit direction (diagonals normalised so all arrows share one length).
+	length := 1.0
+	if dx != 0 && dy != 0 {
+		length = 1.4142135623730951
+	}
+	ux := float64(dx) / length
+	uy := float64(dy) / length
+	// Perpendicular, for the arrowhead barbs.
+	px := -uy
+	py := ux
+
+	shaft := float64(cellSize) * 0.36 // half the shaft length
+	barb := float64(cellSize) * 0.32  // arrowhead length
+	spread := 0.85                    // how wide the arrowhead opens
+
+	tipX := cx + ux*shaft
+	tipY := cy + uy*shaft
+	backX := cx - ux*shaft
+	backY := cy - uy*shaft
+
+	b1x := tipX - ux*barb + px*barb*spread
+	b1y := tipY - uy*barb + py*barb*spread
+	b2x := tipX - ux*barb - px*barb*spread
+	b2y := tipY - uy*barb - py*barb*spread
+
+	vector.StrokeLine(screen, float32(backX), float32(backY), float32(tipX), float32(tipY), strokeWidth, clr, true)
+	vector.StrokeLine(screen, float32(tipX), float32(tipY), float32(b1x), float32(b1y), strokeWidth, clr, true)
+	vector.StrokeLine(screen, float32(tipX), float32(tipY), float32(b2x), float32(b2y), strokeWidth, clr, true)
 }
 
 func (g *Game) drawMouseIndicator(screen *ebiten.Image) {

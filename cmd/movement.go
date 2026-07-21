@@ -73,6 +73,9 @@ func (g *Game) moveDaleks() {
 	}
 }
 
+// updateNormalMovement advances the per-turn Dalek animation each tick, easing
+// every Dalek from its start cell to its target cell with a smootherstep curve
+// for jerk-free motion. Runs on a fixed timestep so progress is perfectly even.
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
 

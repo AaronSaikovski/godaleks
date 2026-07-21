@@ -70,7 +70,7 @@ func NewGame() *Game {
 		emperorImage: gameImages.DalekEmperor,
 
 		scrapImage:             createScrapImage(),
-		moveAnimationDuration:  0.7, // Smooth, slightly slower movement
+		moveAnimationDuration:  0.7, // Smooth eased glide per Dalek step
 		daleksMoving:           false,
 		showGrid:               false, // Default OFF
 		emperorWarningMessage:  "",
@@ -339,6 +339,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StatePlaying:
 		g.drawGame(screen)
 		g.drawHUD(screen)
+		g.drawPlayerArrows(screen)
 		g.drawMouseIndicator(screen)
 	case StateLevelComplete:
 		g.drawGame(screen)
