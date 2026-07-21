@@ -192,11 +192,7 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 
 	// Last Stand indicator
 	if g.isLastStandActive {
-		if g.cachedLastStandSpeed != g.lastStandSpeed {
-			g.cachedLastStandMsg = fmt.Sprintf("LAST STAND ACTIVE! Speed: %.1f", g.lastStandSpeed)
-			g.cachedLastStandSpeed = g.lastStandSpeed
-		}
-		text.Draw(screen, g.cachedLastStandMsg, basicfont.Face7x13, 10, screenHeight-30, color.Black)
+		text.Draw(screen, "LAST STAND ACTIVE!", basicfont.Face7x13, 10, screenHeight-30, color.Black)
 	}
 
 	// Temporary center-screen notification for grid toggle

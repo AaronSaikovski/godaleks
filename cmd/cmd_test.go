@@ -107,6 +107,35 @@ func TestRebuildScrapGridClearsStaleEntries(t *testing.T) {
 	}
 }
 
+func TestEnsureScrapGridRespectsDirtyFlag(t *testing.T) {
+	g := &Game{scraps: []Position{{5, 5}}}
+
+	// Clean flag + empty grid: ensureScrapGrid must NOT rebuild.
+	g.scrapGridDirty = false
+	g.ensureScrapGrid()
+	if g.scrapGrid[5][5] {
+		t.Error("ensureScrapGrid rebuilt while not dirty")
+	}
+
+	// Dirty flag: ensureScrapGrid rebuilds and then clears the flag.
+	g.scrapGridDirty = true
+	g.ensureScrapGrid()
+	if !g.scrapGrid[5][5] {
+		t.Error("ensureScrapGrid did not rebuild when dirty")
+	}
+	if g.scrapGridDirty {
+		t.Error("ensureScrapGrid should clear the dirty flag after rebuilding")
+	}
+}
+
+func TestRebuildScrapGridClearsDirtyFlag(t *testing.T) {
+	g := &Game{scraps: []Position{{1, 1}}, scrapGridDirty: true}
+	g.rebuildScrapGrid()
+	if g.scrapGridDirty {
+		t.Error("rebuildScrapGrid should clear the dirty flag")
+	}
+}
+
 func TestRebuildOccupancyGrid(t *testing.T) {
 	g := &Game{
 		daleks: []Dalek{

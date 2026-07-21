@@ -37,7 +37,7 @@ func drawBoldText(screen *ebiten.Image, str string, x, y int, clr color.Color) {
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GoDaleks - v1.3.0"
+	title := "GoDaleks"
 	drawBoldText(screen, title, screenWidth/2-len(title)*3, 100, color.Black)
 
 	gameDesc := "Based on the original 1984 'Daleks' Macintosh Classic game by Johan Strandberg."

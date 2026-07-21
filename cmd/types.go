@@ -64,7 +64,6 @@ type Game struct {
 	lastStands      int
 	gameOverMessage string
 	lastMoveTime    time.Time
-	lastUpdateTime  time.Time // Track last update for accurate deltaTime
 
 	playerImage  *ebiten.Image
 	dalekImage   *ebiten.Image
@@ -112,12 +111,10 @@ type Game struct {
 	lastHUDUpdate    time.Time // Track when HUD needs refresh
 
 	// Cached draw strings to avoid per-frame fmt.Sprintf
-	cachedFinalScore     string
-	cachedLastStandMsg   string
-	cachedLastStandSpeed float64
-	cachedGridStatus     string
-	cachedLevelMsg       string
-	cachedLevelNextMsg   string
+	cachedFinalScore   string
+	cachedGridStatus   string
+	cachedLevelMsg     string
+	cachedLevelNextMsg string
 
 	// Collision animations
 	collisionEffects []CollisionEffect // Active collision effects
@@ -126,6 +123,10 @@ type Game struct {
 	occupancyGrid [gridWidth][gridHeight]bool
 	// Grid-based scrap lookup for O(1) checks
 	scrapGrid [gridWidth][gridHeight]bool
+	// scrapGridDirty marks scrapGrid stale so ensureScrapGrid() only rebuilds it
+	// when the scraps actually changed, keeping the per-frame read path allocation-
+	// and work-free. Set true wherever g.scraps is mutated.
+	scrapGridDirty bool
 
 	// Reusable buffers to reduce allocations
 	dalekRemoveMap     map[int]bool       // Reusable for dalek removal

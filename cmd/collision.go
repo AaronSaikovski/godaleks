@@ -60,9 +60,6 @@ func (g *Game) checkCollisions() {
 		}
 	}
 
-	// Count normal daleks to check if emperor should be defeated
-	normalDalekCount := g.countNormalDaleks()
-
 	// Reuse pre-allocated scrap map
 	for k := range g.scrapMap {
 		delete(g.scrapMap, k)
@@ -141,6 +138,7 @@ func (g *Game) checkCollisions() {
 	for pos, indices := range g.daleksByPosition {
 		if len(indices) > 1 && !g.scrapMap[pos] {
 			g.scraps = append(g.scraps, pos)
+			g.scrapGridDirty = true
 			g.scrapMap[pos] = true // Update map to prevent future duplicates
 
 			// Add collision explosion effect
@@ -169,7 +167,7 @@ func (g *Game) checkCollisions() {
 	}
 
 	// If all normal daleks are defeated, the emperor dies too
-	normalDalekCount = g.countNormalDaleks()
+	normalDalekCount := g.countNormalDaleks()
 	if normalDalekCount == 0 && len(g.daleks) > 0 {
 		// Check if there's an emperor alive
 		emperorFound := false

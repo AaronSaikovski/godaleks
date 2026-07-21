@@ -1,7 +1,36 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go:*)"
+      "Bash(go:*)",
+      "Bash(ls \"$\\(go env GOPATH\\)/bin/govulncheck\")",
+      "Bash(echo \"GOTOOLCHAIN=$\\(go env GOTOOLCHAIN\\)\")",
+      "Bash(git check-ignore *)",
+      "Bash(git rm *)",
+      "Bash(/bin/ls cmd/)",
+      "Bash(python3 -c \"import AVFoundation, Quartz; print\\('pyobjc AVFoundation OK'\\)\")",
+      "Bash(qlmanage -t -s 1000 -o /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad '/Users/aaronsaikovski/Downloads/games/Daleks MacOS Classic Game/Daleks3_Screen Recording 2023-05-30 at 2.38.37 pm.mov')",
+      "Bash(swift /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad/dumpframes.swift '/Users/aaronsaikovski/Downloads/games/Daleks MacOS Classic Game/Daleks3_Screen Recording 2023-05-30 at 2.38.37 pm.mov' /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad)",
+      "Bash(rm -f /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad/s_*.png)",
+      "Bash(swift /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad/montage.swift '/Users/aaronsaikovski/Downloads/games/Daleks MacOS Classic Game/Daleks3_Screen Recording 2023-05-30 at 2.38.37 pm.mov' /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad)",
+      "Bash(/tmp/godaleks_verify *)",
+      "Bash(pkill -f godaleks_verify)",
+      "Bash(rm -f /tmp/godaleks_verify)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/aaronsaikovski/.claude/image-cache/76911b88-554a-45e5-bb4b-2c072db7b2ac/1.png)",
+      "Bash(sips -z 448 448 /Users/aaronsaikovski/.claude/image-cache/76911b88-554a-45e5-bb4b-2c072db7b2ac/1.png --out __TRACKED_VAR__/arrows_zoom.png)",
+      "Bash(sips -z 507 507 '/Users/aaronsaikovski/Downloads/games/Daleks MacOS Classic Game/player.png' --out /private/tmp/claude-501/-Users-aaronsaikovski-Developer-Personal-go-godaleks/76911b88-554a-45e5-bb4b-2c072db7b2ac/scratchpad/player_zoom.png)",
+      "Bash(git --no-pager diff --stat HEAD -- cmd/)",
+      "Bash(git --no-pager diff HEAD -- cmd/)",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager diff --stat HEAD cmd/input.go)",
+      "Bash(git --no-pager show HEAD:cmd/input.go)",
+      "Bash(git --no-pager log --oneline -8)",
+      "Bash(git --no-pager show HEAD --stat --oneline)",
+      "Bash(gofmt -l cmd/ main.go)",
+      "Bash(staticcheck ./cmd/...)",
+      "Bash(gofmt -l cmd/)",
+      "Bash(cd *)",
+      "Bash(git add *)",
+      "Bash(git --no-pager diff main.go)"
     ],
     "deny": [],
     "ask": []

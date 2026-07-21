@@ -54,14 +54,13 @@ func NewGame() *Game {
 
 	now := time.Now()
 	g := &Game{
-		state:          StateMenu,
-		level:          1,
-		teleports:      10,
-		safeTeleports:  3,
-		screwdrivers:   2,
-		lastStands:     1,
-		lastMoveTime:   now,
-		lastUpdateTime: now,
+		state:         StateMenu,
+		level:         1,
+		teleports:     10,
+		safeTeleports: 3,
+		screwdrivers:  2,
+		lastStands:    1,
+		lastMoveTime:  now,
 
 		//playerImage:           createPlayerImage(),
 		//dalekImage:            createDalekImage(),
@@ -71,7 +70,7 @@ func NewGame() *Game {
 		emperorImage: gameImages.DalekEmperor,
 
 		scrapImage:             createScrapImage(),
-		moveAnimationDuration:  0.7, // Smooth, slightly slower movement
+		moveAnimationDuration:  0.7, // Smooth eased glide per Dalek step
 		daleksMoving:           false,
 		showGrid:               false, // Default OFF
 		emperorWarningMessage:  "",
@@ -122,18 +121,20 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	// Calculate actual deltaTime based on real elapsed time for smooth animation
-	now := time.Now()
-	deltaTime := now.Sub(g.lastUpdateTime).Seconds()
-	g.lastUpdateTime = now
-
-	// Clamp deltaTime to reasonable bounds to prevent jitter and jumps
-	// Min: ~240 FPS max, Max: ~30 FPS min
-	if deltaTime < 0.004 {
-		deltaTime = 0.004 // Prevent too-fast updates causing jitter
-	} else if deltaTime > 0.033 {
-		deltaTime = 0.033 // Prevent huge jumps when window is dragged
+	// Ebiten calls Update at a fixed tick rate (SetTPS, default 60), decoupled
+	// from the display's render rate. Deriving deltaTime from the wall clock is
+	// therefore uneven: when Ebiten runs several catch-up ticks back-to-back in a
+	// single rendered frame, each measures a near-zero elapsed time and then the
+	// next frame measures a full frame's worth. That jitter is what makes the
+	// interpolated Dalek movement look jerky. Because the tick rate is fixed, a
+	// constant timestep advances the animation by an even amount every tick,
+	// giving perfectly smooth motion (Ebiten still keeps game-time correct by
+	// running extra catch-up ticks when the machine falls behind).
+	tps := ebiten.TPS()
+	if tps <= 0 {
+		tps = 60 // Fall back to the default when TPS is set to SyncWithFPS.
 	}
+	deltaTime := 1.0 / float64(tps)
 
 	// Handle mouse input for player movement
 	if g.state == StatePlaying && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -314,14 +315,13 @@ func (g *Game) Update() error {
 			g.lastStandSpeed = 2.0
 			// Clear cached strings
 			g.cachedFinalScore = ""
-			g.cachedLastStandMsg = ""
-			g.cachedLastStandSpeed = 0
 			g.cachedLevelMsg = ""
 			g.cachedLevelNextMsg = ""
 			g.cachedGridStatus = "Grid: OFF"
 			// Clear any remaining game state
 			g.daleks = nil
 			g.scraps = nil
+			g.scrapGridDirty = true
 			g.gameOverMessage = ""
 			g.state = StateMenu
 		}
@@ -340,6 +340,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StatePlaying:
 		g.drawGame(screen)
 		g.drawHUD(screen)
+		g.drawPlayerArrows(screen)
 		g.drawMouseIndicator(screen)
 	case StateLevelComplete:
 		g.drawGame(screen)

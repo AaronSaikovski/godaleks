@@ -73,6 +73,9 @@ func (g *Game) moveDaleks() {
 	}
 }
 
+// updateNormalMovement advances the per-turn Dalek animation each tick, easing
+// every Dalek from its start cell to its target cell with a smootherstep curve
+// for jerk-free motion. Runs on a fixed timestep so progress is perfectly even.
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
 
@@ -94,8 +97,7 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 
 			// Ultra-smooth easing function - smootherstep (quintic) interpolation
 			// This gives the smoothest possible interpolation with no visible jerk
-			var easedProgress float64
-			easedProgress = progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
+			easedProgress := progress * progress * progress * (progress*(progress*6.0-15.0) + 10.0)
 
 			// Interpolate position using stored start position for consistency
 			startX := dalek.StartPos.X
@@ -193,8 +195,9 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	g.newScrapsBuf = g.newScrapsBuf[:0] // Reuse pre-allocated buffer
 	hasAnyCollision := false            // Track if any collision occurred
 
-	// Rebuild the scrap grid once per frame so the O(1) lookup is fresh.
-	g.rebuildScrapGrid()
+	// Ensure the scrap grid is current so the O(1) lookup is fresh (rebuilds only
+	// when scraps changed).
+	g.ensureScrapGrid()
 
 	// Check for collisions with scraps using the O(1) scrapGrid lookup.
 	// Dalek's visual position is rounded to the nearest grid cell; if that
@@ -260,6 +263,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	// Add new scraps and collision effects
 	if len(g.newScrapsBuf) > 0 {
 		g.scraps = append(g.scraps, g.newScrapsBuf...)
+		g.scrapGridDirty = true
 
 		// Add collision explosion effect for each new scrap
 		for _, scrapPos := range g.newScrapsBuf {

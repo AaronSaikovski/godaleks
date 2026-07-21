@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v1.2.2. (2026-07-16)
+- Added the classic direction arrows: a bold black arrow in each of the 8 cells around the human player, shown only for valid moves (in-bounds and not blocked by scrap). Arrows hide while the Daleks move and reappear around the player's new position, matching the original.
+- Removed the green highlight square that appeared over the player's own cell on mouse hover; the mouse indicator now only highlights adjacent move cells (blue = valid, red = blocked).
+- Performance: the scrap grid now rebuilds only when scraps actually change (dirty flag + `ensureScrapGrid`) instead of on every `isScrapAt` call, so the per-frame arrow overlay does O(1) lookups with no per-frame rebuild. Added dirty-flag unit tests.
+- Fixed jerky Dalek movement — `Update` now uses a fixed timestep (`1/TPS`) instead of a wall-clock deltaTime, giving even smootherstep-eased animation progress.
+- Removed the "Speed: X.X" counter from the Last Stand HUD indicator (now just "LAST STAND ACTIVE!").
+- Security: bumped the `go` directive to 1.26.5 for the patched `crypto/tls` stdlib (GO-2026-5856).
+- Cleanups: removed dead `lastUpdateTime`/`cachedLastStand*` state and resolved two staticcheck findings (S1021, SA4006).
+- Investigated Dalek/human grid centering — confirmed sprites are already pixel-perfect centered; no change needed.
+
 ## v0.0.4. (2025-08-12)
 - Bug fixes and performance improvements.
 - When using sonic screwdriver, not leaving behind a debris field.
