@@ -15,3 +15,9 @@
   drawing. Confirm **colour** and **stroke weight** against the source — don't assume a colour
   from an in-game screenshot is the intended one. Use `vector.StrokeLine` (anti-aliased, width)
   for bold clean strokes rather than 1px `ebitenutil.DrawLine`.
+
+## Verify dependency versions from the current module
+- **Context**: Earlier repository guidance referred to Ebitengine 2.9; the user clarified
+  that 2.10 is released, and the current `go.mod` already specifies v2.10.0.
+- **Rule**: Read the current `go.mod` before stating dependency versions or planning
+  API migrations; use upstream release notes for release status rather than cached guidance.
