@@ -98,3 +98,17 @@
 - Actionlint v1.7.12 passed for all three workflows (optional ShellCheck/Pyflakes integrations disabled).
 - Parsed all workflow YAML: all four Go setup steps follow checkout and select `go.mod`, currently Go 1.27.1, without a competing `go-version` input.
 - GitHub-hosted workflow execution was not triggered.
+
+## Intermittent collision audio
+
+### Plan
+- [x] Exercise deterministic normal-turn and Last Stand collision scenarios, observing real sound-player calls.
+- [x] Make normal-turn scrap destruction request the crash sound without duplicating simultaneous collision sounds.
+- [x] Verify the scenarios and full checks, then update the changelog and repository guidance.
+
+### Review
+- Root cause: normal-turn scrap removals bypassed the Dalek-to-Dalek crash-sound branch; playback lifetime was not the issue.
+- Moved the normal collision crash cue after both removal passes, keyed to actual removals. Player-death precedence and separate emperor defeat audio remain unchanged.
+- A temporary Go overlay recorded calls while preserving real WAV decoding/playback. Before the fix, single/multiple/final-Dalek scrap cases emitted no crash; after the fix, all ten scenarios passed, including mixed collisions, Last Stand, emperor immunity, and player-death precedence.
+- `go test ./...` and `task staticcheck` passed. Audible device output was not assessed.
+- Removed the overlay and fixtures rather than adding production audio hooks solely for testing. Updated `CHANGELOG.md` and `AGENTS.md`.

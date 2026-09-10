@@ -11,6 +11,7 @@ GoDaleks recreates Macintosh Daleks/BSD Robots in Go with Ebitengine. It targets
 - `Update` processes mouse input, advances animations/effects, then dispatches keyboard input and game state. Simulation uses `1/ebiten.TPS()` with a 60-TPS fallback; some input/HUD timers use wall-clock time.
 - Normal movement (`cmd/movement.go`) updates logical `GridPos` immediately, interpolates `VisualPos` with smootherstep, and resolves collisions after movement finishes. Rendering reads visual positions. Last Stand has a separate continuous accelerating movement/collision path; preserve that distinction.
 - `cmd/collision.go` resolves player death before enemy/scrap collisions, scoring, and level progression. Normal collision handling protects emperors until ordinary Daleks are gone; check the separate Last Stand path when changing combat rules.
+- Collision audio follows actual removals: normal turns play one crash cue for the combined Dalek/scrap removal batch; emperor defeat retains its separate cue. Last Stand has its own collision-audio path. Check both modes, scrap hits, and mixed simultaneous collisions when changing collision feedback.
 - State flow: menu → playing → level complete → playing, or game over/win. Level completion pauses 1.5 seconds; completing level 10 wins. Reset behavior is state-dependent.
 - Browser flow: `index.html` loads `wasm_exec.js`, instantiates `godaleks.wasm`, and starts Go. Keep these files together; the HTML uses relative URLs.
 

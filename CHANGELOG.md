@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## Unreleased
+- Fixed silent normal-turn Dalek collisions with existing scrap: any Dalek destruction in the collision pass now triggers one crash sound, including the final Dalek in a level, without duplicating sounds for simultaneous Dalek-to-Dalek and scrap collisions.
 - Aligned all GitHub Actions Go setup steps with `go.mod` (currently Go 1.27.1), replacing the old `>=1.26.0` range across native builds, WASM deployment, and Linux/Windows/macOS release jobs.
 - Added the current version after the GoDaleks title on the splash screen and centered the full title.
 - Replaced deprecated Ebitengine text, line/rectangle drawing, teleport color-matrix, and WAV/player APIs with `text/v2`, `vector`, `ColorScale`, and context-based audio APIs. Preserved bitmap-font baselines, pixel-aligned primitives, teleport fading, and overlapping playback; Staticcheck now passes.

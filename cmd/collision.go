@@ -91,7 +91,6 @@ func (g *Game) checkCollisions() {
 	}
 
 	// Identify dalek-dalek collisions
-	playedCrashSound := false
 	for _, indices := range g.daleksByPosition {
 		if len(indices) > 1 {
 			// Multiple daleks at this position - check for emperor
@@ -118,12 +117,12 @@ func (g *Game) checkCollisions() {
 					g.score += 2 // 2 points per dalek
 				}
 			}
-
-			if !playedCrashSound && g.soundPlayer != nil {
-				g.soundPlayer.Play("crash")
-				playedCrashSound = true
-			}
 		}
+	}
+
+	// Play once for this collision pass, including Daleks destroyed by existing scrap.
+	if len(g.dalekRemoveMap) > 0 && g.soundPlayer != nil {
+		g.soundPlayer.Play("crash")
 	}
 
 	// Filter daleks in-place using reusable buffer
