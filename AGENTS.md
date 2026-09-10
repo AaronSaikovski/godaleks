@@ -71,6 +71,9 @@ Use `go mod download` to fetch pinned dependencies; `task deps` also upgrades th
 
 ## Testing & QA
 
+- **Mandatory completion checks:** after every repository change, including documentation-only edits, run `task lint`, then `task vet`, `task staticcheck`, and `task seccheck`. Run lint first because it modifies source/module files; run the remaining checks against that resulting state.
+- Fix failures and rerun affected checks before declaring completion. Report each command's actual result; an unavailable tool, download failure, or incomplete scan is a blocker, not a pass. Preserve security findings rather than suppressing them to obtain a green result.
+
 - Standard Go `testing`: `cmd/cmd_test.go` covers math/grid helpers; `scripts/serve/main_test.go` covers directory validation and HTTP behavior. There is no configured coverage threshold; helper tests do not prove complete gameplay.
 - Follow same-package tests, table-driven subtests, minimal `Game` literals, and server fixtures using `t.TempDir`, `t.Cleanup`, and `httptest`. Minimal game values avoid audio construction, but package initialization still loads Ebiten images.
 - Focused examples: `go test ./cmd -run '^TestRebuildScrapGridClearsStaleEntries$' -count=1` and `go test -v ./scripts/serve`.

@@ -5,6 +5,8 @@
 - Aligned all GitHub Actions Go setup steps with `go.mod` (currently Go 1.27.1), replacing the old `>=1.26.0` range across native builds, WASM deployment, and Linux/Windows/macOS release jobs.
 - Added the current version after the GoDaleks title on the splash screen and centered the full title.
 - Replaced deprecated Ebitengine text, line/rectangle drawing, teleport color-matrix, and WAV/player APIs with `text/v2`, `vector`, `ColorScale`, and context-based audio APIs. Preserved bitmap-font baselines, pixel-aligned primitives, teleport fading, and overlapping playback; Staticcheck now passes.
+- Updated project requirements to Go 1.27.1 and Ebitengine v2.10.0, including the dependencies required by `text/v2`.
+- Added `AGENTS.md` repository guidelines covering architecture, development commands, testing, module-driven CI toolchains, release-version displays, and collision-audio behavior.
 
 ## v1.2.3. (2026-09-10)
 - Bumped the application window title, build version, and current README version references to v1.2.3.
