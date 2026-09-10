@@ -72,7 +72,7 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 
 	// Validate all WAV data can be decoded
 	for name, data := range sounds {
-		_, err := wav.Decode(audioContext, bytes.NewReader(data))
+		_, err := wav.DecodeWithSampleRate(audioContext.SampleRate(), bytes.NewReader(data))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode sound %s: %w", name, err)
 		}
@@ -93,11 +93,11 @@ func (s *SoundPlayer) Play(name string) {
 		return
 	}
 	// Create a fresh player each time to allow overlapping playback
-	d, err := wav.Decode(s.audioContext, bytes.NewReader(data))
+	d, err := wav.DecodeWithSampleRate(s.audioContext.SampleRate(), bytes.NewReader(data))
 	if err != nil {
 		return
 	}
-	player, err := audio.NewPlayer(s.audioContext, d)
+	player, err := s.audioContext.NewPlayer(d)
 	if err != nil {
 		return
 	}

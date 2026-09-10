@@ -26,19 +26,25 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font/basicfont"
 )
 
-// drawBoldText draws smooth, non-bold text
+// Reuse the bitmap face so text/v2 retains its glyph cache across draws.
+var gameTextFace = text.NewGoXFace(basicfont.Face7x13)
+
+// drawBoldText draws the original bitmap font at baseline coordinates.
 func drawBoldText(screen *ebiten.Image, str string, x, y int, clr color.Color) {
-	// Draw single clean text for smooth appearance
-	text.Draw(screen, str, basicfont.Face7x13, x, y, clr)
+	var op text.DrawOptions
+	op.GeoM.Translate(float64(x), float64(y)-gameTextFace.Metrics().HAscent)
+	op.ColorScale.ScaleWithColor(clr)
+	op.LineSpacing = float64(basicfont.Face7x13.Height)
+	text.Draw(screen, str, gameTextFace, &op)
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
-	title := "GoDaleks"
-	drawBoldText(screen, title, screenWidth/2-len(title)*3, 100, color.Black)
+	title := "GoDaleks v1.2.3"
+	drawBoldText(screen, title, screenWidth/2-len(title)*7/2, 100, color.Black)
 
 	gameDesc := "Based on the original 1984 'Daleks' Macintosh Classic game by Johan Strandberg."
 	drawBoldText(screen, gameDesc, screenWidth/2-len(gameDesc)*7/2, 120, color.Black)

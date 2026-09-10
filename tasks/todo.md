@@ -59,3 +59,42 @@
   chase movement by design.
 - Arrows treat moving onto a Dalek cell as "valid" (legal but fatal), matching the original;
   only scrap/walls are hidden.
+
+## Repository guidelines documentation
+
+### Plan
+- [x] Research core source, tests, build configuration, and scripts/docs with four parallel read-only agents.
+- [x] Synthesize verified findings into root `AGENTS.md` using the requested eight sections.
+- [x] Check headings, command accuracy, file paths, and concise architecture/pattern guidance.
+
+### Review
+- Created `AGENTS.md`, titled “Repository Guidelines,” from four source-backed research reports.
+- Verification passed: eight required sections, 25 referenced files, 13 task names, module/runtime versions, and the focused test example.
+- Documentation only; application tests/builds were not run. No application code or structural code changes; changelog unchanged.
+
+## Deprecated Ebitengine API migration
+
+### Plan
+- [x] Replace legacy text and drawing APIs, preserving bitmap-font baselines, non-antialiased primitives, and teleport opacity.
+- [x] Replace WAV decoding and player creation APIs, retaining the context sample rate and overlapping playback.
+- [x] Run Staticcheck and tests; exercise rendering and audio, then update the changelog.
+
+### Review
+- User-provided Staticcheck output establishes the failure; no pre-fix rerun needed.
+- `task staticcheck`, `go test ./...`, and `task wasm:build` passed after `go mod tidy` resolved text/v2 dependencies.
+- Browser smoke checked menu/HUD text, grid lines, mouse highlighting, teleport disappearance/reappearance, and the game-over overlay.
+- Native audio smoke validated all six embedded WAVs and exercised overlapping playback calls; audible output was not assessed.
+- Updated `CHANGELOG.md` and rendering/tooling guidance. Temporary audio script removed; browser tab and server stopped.
+
+## Go pipeline synchronization
+
+### Plan
+- [x] Use `go-version-file: go.mod` in native build, WASM deployment, and both release build jobs.
+- [x] Update `AGENTS.md` and `CHANGELOG.md` with the module-driven toolchain convention.
+- [x] Validate workflow syntax and verify every Go setup step uses the checked-out module.
+
+### Review
+- Preserved existing triggers, build targets, permissions, and artifact handling.
+- Actionlint v1.7.12 passed for all three workflows (optional ShellCheck/Pyflakes integrations disabled).
+- Parsed all workflow YAML: all four Go setup steps follow checkout and select `go.mod`, currently Go 1.27.1, without a competing `go-version` input.
+- GitHub-hosted workflow execution was not triggered.

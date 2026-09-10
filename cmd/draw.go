@@ -28,25 +28,23 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"golang.org/x/image/font/basicfont"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 func (g *Game) drawGame(screen *ebiten.Image) {
 	// Draw grid only if enabled
 	if g.showGrid {
 		for x := 0; x <= gridWidth; x++ {
-			ebitenutil.DrawLine(screen,
-				float64(gridOffsetX+x*cellSize), float64(gridOffsetY),
-				float64(gridOffsetX+x*cellSize), float64(gridOffsetY+gridHeight*cellSize),
-				color.Black)
+			vector.StrokeLine(screen,
+				float32(gridOffsetX+x*cellSize), float32(gridOffsetY),
+				float32(gridOffsetX+x*cellSize), float32(gridOffsetY+gridHeight*cellSize),
+				1, color.Black, false)
 		}
 		for y := 0; y <= gridHeight; y++ {
-			ebitenutil.DrawLine(screen,
-				float64(gridOffsetX), float64(gridOffsetY+y*cellSize),
-				float64(gridOffsetX+gridWidth*cellSize), float64(gridOffsetY+y*cellSize),
-				color.Black)
+			vector.StrokeLine(screen,
+				float32(gridOffsetX), float32(gridOffsetY+y*cellSize),
+				float32(gridOffsetX+gridWidth*cellSize), float32(gridOffsetY+y*cellSize),
+				1, color.Black, false)
 		}
 	}
 
@@ -108,17 +106,17 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		g.drawOp.GeoM.Reset()
 		g.drawOp.GeoM.Translate(x, y)
 
-		g.drawOp.ColorM.Reset()
+		g.drawOp.ColorScale.Reset()
 		// Fade in player at new position
 		if progress > 0.3 {
 			fadeAlpha := (progress - 0.3) / 0.7
-			g.drawOp.ColorM.Scale(1, 1, 1, fadeAlpha)
+			g.drawOp.ColorScale.ScaleAlpha(float32(fadeAlpha))
 		} else {
-			g.drawOp.ColorM.Scale(1, 1, 1, 0) // Invisible during first part
+			g.drawOp.ColorScale.ScaleAlpha(0) // Invisible during first part
 		}
 
 		screen.DrawImage(g.playerImage, &g.drawOp)
-		g.drawOp.ColorM.Reset() // Reset color for next draw
+		g.drawOp.ColorScale.Reset() // Reset color for next draw
 	} else {
 		// Normal player drawing (centered) - use cached dimensions
 		cellCenterX := float64(gridOffsetX) + (float64(g.player.X)+0.5)*float64(cellSize)
@@ -149,32 +147,27 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 }
 
 func (g *Game) drawLevelComplete(screen *ebiten.Image) {
-	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay)
+	vector.FillRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay, false)
 
-	text.Draw(screen, g.cachedLevelMsg, basicfont.Face7x13,
-		screenWidth/2-len(g.cachedLevelMsg)*3, screenHeight/2-10, color.White)
+	drawBoldText(screen, g.cachedLevelMsg, screenWidth/2-len(g.cachedLevelMsg)*3, screenHeight/2-10, color.White)
 
-	text.Draw(screen, g.cachedLevelNextMsg, basicfont.Face7x13,
-		screenWidth/2-len(g.cachedLevelNextMsg)*3, screenHeight/2+20, color.White)
+	drawBoldText(screen, g.cachedLevelNextMsg, screenWidth/2-len(g.cachedLevelNextMsg)*3, screenHeight/2+20, color.White)
 }
 
 func (g *Game) drawGameOver(screen *ebiten.Image) {
 	// Semi-transparent overlay
-	ebitenutil.DrawRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay)
+	vector.FillRect(screen, 0, 0, screenWidth, screenHeight, colorOverlay, false)
 
 	// Game over message
-	text.Draw(screen, g.gameOverMessage, basicfont.Face7x13,
-		screenWidth/2-len(g.gameOverMessage)*3, screenHeight/2-20, color.White)
+	drawBoldText(screen, g.gameOverMessage, screenWidth/2-len(g.gameOverMessage)*3, screenHeight/2-20, color.White)
 
 	if g.cachedFinalScore == "" {
 		g.cachedFinalScore = fmt.Sprintf("Final Score: %d", g.score)
 	}
-	text.Draw(screen, g.cachedFinalScore, basicfont.Face7x13,
-		screenWidth/2-len(g.cachedFinalScore)*3, screenHeight/2+10, color.White)
+	drawBoldText(screen, g.cachedFinalScore, screenWidth/2-len(g.cachedFinalScore)*3, screenHeight/2+10, color.White)
 
 	restart := "Press SPACE or click to restart"
-	text.Draw(screen, restart, basicfont.Face7x13,
-		screenWidth/2-len(restart)*3, screenHeight/2+40, color.White)
+	drawBoldText(screen, restart, screenWidth/2-len(restart)*3, screenHeight/2+40, color.White)
 }
 
 func (g *Game) drawHUD(screen *ebiten.Image) {
@@ -185,14 +178,14 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 			g.level, g.score, g.teleports, g.safeTeleports, g.screwdrivers, g.lastStands, len(g.daleks))
 		g.lastHUDUpdate = now
 	}
-	text.Draw(screen, g.hudStatusText, basicfont.Face7x13, 10, 20, color.Black)
+	drawBoldText(screen, g.hudStatusText, 10, 20, color.Black)
 
 	// Grid indicator (cached — updated only on toggle)
-	text.Draw(screen, g.cachedGridStatus, basicfont.Face7x13, 10, 40, color.Black)
+	drawBoldText(screen, g.cachedGridStatus, 10, 40, color.Black)
 
 	// Last Stand indicator
 	if g.isLastStandActive {
-		text.Draw(screen, "LAST STAND ACTIVE!", basicfont.Face7x13, 10, screenHeight-30, color.Black)
+		drawBoldText(screen, "LAST STAND ACTIVE!", 10, screenHeight-30, color.Black)
 	}
 
 	// Temporary center-screen notification for grid toggle
@@ -200,7 +193,7 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 		msg := g.gridToggleMessage
 		x := screenWidth/2 - len(msg)*3
 		y := 60
-		text.Draw(screen, msg, basicfont.Face7x13, x, y, color.Black)
+		drawBoldText(screen, msg, x, y, color.Black)
 	}
 
 	// Emperor warning message in red
@@ -208,6 +201,6 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 		msg := g.emperorWarningMessage
 		x := screenWidth/2 - len(msg)*3
 		y := 80
-		text.Draw(screen, msg, basicfont.Face7x13, x, y, colorRed)
+		drawBoldText(screen, msg, x, y, colorRed)
 	}
 }

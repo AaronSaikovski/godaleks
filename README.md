@@ -1,12 +1,12 @@
 <div align="center">
 
-# GoDaleks v1.2.2 
+# GoDaleks v1.2.3
 
 A modern Go/Ebiten (and faithful) recreation of the classic Apple Macintosh game **Daleks**, itself inspired by Johan Strandberg’s 1984 _Daleks_ and the older BSD UNIX game _Robots_.  
 This version keeps the spirit of the original while adding smooth animations, mouse support, and modern gameplay tweaks including sounds.
 
 [![Build Status](https://github.com/AaronSaikovski/godaleks/workflows/build/badge.svg)](https://github.com/AaronSaikovski/godaleks/actions)
-![version](https://img.shields.io/badge/version-1.2.2-blue)
+![version](https://img.shields.io/badge/version-1.2.3-blue)
 [![Licence](https://img.shields.io/github/license/AaronSaikovski/godaleks)](LICENSE)
 
 </div>
@@ -198,8 +198,8 @@ Runs `go test -v ./...`. Current coverage:
 Releases are triggered by pushing a version tag:
 
 ```bash
-git tag v1.2.2
-git push origin v1.2.2
+git tag v1.2.3
+git push origin v1.2.3
 ```
 
 This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (amd64/arm64) via GitHub Actions. The WASM version is automatically deployed to GitHub Pages on every push to `main`.
@@ -247,6 +247,10 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 ---
 
 ## 📝 Changelog
+
+### v1.2.3 - Web Hosting & Discoverability
+- Updated the application and build version to `v1.2.3`.
+- Includes the web analytics, SEO, accessibility, and custom-domain updates detailed in [CHANGELOG.md](CHANGELOG.md).
 
 ### v1.2.2 - Direction Arrows, Rendering, Hot-Path Optimisation & Security Patch
 - **Added**: Classic 8-direction arrows around the human player — bold black arrows drawn only for valid moves (in-bounds and not blocked by scrap). They hide while the Daleks move and reappear around the player's new position each turn, matching the original

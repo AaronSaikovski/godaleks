@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## Unreleased
+- Aligned all GitHub Actions Go setup steps with `go.mod` (currently Go 1.27.1), replacing the old `>=1.26.0` range across native builds, WASM deployment, and Linux/Windows/macOS release jobs.
+- Added the current version after the GoDaleks title on the splash screen and centered the full title.
+- Replaced deprecated Ebitengine text, line/rectangle drawing, teleport color-matrix, and WAV/player APIs with `text/v2`, `vector`, `ColorScale`, and context-based audio APIs. Preserved bitmap-font baselines, pixel-aligned primitives, teleport fading, and overlapping playback; Staticcheck now passes.
+
+## v1.2.3. (2026-09-10)
+- Bumped the application window title, build version, and current README version references to v1.2.3.
 - Added Google Analytics (gtag.js, ID `G-1Q92MBTYT9`) to `index.html`, placed immediately after the `<head>` element for the WASM build's GitHub Pages deployment.
 - SEO: added a full set of meta tags to `index.html` — `lang`, `charset`, responsive `viewport`, descriptive `<title>`, meta description/keywords/author/robots, `theme-color`, and a canonical URL.
 - SEO: added Open Graph and Twitter Card tags plus JSON-LD `VideoGame` structured data for rich social/search previews (using the repo's `dalek.png` sprite as the preview image).

@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -189,8 +188,8 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 		return
 	}
 
-	x := float64(gridOffsetX + gridX*cellSize)
-	y := float64(gridOffsetY + gridY*cellSize)
+	x := float32(gridOffsetX + gridX*cellSize)
+	y := float32(gridOffsetY + gridY*cellSize)
 
 	// Red if blocked by scrap, blue for a valid move.
 	g.ensureScrapGrid()
@@ -202,11 +201,11 @@ func (g *Game) drawMouseIndicator(screen *ebiten.Image) {
 	}
 
 	// Draw semi-transparent overlay on the cell
-	ebitenutil.DrawRect(screen, x, y, cellSize, cellSize, indicatorColor)
+	vector.FillRect(screen, x, y, cellSize, cellSize, indicatorColor, false)
 
 	// Draw border
-	ebitenutil.DrawRect(screen, x, y, cellSize, 1, color.Black)
-	ebitenutil.DrawRect(screen, x, y, 1, cellSize, color.Black)
-	ebitenutil.DrawRect(screen, x+cellSize-1, y, 1, cellSize, color.Black)
-	ebitenutil.DrawRect(screen, x, y+cellSize-1, cellSize, 1, color.Black)
+	vector.FillRect(screen, x, y, cellSize, 1, color.Black, false)
+	vector.FillRect(screen, x, y, 1, cellSize, color.Black, false)
+	vector.FillRect(screen, x+cellSize-1, y, 1, cellSize, color.Black, false)
+	vector.FillRect(screen, x, y+cellSize-1, cellSize, 1, color.Black, false)
 }
