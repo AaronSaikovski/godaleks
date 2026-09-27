@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+- Redesigned the browser landing page with a retro tactical theme, responsive navigation, a clear play entry point, keyboard controls, a survival guide, and FAQs.
+- Embedded the playable WebAssembly game in a responsive, window-style panel. Load it on demand in an isolated iframe so Ebitengine's canvas and input handling stay inside the game; preserve Tab navigation and show an actionable loading error.
+- Refreshed search titles, descriptions, targeted Daleks/Macintosh/BSD Robots terms, visible page copy, and VideoGame structured data. Social previews now use the gameplay screenshot, and the sitemap reflects the landing-page update.
+
 ## v1.2.3. (2026-09-10)
 - Fixed silent normal-turn Dalek collisions with existing scrap: any Dalek destruction in the collision pass now triggers one crash sound, including the final Dalek in a level, without duplicating sounds for simultaneous Dalek-to-Dalek and scrap collisions.
 - Aligned all GitHub Actions Go setup steps with `go.mod` (currently Go 1.27.1), replacing the old `>=1.26.0` range across native builds, WASM deployment, and Linux/Windows/macOS release jobs.
