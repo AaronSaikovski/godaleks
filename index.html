@@ -1,165 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1Q92MBTYT9"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-1Q92MBTYT9');
   </script>
 
-  <!-- Character encoding & responsive viewport -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Primary SEO meta tags -->
-  <title>GoDaleks — Classic Daleks / Robots Game in Your Browser</title>
-  <meta name="description" content="Play GoDaleks, a free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Outmaneuver the Daleks, use teleports and the sonic screwdriver, and survive the Last Stand. Built in Go with Ebitengine and WebAssembly.">
-  <meta name="keywords" content="daleks, daleks game, dalek game, play daleks online, free daleks game, daleks robots game, robots game, BSD Robots, killbots, chase game, GoDaleks, classic Macintosh game, browser game, WebAssembly game, Go game, Ebitengine, Doctor Who game, retro game, puzzle game, strategy game">
+  <title>Play Daleks Online Free | GoDaleks — Classic Robots Game</title>
+  <meta name="description" content="Play Daleks online for free. GoDaleks revives the classic Macintosh and BSD Robots chase game: outwit robots, teleport out of danger, and survive all 10 levels.">
+  <meta name="keywords" content="GoDaleks, play Daleks online, Daleks game, free Daleks browser game, classic Macintosh Daleks, BSD Robots game, UNIX Robots, retro robot chase game, turn-based strategy game, grid-based puzzle game, sonic screwdriver, WebAssembly game, Ebitengine">
   <meta name="author" content="Aaron Saikovski">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#f0f0f0">
+  <meta name="theme-color" content="#101713">
   <link rel="canonical" href="https://godaleks.com/">
-
-  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GoDaleks">
-  <meta property="og:title" content="GoDaleks — Classic Daleks / Robots Game in Your Browser">
-  <meta property="og:description" content="A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Built in Go with Ebitengine and WebAssembly.">
+  <meta property="og:title" content="GoDaleks — Outthink the robots. Survive the grid.">
+  <meta property="og:description" content="Play the classic Daleks robot-chase game online for free. Ten levels, clever escapes, and one last stand. No download required.">
   <meta property="og:url" content="https://godaleks.com/">
-  <meta property="og:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="GoDaleks — Classic Daleks / Robots Game in Your Browser">
-  <meta name="twitter:description" content="A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots). Built in Go with Ebitengine and WebAssembly.">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png">
-
-  <!-- Inline SVG favicon (self-contained, no extra file to deploy) -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='4'%20fill='%23222'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20text-anchor='middle'%20fill='%234ce04c'%20font-family='monospace'%3ED%3C/text%3E%3C/svg%3E">
-
-  <!-- Structured data for rich search results -->
+  <meta property="og:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/images/daleks2.jpg">
+  <meta property="og:image:alt" content="GoDaleks gameplay with Daleks chasing the player across the grid">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GoDaleks — Play Daleks Online Free">
+  <meta name="twitter:description" content="The classic Macintosh Daleks and BSD Robots spirit, back in your browser. Outsmart the chase and survive all 10 levels.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/images/daleks2.jpg">
+  <meta name="twitter:image:alt" content="GoDaleks gameplay with Daleks chasing the player across the grid">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='4'%20fill='%23101713'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20text-anchor='middle'%20fill='%23c5f277'%20font-family='monospace'%3ED%3C/text%3E%3C/svg%3E">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "VideoGame",
     "name": "GoDaleks",
     "alternateName": ["Daleks", "Daleks Game", "Robots Game"],
-    "description": "A free browser recreation of the classic Macintosh game Daleks (inspired by BSD UNIX Robots), built in Go with Ebitengine and compiled to WebAssembly.",
-    "keywords": "daleks, daleks game, play daleks online, free daleks game, robots game, BSD Robots, killbots, retro chase game",
+    "description": "Play Daleks online for free: a retro, grid-based strategy game inspired by classic Macintosh Daleks and BSD UNIX Robots. Lure robots into collisions, teleport, use a sonic screwdriver, and survive 10 levels.",
+    "keywords": "play Daleks online, free Daleks browser game, classic Macintosh Daleks, BSD Robots game, UNIX Robots, retro robot chase game, turn-based strategy, grid-based puzzle game",
     "url": "https://godaleks.com/",
     "inLanguage": "en",
-    "image": "https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/cmd/assets/dalek.png",
+    "image": "https://raw.githubusercontent.com/AaronSaikovski/godaleks/main/images/daleks2.jpg",
     "playMode": "SinglePlayer",
     "applicationCategory": "GameApplication",
-    "author": {
-      "@type": "Person",
-      "name": "Aaron Saikovski"
-    },
+    "author": {"@type": "Person", "name": "Aaron Saikovski"},
     "genre": ["Puzzle", "Strategy", "Retro"],
     "operatingSystem": "Web Browser, Windows, Linux, macOS",
     "gamePlatform": ["Web Browser (WebAssembly)", "Desktop"],
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "isAccessibleForFree": true,
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
   }
   </script>
-
   <style>
-    /* Container for your WASM app fixed at 800x600 */
-    #wasm-container {
-      width: 800px;
-      height: 600px;
-      border: 1px solid #333;
-      overflow: auto; /* if needed */
-      margin: 0 auto; /* center horizontally */
-      background: #f0f0f0;
+    :root {
+      color-scheme: dark;
+      --bg: #101713;
+      --panel: #19231c;
+      --ink: #f0f1e7;
+      --muted: #b0bbad;
+      --line: #39483b;
+      --accent: #c5f277;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center; /* center container horizontally */
-      justify-content: start;
-      min-height: 100vh;
-      margin: 20px 0;
-      font-family: system-ui, -apple-system, sans-serif;
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif; line-height: 1.6; }
+    a { color: inherit; text-underline-offset: 4px; }
+    a:hover { color: var(--accent); }
+    button { font: inherit; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+    .skip { position: absolute; left: 16px; top: -80px; z-index: 5; padding: 12px; background: var(--accent); color: var(--bg); }
+    .skip:focus { top: 12px; }
+    .site-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 25px; border-bottom: 1px solid var(--line); }
+    .brand { display: inline-flex; gap: 12px; align-items: center; font: bold 20px var(--mono); text-decoration: none; letter-spacing: -1px; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; background: var(--accent); color: var(--bg); }
+    nav { display: flex; gap: 28px; font-size: 14px; }
+    nav a { text-decoration: none; }
+    .eyebrow { color: var(--accent); font: 12px/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+    .hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: center; padding-block: 72px 56px; }
+    h1 { margin: 18px 0 24px; font-size: clamp(44px, 5.6vw, 70px); line-height: 1.04; letter-spacing: -.055em; font-weight: 750; }
+    h1 span { color: var(--accent); }
+    .hero-copy { max-width: 510px; color: var(--muted); font-size: 18px; }
+    .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; margin-block: 30px 20px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 24px; padding: 14px 24px; border: 1px solid var(--accent); background: var(--accent); color: var(--bg); font-weight: 700; text-decoration: none; cursor: pointer; }
+    .button:hover { background: #d8ffa1; color: var(--bg); }
+    .button:disabled { opacity: .5; cursor: not-allowed; }
+    .fine { color: var(--muted); font: 12px/1.7 var(--mono); }
+    .radar { position: relative; margin: 0; border: 1px solid var(--line); background: var(--panel); padding: 20px; transform: rotate(2deg); }
+    .radar svg { display: block; width: 100%; height: auto; }
+    .radar figcaption { display: flex; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+    .facts { display: flex; flex-wrap: wrap; gap: 16px 40px; padding-block: 20px; border-block: 1px solid var(--line); color: var(--muted); font: 12px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .facts strong { color: var(--ink); }
+    section { scroll-margin-top: 24px; }
+    .section-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 24px; }
+    h2 { font-size: clamp(28px, 3vw, 38px); letter-spacing: -.035em; line-height: 1.2; margin: 10px 0 0; }
+    .play-section { padding-top: 64px; }
+    .play-layout { display: grid; grid-template-columns: minmax(0, 800px) 1fr; gap: 28px; align-items: start; }
+    .game-shell { border: 1px solid #596750; border-radius: 8px; overflow: hidden; background: #0c110e; box-shadow: 0 20px 60px #0005; }
+    .game-toolbar { display: flex; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--panel); font: 11px var(--mono); letter-spacing: .06em; color: var(--muted); }
+    #wasm-container { width: 100%; aspect-ratio: 4 / 3; position: relative; }
+    .game-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; background-image: linear-gradient(#26352955 1px, transparent 1px), linear-gradient(90deg, #26352955 1px, transparent 1px); background-size: 32px 32px; }
+    .game-placeholder .sigil { color: var(--accent); font: bold clamp(40px, 7vw, 80px) var(--mono); letter-spacing: -.08em; margin: 0; }
+    .game-placeholder p { color: var(--muted); margin: 8px 0 24px; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; }
+    .game-note { margin-top: 12px; color: var(--muted); font-size: 13px; }
+    .controls { padding-top: 4px; }
+    .controls h3 { margin: 0 0 12px; font-size: 18px; }
+    .controls dl { margin: 0; }
+    .controls dl > div { padding-block: 12px; border-bottom: 1px solid var(--line); }
+    .controls dt { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .controls dd { margin: 0; font-size: 13px; }
+    kbd { display: inline-block; padding: 1px 6px; margin: 2px 0; border: 1px solid #596750; border-bottom-width: 3px; font: 12px/1.6 var(--mono); background: var(--panel); color: var(--ink); }
+    .guide { padding-block: 64px; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 32px; }
+    .step { border-top: 1px solid var(--line); padding-top: 20px; }
+    .step-number { color: var(--accent); font: 13px var(--mono); }
+    h3 { font-size: 21px; letter-spacing: -.02em; margin: 18px 0 10px; }
+    .step p, .about p, .faq p { color: var(--muted); margin-block: 10px; }
+    .about { display: grid; grid-template-columns: 1fr 1.3fr; gap: 64px; padding: 40px; background: var(--panel); border: 1px solid var(--line); }
+    .about h2 { max-width: 330px; }
+    .about p:first-child { margin-top: 0; }
+    .faq { padding-block: 64px; max-width: 800px; }
+    .faq h2 { margin-bottom: 24px; }
+    details { border-bottom: 1px solid var(--line); padding-block: 18px; }
+    summary { cursor: pointer; font-weight: 600; }
+    details p { max-width: 680px; }
+    footer { border-top: 1px solid var(--line); padding-block: 24px 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; }
+    footer p { margin: 0; }
+    footer a + a { margin-left: 20px; }
+    @media (max-width: 900px) {
+      .hero { gap: 24px; }
+      .play-layout { grid-template-columns: 1fr; }
+      .controls dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 24px; }
+      .about { gap: 32px; padding: 28px; }
     }
-    /* Readable content section (real, visible text helps SEO far more
-       than hidden text, which search engines discount or ignore). */
-    .content {
-      max-width: 800px;
-      margin: 24px auto 40px;
-      padding: 0 16px;
-      line-height: 1.6;
-      color: #222;
+    @media (max-width: 620px) {
+      .wrap { width: calc(100% - 32px); }
+      .site-header { gap: 16px; padding-block: 20px; }
+      nav { gap: 16px; font-size: 12px; }
+      nav .source-link { display: none; }
+      .hero { grid-template-columns: 1fr; padding-block: 40px; gap: 32px; }
+      .hero-copy { font-size: 16px; }
+      .radar { width: min(100%, 340px); justify-self: center; transform: none; }
+      .facts { font-size: 10px; gap: 16px 24px; }
+      .section-head { display: block; }
+      .section-head > p { margin-bottom: 0; }
+      .game-placeholder { padding: 16px; }
+      .game-placeholder p { font-size: 13px; margin-bottom: 16px; }
+      .game-toolbar { font-size: 10px; padding-inline: 10px; }
+      .controls dl { grid-template-columns: repeat(2, 1fr); gap: 0 16px; }
+      .steps, .about { grid-template-columns: 1fr; gap: 24px; }
+      .play-section { padding-top: 40px; }
+      .guide, .faq { padding-block: 40px; }
     }
-    .content h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
-    .content h2 { font-size: 1.2rem; margin: 1.5rem 0 .5rem; }
-    .content p, .content li { font-size: 1rem; }
-    .content a { color: #0645ad; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
 </head>
 <body>
-  <main id="wasm-container"></main>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header wrap">
+    <a class="brand" href="#" aria-label="GoDaleks home"><span class="brand-mark" aria-hidden="true">D</span>GoDaleks</a>
+    <nav aria-label="Main navigation">
+      <a href="#play">Play</a>
+      <a href="#how-to-play">How to play</a>
+      <a class="source-link" href="https://github.com/AaronSaikovski/godaleks">Source code ↗</a>
+    </nav>
+  </header>
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <p class="eyebrow">Classic Macintosh spirit. Modern browser.</p>
+        <h1 id="hero-title">Outthink the robots.<br><span>Survive the grid.</span></h1>
+        <p class="hero-copy">Play Daleks online, free. A classic robot-chase strategy game where your best weapon is their next move. Lure them into collisions. Find your escape. Make your last stand.</p>
+        <div class="actions">
+          <a class="button" href="#play">Play GoDaleks <span aria-hidden="true">↗</span></a>
+          <a href="#how-to-play">Learn the rules</a>
+        </div>
+        <p class="fine">No download. No account. Just you versus the Daleks.</p>
+      </div>
+      <figure class="radar">
+        <svg viewBox="0 0 384 320" role="img" aria-labelledby="grid-title grid-desc">
+          <title id="grid-title">Outsmart the chase</title>
+          <desc id="grid-desc">A tactical illustration of robots converging on a lone player, with a path to escape.</desc>
+          <defs>
+            <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#39483b" stroke-width="1"/></pattern>
+            <g id="robot" fill="#b0bbad"><path d="M-8-10H8V-6H12V5H8V10H-8V5H-12V-6H-8Z"/><path d="M-8 12H-2V16H-8ZM2 12H8V16H2Z"/><path d="M-6-4H-2V0H-6ZM2-4H6V0H2Z" fill="#101713"/></g>
+          </defs>
+          <path fill="url(#grid)" d="M0 0H384V288H0Z"/>
+          <g fill="none" stroke="#788b66" stroke-dasharray="4 6"><path d="M80 80L176 176M304 48L176 176M304 240L176 176M48 240L176 176"/></g>
+          <path d="M176 176H240V112H272" fill="none" stroke="#c5f277" stroke-width="2"/>
+          <path d="M262 106L272 112L262 118" fill="none" stroke="#c5f277" stroke-width="2"/>
+          <use href="#robot" x="80" y="80"/><use href="#robot" x="304" y="48"/><use href="#robot" x="304" y="240"/><use href="#robot" x="48" y="240"/>
+          <rect x="160" y="160" width="32" height="32" fill="#c5f277" fill-opacity=".15" stroke="#c5f277"/>
+          <g fill="#c5f277"><circle cx="176" cy="169" r="4"/><path d="M170 175H182V183H179V189H173V183H170Z"/></g>
+          <text x="176" y="218" text-anchor="middle" fill="#c5f277" font-size="10" font-family="monospace" letter-spacing="2">YOU</text>
+        </svg>
+        <figcaption><span>The chase is predictable.</span><span>You aren’t.</span></figcaption>
+      </figure>
+    </section>
+    <div class="facts" aria-label="Game features"><span><strong>10</strong> levels to survive</span><span><strong>50 × 33</strong> tactical grid</span><span><strong>Free</strong> &amp; open source</span></div>
 
-  <noscript>
-    <p>GoDaleks requires JavaScript and WebAssembly to run. Please enable
-    JavaScript in your browser to play the game.</p>
-  </noscript>
+    <section id="play" class="play-section" aria-labelledby="play-title">
+      <div class="section-head">
+        <div><p class="eyebrow">01 / Enter the grid</p><h2 id="play-title">One move ahead. Or game over.</h2></div>
+        <p class="fine">Best played with a keyboard &amp; mouse.</p>
+      </div>
+      <div class="play-layout">
+        <div>
+          <div class="game-shell">
+            <div class="game-toolbar"><span>GODALEKS / BROWSER EDITION</span><span>800 × 600</span></div>
+            <div id="wasm-container">
+              <div class="game-placeholder" id="game-placeholder">
+                <p class="sigil" aria-hidden="true">[ D ]</p>
+                <p>The robots are waiting. Your move.</p>
+                <button class="button" id="launch-game" type="button" disabled>Launch game <span aria-hidden="true">→</span></button>
+              </div>
+            </div>
+          </div>
+          <p class="game-note" id="game-status" role="status">Launch the game, then click the title screen or press Space to begin.</p>
+          <noscript><p>Enable JavaScript and use a browser with WebAssembly support to play GoDaleks. You can still read the rules below.</p></noscript>
+        </div>
+        <aside class="controls" aria-labelledby="controls-title">
+          <h3 id="controls-title">Your controls</h3>
+          <dl>
+            <div><dt>Move</dt><dd><kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd> or click an adjacent cell</dd></div>
+            <div><dt>Move diagonally</dt><dd><kbd>Q</kbd> <kbd>E</kbd> <kbd>Z</kbd> <kbd>C</kbd></dd></div>
+            <div><dt>Wait one turn</dt><dd><kbd>Space</kbd> / <kbd>.</kbd></dd></div>
+            <div><dt>Teleport / safe teleport</dt><dd><kbd>T</kbd> / <kbd>R</kbd></dd></div>
+            <div><dt>Sonic screwdriver</dt><dd><kbd>S</kbd></dd></div>
+            <div><dt>Last Stand</dt><dd><kbd>L</kbd></dd></div>
+            <div><dt>Toggle grid / new game</dt><dd><kbd>G</kbd> / <kbd>N</kbd></dd></div>
+          </dl>
+        </aside>
+      </div>
+    </section>
 
-  <article class="content">
-    <h1>Play Daleks Online — the Classic Robots Game, Free in Your Browser</h1>
-    <p>
-      <strong>GoDaleks</strong> is a free online recreation of the classic
-      <strong>Daleks</strong> game from the Apple Macintosh — itself a descendant
-      of the legendary BSD UNIX <strong>Robots</strong> game. Outwit the Daleks
-      on a 50&times;33 grid: every step you take, the killer robots march one step
-      closer, so lure them into crashing into each other and into the piles of
-      scrap they leave behind. No download required — just click and play.
-    </p>
+    <section id="how-to-play" class="guide" aria-labelledby="guide-title">
+      <p class="eyebrow">02 / The survival guide</p>
+      <h2 id="guide-title">Simple rules. Devious little decisions.</h2>
+      <div class="steps">
+        <article class="step"><span class="step-number">01 — OUTMANEUVER</span><h3>Make the chase work for you.</h3><p>Move in eight directions or wait in place. On normal turns, every Dalek steps toward you. Plan your route so two robots meet on the same square: they become scrap, which destroys other Daleks that hit it. Keep yourself clear.</p></article>
+        <article class="step"><span class="step-number">02 — ESCAPE</span><h3>Keep a way out.</h3><p>Teleport when you’re cornered, or spend a safe teleport to avoid nearby Daleks. A random teleport is a gamble. Your sonic screwdriver destroys adjacent Daleks, but your supplies are limited—make each use count.</p></article>
+        <article class="step"><span class="step-number">03 — SURVIVE</span><h3>Know when to stand still.</h3><p>Last Stand sends the Daleks rushing toward you continuously. Commit only when their paths favor you. Clear each level, watch for the Emperor, and survive all 10 levels to win.</p></article>
+      </div>
+    </section>
 
-    <h2>How to play Daleks</h2>
-    <ul>
-      <li><strong>Move</strong> in any of the eight directions; the Daleks always
-          advance toward you.</li>
-      <li><strong>Make them collide</strong> — two Daleks that meet are destroyed
-          and leave a pile of scrap that wrecks any Dalek that touches it.</li>
-      <li><strong>Teleport</strong> to a random square to escape a tight corner
-          (but you might land somewhere worse!).</li>
-      <li><strong>Sonic screwdriver</strong> — zap the Daleks around you for a
-          limited number of uses per level.</li>
-      <li><strong>Last Stand</strong> — when you have nowhere left to run, hold
-          your ground and let the Daleks charge in.</li>
-      <li>Clear every Dalek to advance; survive the Dalek Emperor to win.</li>
-    </ul>
+    <section id="about" class="about" aria-labelledby="about-title">
+      <div><p class="eyebrow">03 / A classic, recompiled</p><h2 id="about-title">From the Macintosh.<br>Back to your browser.</h2></div>
+      <div><p>GoDaleks recreates the classic <strong>Macintosh Daleks game</strong>, itself inspired by <strong>BSD UNIX Robots</strong>. It keeps that wonderfully unforgiving idea: the robots know where you are, but you know where they’re going.</p><p>This free, single-player, grid-based puzzle and strategy game is built in Go with <a href="https://ebitengine.org/">Ebitengine</a> and runs in your browser through WebAssembly. Prefer desktop play? Native releases are available for Windows, macOS, and Linux.</p><a href="https://github.com/AaronSaikovski/godaleks">Explore the open-source project ↗</a></div>
+    </section>
 
-    <h2>About GoDaleks</h2>
-    <p>
-      This <strong>Daleks game</strong> is built in Go with the
-      <a href="https://ebitengine.org/" rel="noopener">Ebitengine</a> game engine
-      and compiled to WebAssembly, so it runs natively in the browser as well as
-      on Windows, Linux, and macOS. It is a faithful, fast, retro
-      strategy/puzzle take on the classic robot-chase genre. The source code is
-      open on
-      <a href="https://github.com/AaronSaikovski/godaleks" rel="noopener">GitHub</a>.
-    </p>
-  </article>
+    <section class="faq" aria-labelledby="faq-title">
+      <p class="eyebrow">04 / Before your first move</p>
+      <h2 id="faq-title">A few things worth knowing.</h2>
+      <details><summary>Is GoDaleks free to play online?</summary><p>Yes. Play the full Daleks browser game for free, with no account or installation. Click Launch game above; the game downloads and runs in your browser.</p></details>
+      <details><summary>Is this the classic Daleks or Robots game?</summary><p>It’s a modern recreation of Macintosh Daleks and the BSD Robots style of robot-chase game, with smooth movement, mouse controls, sound effects, a sonic screwdriver, and Emperor encounters.</p></details>
+      <details><summary>Can I play on a phone or tablet?</summary><p>The page fits smaller screens, but the game is designed for a keyboard and mouse. A desktop or laptop browser is recommended for access to all movement and special-action controls.</p></details>
+      <details><summary>How do I defeat the Dalek Emperor?</summary><p>Emperors are protected while ordinary Daleks remain. Clear the regular Daleks first to make the Emperor vulnerable, then finish the level. Avoid getting caught while setting up collisions.</p></details>
+    </section>
+  </main>
+  <footer class="wrap">
+    <p>GoDaleks · Made by Aaron Saikovski</p>
+    <div><a href="https://github.com/AaronSaikovski/godaleks">GitHub</a><a href="https://github.com/AaronSaikovski/godaleks/releases">Desktop downloads</a><a href="#play">Back to game ↑</a></div>
+  </footer>
 
-  <script src="wasm_exec.js"></script>
+  <!-- Isolate Ebitengine's document-level canvas and keyboard handling from the landing page.
+       srcdoc keeps the existing three-file browser bundle and relative WASM URLs intact. -->
+  <template id="game-document">
+    <style>
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #101713; }
+      #loading { position: fixed; inset: 0; z-index: 1; display: grid; place-content: center; padding: 24px; color: #f0f1e7; background: #101713; text-align: center; font: 16px/1.6 system-ui, sans-serif; }
+    </style>
+    <p id="loading" role="status">Loading GoDaleks…</p>
+    <script src="wasm_exec.js"></script>
+    <script>
+      // Keep browser focus navigation available while Ebitengine owns other keys.
+      window.addEventListener('keydown', event => {
+        if (event.key === 'Tab') event.stopImmediatePropagation();
+      }, true);
+      (async () => {
+        const status = document.getElementById('loading');
+        try {
+          const go = new Go();
+          const response = await fetch('godaleks.wasm');
+          if (!response.ok) throw new Error(`Game download failed: HTTP ${response.status}`);
+          const result = await WebAssembly.instantiateStreaming(response, go.importObject);
+          status.remove();
+          await go.run(result.instance);
+        } catch (error) {
+          console.error('GoDaleks could not start:', error);
+          status.textContent = 'Could not load GoDaleks. Check your connection and reload the page. Use an up-to-date browser with WebAssembly enabled.';
+          document.body.append(status);
+        }
+      })();
+    </script>
+  </template>
   <script>
-    const go = new Go();
-
-    WebAssembly.instantiateStreaming(fetch("godaleks.wasm"), go.importObject).then(result => {
-      // Redirect stdout/stderr if needed, e.g. to console or to the container
-
-      // Run the wasm in the current document — you can modify your app if it requires
-      go.run(result.instance);
-    });
+    const launchButton = document.getElementById('launch-game');
+    launchButton.disabled = false;
+    launchButton.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.title = 'GoDaleks playable game';
+      frame.allow = 'autoplay';
+      frame.srcdoc = '<!doctype html><html lang="en"><title>GoDaleks game</title>' +
+        document.getElementById('game-document').innerHTML + '</html>';
+      document.getElementById('wasm-container').replaceChildren(frame);
+      document.getElementById('game-status').textContent = 'Click inside the game to focus its controls. Press Space on the title screen to begin. Tab moves focus back to the page.';
+      frame.addEventListener('load', () => frame.focus(), { once: true });
+    }, { once: true });
   </script>
 </body>
 </html>
