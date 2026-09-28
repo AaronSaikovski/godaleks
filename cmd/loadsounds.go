@@ -48,6 +48,9 @@ var gamestartData []byte
 //go:embed assets/dalek_emperor.wav
 var dalekEmperorData []byte
 
+//go:embed assets/exterminate.wav
+var exterminateData []byte
+
 const (
 	sampleRate = 44100
 )
@@ -68,6 +71,7 @@ func NewSoundPlayer() (*SoundPlayer, error) {
 		"gamestart":     gamestartData,
 		"gameover":      gameoverData,
 		"dalek_emperor": dalekEmperorData,
+		"exterminate":   exterminateData,
 	}
 
 	// Validate all WAV data can be decoded

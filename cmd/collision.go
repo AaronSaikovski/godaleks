@@ -52,7 +52,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
-			g.soundPlayer.Play("gameover")
+			g.soundPlayer.Play(deathSound(dalek.IsEmperor))
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -157,7 +157,7 @@ func (g *Game) checkCollisions() {
 	for _, dalek := range g.daleks {
 		if g.player == dalek.GridPos {
 			g.state = StateGameOver
-			g.soundPlayer.Play("gameover")
+			g.soundPlayer.Play(deathSound(dalek.IsEmperor))
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false // End Last Stand immediately
 			g.daleksMoving = false
@@ -225,4 +225,12 @@ func (g *Game) checkCollisions() {
 			g.cachedLevelNextMsg = fmt.Sprintf("Starting Level %d...", g.level)
 		}
 	}
+}
+
+// deathSound returns the cue for the player being caught: the Emperor exterminates.
+func deathSound(byEmperor bool) string {
+	if byEmperor {
+		return "exterminate"
+	}
+	return "gameover"
 }

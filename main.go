@@ -17,7 +17,7 @@ func main() {
 
 	game := cmd.NewGame()
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("GoDaleks v1.2.3")
+	ebiten.SetWindowTitle("GoDaleks v1.2.4")
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
