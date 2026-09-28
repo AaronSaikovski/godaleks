@@ -149,7 +149,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	for _, dalek := range g.daleks {
 		if g.checkCollisionWithThreshold(playerPos, dalek.VisualPos, collisionThreshold) {
 			g.state = StateGameOver
-			g.soundPlayer.Play("gameover")
+			g.soundPlayer.Play(deathSound(dalek.IsEmperor))
 			g.gameOverMessage = "Game Over! You were caught by a Dalek!"
 			g.isLastStandActive = false
 			g.daleksMoving = false

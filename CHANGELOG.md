@@ -1,9 +1,11 @@
 # CHANGELOG
 
-## Unreleased
+## v1.2.4 (2026-09-28)
+- Bumped the application window title, splash title, build version, and current README version references to v1.2.4.
 - Redesigned the browser landing page with a retro tactical theme, responsive navigation, a clear play entry point, keyboard controls, a survival guide, and FAQs.
 - Embedded the playable WebAssembly game in a responsive, window-style panel. Load it on demand in an isolated iframe so Ebitengine's canvas and input handling stay inside the game; preserve Tab navigation and show an actionable loading error.
 - Refreshed search titles, descriptions, targeted Daleks/Macintosh/BSD Robots terms, visible page copy, and VideoGame structured data. Social previews now use the gameplay screenshot, and the sitemap reflects the landing-page update.
+- Play the new embedded `exterminate.wav` cue instead of the game-over sound when the Dalek Emperor catches the player, in both normal turns and Last Stand, for native and WebAssembly builds. Ordinary Dalek deaths still play `gameover.wav`. The asset was converted from MP2-in-WAV to 16-bit PCM (44.1 kHz stereo) because Ebitengine's WAV decoder only accepts linear PCM.
 
 ## v1.2.3. (2026-09-10)
 - Fixed silent normal-turn Dalek collisions with existing scrap: any Dalek destruction in the collision pass now triggers one crash sound, including the final Dalek in a level, without duplicating sounds for simultaneous Dalek-to-Dalek and scrap collisions.
