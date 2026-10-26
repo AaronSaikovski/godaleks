@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## Unreleased
+## v1.2.5 (2026-10-27)
+- Bumped the window title, splash title, build version, and current README references to v1.2.5.
 - Expanded the game to 15 levels; victory now follows completion of level 15.
 - Kept levels 1–10 at their original speed and added 20% of base Dalek speed per level after 10 (1.2× at level 11 through 2× at level 15). The multiplier speeds up normal-turn animation and Last Stand movement; normal turns still move one grid cell.
 - Updated gameplay documentation and browser landing-page copy, social metadata, and structured data for the 15-level game.
