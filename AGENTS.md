@@ -2,26 +2,25 @@
 
 ## Project Overview
 
-GoDaleks recreates Macintosh Daleks/BSD Robots in Go with Ebitengine. It targets native desktop and browser WebAssembly, using an 800×600 viewport and a 50×33 grid of 16px cells. Gameplay combines robot-chase collisions, scrap hazards, teleportation, a sonic screwdriver, and Last Stand.
+GoDaleks recreates Macintosh Daleks/BSD Robots in Go with Ebitengine for native desktop and browser WebAssembly. Players survive robot-chase collisions using scrap hazards, teleportation, a sonic screwdriver, and Last Stand. The logical viewport is fixed at 800×600, with a 50×33 grid of 16px cells.
 
 ## Architecture & Data Flow
 
-- `main.go` → `cmd.NewGame()` → `ebiten.RunGame()`. All gameplay lives in one `cmd` package; files separate subsystems, not service layers.
-- `cmd/types.go`: `Game` owns entities, resources, timers, effects, spatial caches, render buffers, and concrete image/audio dependencies. `cmd/root.go` implements `Update`, `Draw`, and fixed-size `Layout`.
-- `Update` processes mouse input, advances animations/effects, then dispatches keyboard input and game state. Simulation uses `1/ebiten.TPS()` with a 60-TPS fallback; some input/HUD timers use wall-clock time.
-- Normal movement (`cmd/movement.go`) updates logical `GridPos` immediately, interpolates `VisualPos` with smootherstep, and resolves collisions after movement finishes. Rendering reads visual positions. Last Stand has a separate continuous accelerating movement/collision path; preserve that distinction.
-- `cmd/collision.go` resolves player death before enemy/scrap collisions, scoring, and level progression. Normal collision handling protects emperors until ordinary Daleks are gone; check the separate Last Stand path when changing combat rules.
-- Collision audio follows actual removals: normal turns play one crash cue for the combined Dalek/scrap removal batch; emperor defeat retains its separate cue. Last Stand has its own collision-audio path. Check both modes, scrap hits, and mixed simultaneous collisions when changing collision feedback.
-- State flow: menu → playing → level complete → playing, or game over/win. Level completion pauses 1.5 seconds; completing level 10 wins. Reset behavior is state-dependent.
-- Browser flow: `index.html` loads `wasm_exec.js`, instantiates `godaleks.wasm`, and starts Go. Keep these files together; the HTML uses relative URLs.
+- `main.go` constructs `cmd.NewGame()` and calls `ebiten.RunGame()`. Despite its name, `cmd/` is one gameplay package, not a CLI or service layer.
+- `Game` in `cmd/types.go` owns entities, inventory, timers, effects, spatial caches, render buffers, and concrete image/audio dependencies. `cmd/root.go` implements Ebitengine's `Update`, `Draw`, and fixed-size `Layout` callbacks.
+- `Update` handles mouse input, advances movement/effects, then dispatches state-specific keyboard input. Simulation uses `1/ebiten.TPS()` with a 60-TPS fallback; some input/HUD timers use wall-clock time. Rendering also updates presentation caches.
+- Normal turns move one grid cell, update logical `GridPos` immediately, interpolate `VisualPos` with smootherstep, then resolve collisions when animation finishes. Last Stand instead uses continuous accelerating movement and its own collision passes. Both paths use the level speed multiplier `1 + 0.2 * max(0, level-10)`: unchanged through level 10, 1.2× at 11 through 2× at 15. Normal turns shorten animation without adding grid steps; Last Stand scales movement speed. Check **both paths** when changing movement, combat, or audio.
+- `cmd/collision.go` checks player death before enemy/scrap removals, scoring, and progression. Normal collisions protect emperors until ordinary Daleks are gone; Last Stand's direct removal loops do not apply the same immunity. Crash audio follows actual removals; `exterminate` denotes emperor-caused player death, not emperor defeat.
+- State flow: menu → playing → level complete → next level, or game over/win. Level transitions pause 1.5 seconds; completing level 15 wins. Restart/reset logic is state-dependent.
+- `index.html` launches the game on demand in a `srcdoc` iframe, isolating Ebitengine's canvas/keyboard handling from the landing page. Inside it, `wasm_exec.js` supplies `Go`, then `godaleks.wasm` is fetched, instantiated, and run. Preserve iframe isolation and Tab navigation; keep all three files together because URLs are relative.
 
 ## Key Directories
 
-- `cmd/`: gameplay and rendering; `cmd/assets/` contains embedded PNG/WAV inputs.
-- `scripts/serve/`: standalone Go static server for local WASM, including HTTP tests; no build watcher.
+- `cmd/`, `cmd/assets/`: gameplay/rendering and embedded PNG/WAV inputs.
+- `scripts/serve/`: standalone Go static server and HTTP handler tests; no build watcher or live reload.
 - `.github/workflows/`: native checks, Pages deployment, and tagged native releases.
-- `web/`, `bin/`, `dist/`: generated local browser bundle, executable, and release outputs; ignored by Git.
-- `images/`: README screenshots, separate from embedded gameplay assets.
+- `web/`, `bin/`, `dist/`: ignored local browser bundle, executable, and release outputs. Build browser previews into `web/`, not over root deployment artifacts.
+- `images/`: README screenshots, separate from game assets. `tasks/` holds historical notes; verify them against current code.
 
 ## Development Commands
 
@@ -30,52 +29,48 @@ Run from the repository root; `Taskfile.yml` is authoritative.
 | Command | Purpose |
 | --- | --- |
 | `task run` | Run native game (`go run ./main.go`) |
-| `task build` | Native build to `bin/godaleks.exe`; suffix does not force Windows |
-| `task test` | All tests: `go test -v ./...` |
-| `task vet` | `go vet ./...` |
-| `task lint` | **Modifies files:** `go fmt ./...`, `go mod tidy -v`, `go fix ./...` |
-| `task staticcheck` / `task seccheck` | Run Staticcheck / govulncheck through `go run ...@latest` |
-| `task wasm:build` | Build/copy browser bundle into `web/` |
-| `task wasm:serve` | Serve existing bundle at `http://127.0.0.1:8080` |
-| `task wasm` | Build, then serve browser bundle |
+| `task build` | Build `bin/godaleks.exe`; the suffix does not select Windows |
+| `task test` | Run all tests (`go test -v ./...`) |
+| `task lint` | **Mutates files:** `go fmt ./...`, `go mod tidy -v`, `go fix ./...` |
+| `task vet` | Run `go vet ./...` |
+| `task staticcheck` / `task seccheck` | Run Staticcheck / govulncheck using `go run ...@latest` |
+| `task wasm:build` | Compile WASM and copy HTML/runtime JS into `web/` |
+| `task wasm:serve` | Serve existing `web/` at `http://127.0.0.1:8080` |
+| `task wasm` | Build the browser bundle, then serve it |
 
-Use `go mod download` to fetch pinned dependencies; `task deps` also upgrades them with `go get -u ./...`. `task release` invokes mutating lint first. `task clean` clears the Go build cache and deletes `bin/` and `dist/`.
+Use `go mod download` to fetch pinned dependencies; `task deps` also **upgrades** them with `go get -u ./...`. `task release` runs mutating lint and builds locally; it does not publish. `task goreleaser` creates a local snapshot. `task clean` clears the Go build cache and deletes `bin/` and `dist/` on macOS/Linux; Windows uses `task clean_windows`.
 
 ## Code Conventions & Common Patterns
 
-- Use `gofmt`, exported Go names for public types/constructors, and lower-camel internal helpers/fields. Gameplay changes generally belong in `*Game` receiver methods with early-return guards.
-- State management is callback-driven, with concrete dependencies constructed in `NewGame`; there is no application goroutine/channel architecture or DI framework.
-- Preserve reusable maps/slices, in-place filtering, precomputed trig tables, cached HUD strings, and shared draw options. Reset reused transforms/color state between sprites; avoid adding allocations in update/draw loops.
-- Text uses a shared cached `text/v2.GoXFace` for the bitmap font; the drawing helper converts existing baseline coordinates to text/v2's top origin. Use `vector` primitives and `ColorScale.ScaleAlpha` for premultiplied-alpha fades.
-- Keep logical and visual positions separate. Mark `scrapGridDirty` whenever scraps change so `ensureScrapGrid` remains correct. Grid-array lookups are cheap, but some helpers rebuild grids per call.
-- Assets use `//go:embed` in `cmd/loadimages.go` and `cmd/loadsounds.go`; runtime asset paths are not external filesystem dependencies. Scrap sprites are generated in `cmd/sprites.go`.
-- Existing error handling distinguishes fatal engine startup errors from warning-only asset/audio initialization. Audio decode errors wrap with `%w`; playback is nil-safe and creates fresh players for overlapping sounds. Image warnings do not imply a working fallback.
-- Update `CHANGELOG.md` for code or structural changes. Prefer source/configuration over older README or task-history claims when they disagree.
+- Use `gofmt`, exported Go names for public types/constructors, lower-camel helpers/fields, and `*Game` receiver methods with early-return guards. State is callback-driven; there is no application goroutine/channel architecture or DI framework. Images initialize at package load; `NewGame` constructs audio and reusable state.
+- Keep logical and visual positions separate. Whenever scraps change, set `scrapGridDirty = true` so `ensureScrapGrid` remains correct. `positionOccupied` and `isScrapAt` rebuild grids per call; do not assume the whole lookup is constant-time. The `distance` helper returns **squared** distance.
+- Preserve reusable maps/slices, in-place filtering, precomputed trig tables, cached HUD strings, and shared draw options. Reset reused `GeoM`/`ColorScale` state between sprites; avoid allocations in update/draw loops.
+- Text uses a cached `text/v2.GoXFace`; its helper converts baseline coordinates to top-origin drawing. Use `vector` primitives and `ColorScale.ScaleAlpha` for premultiplied-alpha fades.
+- Assets use `//go:embed` in `cmd/loadimages.go` and `cmd/loadsounds.go`; scrap sprites are generated in `cmd/sprites.go`. Game assets need no external runtime asset directory.
+- Engine startup errors are fatal; image/audio initialization errors warn. Audio decode errors wrap with `%w`; playback is nil-safe and creates fresh players for overlap. Image warnings do **not** provide a working fallback.
+- Update `CHANGELOG.md` for code or structural changes. Prefer current source/configuration over older README or task-history claims.
 
 ## Important Files
 
 - `cmd/constants.go`: dimensions, states, layout offsets, transition delay.
-- `cmd/game.go`: resets, level spawning, occupancy and scrap-grid maintenance.
-- `cmd/effect.go`: player actions and effects; `cmd/input.go`: mouse movement and direction arrows.
-- `cmd/draw.go`, `cmd/menu.go`: gameplay/HUD and title rendering.
-- Release version displays live in `main.go` (window title) and `cmd/menu.go` (splash title); keep them aligned with `Taskfile.yml`, README version references, and release notes.
-- `go.mod`, `go.sum`: toolchain/dependencies; `Taskfile.yml`: local workflows.
-- `.github/workflows/goreleaser.yml`: actual tag-release builds. `.goreleaser.yaml` configures the separate local snapshot command; they are not equivalent pipelines.
+- `cmd/game.go`: resets, spawning, occupancy/scrap caches; `cmd/movement.go` and `cmd/collision.go`: movement and combat paths.
+- `cmd/effect.go`, `cmd/input.go`: player actions/effects and mouse controls; `cmd/draw.go`, `cmd/menu.go`: gameplay/HUD and title rendering.
+- `go.mod`, `go.sum`: toolchain/dependencies; `Taskfile.yml`: local commands.
+- Version bumps must synchronize literals in `main.go` and `cmd/menu.go` with `Taskfile.yml`, README references, and release notes. `task generate` currently has no generation directive to update them.
+- `.github/workflows/goreleaser.yml` manually builds/publishes `v*` tag releases; it does **not** use `.goreleaser.yaml`, which configures the separate local snapshot command.
 
 ## Runtime/Tooling Preferences
 
-- Current `go.mod` requires Go **1.27.1** and Ebitengine **v2.10.0**. Use Go modules and Task v3; no Node/Bun package toolchain is required. All native build, WASM deployment, and release Go setup steps use `go-version-file: go.mod`; update the module's Go directive to advance CI together.
-- Linux native builds/tests need CGO and X11/OpenGL/ALSA development libraries; exact packages are in `.github/workflows/build.yml`. Tag releases use CGO for Linux/macOS and disable it for Windows. WASM targets `GOOS=js GOARCH=wasm`.
-- Local WASM builds copy the checked-in `wasm_exec.js`; Pages CI copies it from the active Go SDK. Check compiler/shim compatibility when changing Go versions. CI additionally runs Binaryen optimization; local builds do not.
-- The local server supplies WASM MIME and `no-store` headers. Rebuild and reload after changes; use HTTP rather than opening the HTML file directly.
+- `go.mod` requires **Go 1.27.1** and **Ebitengine v2.10.0**. Use Go modules and Task v3; no Node/Bun package toolchain is required. README's older Go prerequisite is stale. All CI Go setup steps use `go-version-file: go.mod`.
+- Linux native builds/tests require CGO and X11/OpenGL/ALSA development libraries; see `.github/workflows/build.yml` for packages. Tagged releases enable CGO for Linux/macOS and disable it for Windows; local GoReleaser configuration differs.
+- WASM targets `GOOS=js GOARCH=wasm`. Local builds copy checked-in `wasm_exec.js`; Pages CI copies it from the active Go SDK and additionally runs Binaryen optimization. Check compiler/runtime-shim compatibility after Go upgrades.
+- The local server supplies `application/wasm` and `Cache-Control: no-store`. Use HTTP, not `file://`; rebuild and reload after source or root HTML/runtime changes. Serving alone does not rebuild or recopy files.
 
 ## Testing & QA
 
-- **Mandatory completion checks:** after every repository change, including documentation-only edits, run `task lint`, then `task vet`, `task staticcheck`, and `task seccheck`. Run lint first because it modifies source/module files; run the remaining checks against that resulting state.
-- Fix failures and rerun affected checks before declaring completion. Report each command's actual result; an unavailable tool, download failure, or incomplete scan is a blocker, not a pass. Preserve security findings rather than suppressing them to obtain a green result.
-
-- Standard Go `testing`: `cmd/cmd_test.go` covers math/grid helpers; `scripts/serve/main_test.go` covers directory validation and HTTP behavior. There is no configured coverage threshold; helper tests do not prove complete gameplay.
-- Follow same-package tests, table-driven subtests, minimal `Game` literals, and server fixtures using `t.TempDir`, `t.Cleanup`, and `httptest`. Minimal game values avoid audio construction, but package initialization still loads Ebiten images.
+- **Mandatory after every repository change, including documentation:** run `task lint` first, then `task vet`, `task staticcheck`, and `task seccheck` against its resulting state. Fix failures and rerun affected checks. Report actual results; unavailable tools, download failures, and incomplete scans are blockers, not passes. Preserve security findings rather than suppressing them.
+- Tests use Go's standard `testing` package: `cmd/cmd_test.go` covers math/grid/cache helpers; `scripts/serve/main_test.go` covers directory validation, MIME/cache headers, traversal, and missing files. No coverage threshold is configured; helper/formula tests do not prove gameplay.
+- Follow same-package tests, table-driven subtests, and minimal `Game` literals. Server tests use `t.TempDir`, `t.Cleanup`, and `httptest` without opening a listening port. Minimal game fixtures avoid audio construction but still trigger Ebiten package initialization.
 - Focused examples: `go test ./cmd -run '^TestRebuildScrapGridClearsStaleEntries$' -count=1` and `go test -v ./scripts/serve`.
-- Headless Linux: install native dependencies plus Xvfb, then `xvfb-run -a go test ./...`, as Pages CI does. A `-run` filter does not bypass graphics initialization. Server-package tests can run independently of Ebiten.
-- For gameplay/render/input changes, run the actual native game or WASM browser build and exercise the affected behavior. Check movement timing, collision outcomes, state transitions, and visual feedback; the existing tests do not cover those end to end.
+- Headless Linux needs native libraries plus Xvfb: `xvfb-run -a go test ./...`. A `-run` filter does not bypass graphics initialization. Server-package tests run independently of Ebiten.
+- Pages CI runs tests; native build CI runs vet, formatting checks, and build, not tests. For gameplay/render/input changes, also run the actual native game or WASM browser build and exercise movement, collisions, transitions, and visual feedback; existing tests do not cover these end to end.

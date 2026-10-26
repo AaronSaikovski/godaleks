@@ -214,7 +214,7 @@ func (g *Game) checkCollisions() {
 		if g.level%5 == 0 { // Bonus last stand every 5 levels
 			g.lastStands++
 		}
-		if g.level > 10 {
+		if g.level > maxLevels {
 			g.state = StateWin
 			g.gameOverMessage = "Congratulations! You survived all levels!"
 			g.soundPlayer.Play("gameover")

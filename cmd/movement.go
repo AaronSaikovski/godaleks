@@ -26,6 +26,11 @@ import (
 	"math"
 )
 
+// levelSpeedMultiplier preserves the original pace through level 10.
+func levelSpeedMultiplier(level int) float64 {
+	return 1.0 + 0.2*float64(max(0, level-10))
+}
+
 func (g *Game) moveDaleks() {
 	// Start movement animation for all daleks
 	g.daleksMoving = true
@@ -78,6 +83,7 @@ func (g *Game) moveDaleks() {
 // for jerk-free motion. Runs on a fixed timestep so progress is perfectly even.
 func (g *Game) updateNormalMovement(deltaTime float64) {
 	allFinished := true
+	speedMultiplier := levelSpeedMultiplier(g.level)
 
 	for i := range g.daleks {
 		dalek := &g.daleks[i]
@@ -86,7 +92,7 @@ func (g *Game) updateNormalMovement(deltaTime float64) {
 			dalek.MoveTimer += deltaTime
 
 			// Calculate interpolation progress (0.0 to 1.0)
-			progress := dalek.MoveTimer / g.moveAnimationDuration
+			progress := dalek.MoveTimer * speedMultiplier / g.moveAnimationDuration
 			if progress >= 1.0 {
 				progress = 1.0
 				dalek.IsMoving = false
@@ -138,6 +144,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 	if g.lastStandSpeed > g.lastStandMaxSpeed {
 		g.lastStandSpeed = g.lastStandMaxSpeed
 	}
+	moveDistance := g.lastStandSpeed * deltaTime * levelSpeedMultiplier(g.level)
 
 	anyMoving := false
 
@@ -171,7 +178,7 @@ func (g *Game) updateLastStandMovement(deltaTime float64) {
 			dy /= dist
 
 			// Move toward player at current speed
-			moveDistance := g.lastStandSpeed * deltaTime
+			// The level multiplier scales displacement without changing acceleration or its cap.
 			dalek.VisualPos.X += dx * moveDistance
 			dalek.VisualPos.Y += dy * moveDistance
 

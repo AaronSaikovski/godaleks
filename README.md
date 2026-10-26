@@ -207,8 +207,9 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 ## 📋 Game Mechanics
 
 ### Level Progression
+- **Goal**: Survive all 15 levels
 - **Starting Daleks**: 5 + current level count
-- **Difficulty**: Increases with each level
+- **Difficulty**: Levels 1–10 retain their original speed. Each level after 10 adds 20% of base Dalek speed: 1.2× at level 11, 1.4× at 12, 1.6× at 13, 1.8× at 14, and 2× at 15. The multiplier is `1 + 0.2 × max(0, level - 10)` and applies to normal-turn animation and Last Stand movement.
 - **Resources per level**:
   - +2 Teleports per level
   - +2 Sonic Screwdrivers per level
@@ -216,8 +217,8 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 - **Level completion**: All Daleks must be destroyed
 
 ### Dalek Behavior
-- **Normal Movement**: Move one grid cell per turn toward the player
-- **Animation**: 0.7 second smooth easing animation per move
+- **Normal Movement**: Move one grid cell per turn toward the player at every level
+- **Animation**: Smooth easing over 0.7 seconds divided by the level speed multiplier (0.7 seconds at levels 1–10, 0.35 seconds at level 15)
 - **Collision Detection**: Grid-based (50×33 grid, 16 pixels per cell)
 - **Collision Rules**:
   - Dalek hits scrap: Dies (+2 points)
@@ -238,9 +239,9 @@ This builds binaries for **Linux** (amd64), **Windows** (amd64), and **macOS** (
 ### Last Stand Mode
 - **Activation**: Press `L` key (requires available Last Stand)
 - **Behavior**: Daleks accelerate continuously toward player
-- **Initial Speed**: 2.0 cells/second
+- **Initial Speed**: 2.0 cells/second × level speed multiplier
 - **Acceleration**: 1.1× per second
-- **Maximum Speed**: 8.0 cells/second
+- **Maximum Speed**: 8.0 cells/second × level speed multiplier
 - **End Condition**: All Daleks destroyed or player caught
 - **Bonus**: +50 points on successful completion
 
